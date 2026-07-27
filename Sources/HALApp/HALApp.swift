@@ -39,12 +39,6 @@ final class HALApplicationDelegate: NSObject, NSApplicationDelegate {
 @MainActor
 @Observable
 final class AppModel {
-  enum DataFreshness {
-    case upToDate
-    case aFewMinutesAgo
-    case aWhileAgo
-  }
-
   enum Destination: Hashable {
     case overview
     case storage
@@ -64,14 +58,12 @@ final class AppModel {
   var inspectorPresented = true
   var referencePresented = false
   var entityTypeReferencePresented: EntityType?
-  private(set) var lastSuccessfulUpdate = Date()
 
   init(configuration: AppConfiguration, snapshotProvider: any GraphSnapshotProvider) {
     self.configuration = configuration
     let snapshot = snapshotProvider.snapshot()
     fixture = snapshot.graph
     scanContext = snapshot.scan
-    lastSuccessfulUpdate = snapshot.scan.completedAt ?? snapshot.scan.startedAt
   }
 
   var layout: LayoutResult {
@@ -110,15 +102,12 @@ final class AppModel {
     }
   }
 
-  func dataFreshness(at currentDate: Date = Date()) -> DataFreshness {
-    let age = currentDate.timeIntervalSince(lastSuccessfulUpdate)
-    if age < 2 * 60 {
-      return .upToDate
+  func dataFreshness(at currentDate: Date = Date()) -> FreshnessState {
+    if scanContext.environment == .synthetic {
+      return .fresh
     }
-    if age < 15 * 60 {
-      return .aFewMinutesAgo
-    }
-    return .aWhileAgo
+    return FreshnessPolicy(agingAfter: 2 * 60, staleAfter: 15 * 60)
+      .state(for: scanContext, at: currentDate)
   }
 
   func navigate(to destination: Destination) {

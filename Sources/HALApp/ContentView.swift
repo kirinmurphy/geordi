@@ -223,7 +223,9 @@ struct ContentView: View {
         Divider()
       }
       .help(
-        "Freshness reflects time since HAL last loaded data successfully. It does not show a collection date."
+        model.scanContext.environment == .synthetic
+          ? "This is a deterministic fixture, not a reading from this Mac."
+          : "Freshness reflects when HAL collected this snapshot and whether collection was complete."
       )
       .accessibilityElement(children: .combine)
       .accessibilityLabel(freshnessText(freshness))
@@ -231,27 +233,42 @@ struct ContentView: View {
     }
   }
 
-  private func freshnessText(_ freshness: AppModel.DataFreshness) -> String {
-    switch freshness {
-    case .upToDate: "Up to date"
-    case .aFewMinutesAgo: "Updated a few minutes ago"
-    case .aWhileAgo: "Updated a while ago"
+  private func freshnessText(_ freshness: FreshnessState) -> String {
+    if model.scanContext.environment == .synthetic {
+      return "Deterministic fixture"
+    }
+    return switch freshness {
+    case .fresh: "Observed recently"
+    case .aging: "Observation is aging"
+    case .stale: "Observation is stale"
+    case .partial: "Partial observation"
+    case .unavailable: "Data unavailable"
+    case .permissionDenied: "Permission required"
+    case .neverCollected: "Not yet observed"
     }
   }
 
-  private func freshnessSymbol(_ freshness: AppModel.DataFreshness) -> String {
+  private func freshnessSymbol(_ freshness: FreshnessState) -> String {
     switch freshness {
-    case .upToDate: "checkmark.circle.fill"
-    case .aFewMinutesAgo: "clock.fill"
-    case .aWhileAgo: "exclamationmark.circle.fill"
+    case .fresh: "checkmark.circle.fill"
+    case .aging: "clock.fill"
+    case .stale: "exclamationmark.circle.fill"
+    case .partial: "circle.lefthalf.filled"
+    case .unavailable: "questionmark.circle.fill"
+    case .permissionDenied: "lock.circle.fill"
+    case .neverCollected: "circle.dashed"
     }
   }
 
-  private func freshnessColor(_ freshness: AppModel.DataFreshness) -> Color {
+  private func freshnessColor(_ freshness: FreshnessState) -> Color {
     switch freshness {
-    case .upToDate: .secondary
-    case .aFewMinutesAgo: .orange
-    case .aWhileAgo: .red
+    case .fresh: .secondary
+    case .aging: .orange
+    case .stale: .red
+    case .partial: .orange
+    case .unavailable: .secondary
+    case .permissionDenied: .orange
+    case .neverCollected: .secondary
     }
   }
 
