@@ -1,0 +1,42 @@
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# Local HAL state
+.hal/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.log
+
+# Test output
+TestResults/
+Snapshots/__Failures__/
+coverage/
+
+# Credentials and signing
+*.p12
+*.cer
+*.provisionprofile
+*.mobileprovision
+.env
+.env.*
+
+# Editors
+.idea/
+.vscode/
+*.swp
+.build/
+*.xcuserstate
+.DS_Store
