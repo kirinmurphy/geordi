@@ -173,6 +173,13 @@ Recorded outcomes use `[x]`; unchecked items still need evaluation.
   enabled missing associated-data capabilities.
 - [x] An unchanged refresh appeared to do nothing.
 - [x] The linked list mixed system and non-system applications.
+- [x] Signing and provenance collection had no obvious visible effect without
+  finding and using the application inspector.
+- [x] Returning to fictional data was not discoverable; the action was hidden
+  as **Unlink this Mac…** inside an unlabeled sidebar menu.
+- [x] Live applications had no associated file, process, event, or other
+  relationship nodes, leaving the live atlas substantially empty compared with
+  the fictional profile.
 - [ ] Inspect several application details and confirm paths, signing facts,
   App Store receipt presence, and redacted download origins are understandable.
 - [ ] Relaunch HAL and confirm the cached linked snapshot appears before the
@@ -205,6 +212,14 @@ Recorded outcomes use `[x]`; unchecked items still need evaluation.
 - A successful unchanged refresh has no salient completion acknowledgement.
 - Linked application inventory currently mixes system and non-system
   applications without a default scope filter.
+- Signing and provenance facts are projected into application details but have
+  no visible evidence summary, so successful collection can appear to do
+  nothing.
+- The return-to-fictional-data action is hidden behind the sidebar ellipsis and
+  uses implementation-oriented unlink terminology.
+- Live application nodes currently have no relationships. Conventional
+  application support, cache, preference, log, saved-state, or sandbox
+  locations are not collected yet.
 
 ## Known risks
 

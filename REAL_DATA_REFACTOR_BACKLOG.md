@@ -68,6 +68,48 @@ These items were recorded from the first linked-Mac product test on
   storage, or incident observations exist; do not rank applications using
   synthetic or unsupported metrics in live mode.
 
+### Evidence and navigation discoverability
+
+- [ ] Surface a compact signing and provenance summary on each selected
+  application before the technical detail grid.
+- [ ] Explain unavailable provenance as an evidence state rather than silently
+  presenting repeated “Not retained” rows.
+- [ ] Show collector coverage and evidence counts in the application list or
+  application header so users can tell that signing/provenance collection ran.
+- [ ] Add direct **Return to fictional Mac…** navigation beside the linked-data
+  status. Do not hide the only return path inside an unlabeled ellipsis menu.
+- [ ] Keep the existing backup/delete/cancel confirmation after that action;
+  returning to the fictional profile still unlinks the live data source.
+- [ ] Rename technical **Unlink this Mac** copy in user-facing navigation when
+  the user’s goal is to return to the demo, while retaining “unlink” in the
+  confirmation explanation.
+
+### First useful live relationships: application-associated files
+
+- [ ] Add a bounded, read-only associated-file collector before expanding to
+  broad storage scanning.
+- [ ] Select conventional candidate locations and match strategies through
+  versioned manifests rather than Swift path arrays. Initial candidates should
+  cover application support, caches, preferences, logs, saved state, sandbox
+  containers, group containers, HTTP storage, and WebKit data.
+- [ ] Match exact bundle identifiers and authoritative bundle/container
+  metadata first. Treat normalized application-name/path matches as weaker
+  evidence.
+- [ ] Create file/location entities for observed candidates and connect them to
+  applications with evidence-bearing confidence. Use **may belong to** for
+  convention or name matches; do not claim runtime reads/writes without file
+  activity observations.
+- [ ] Preserve unmatched locations, shared/group-container ambiguity,
+  permission-denied paths, unreadable metadata, absent candidates, and
+  applications with no discovered associations.
+- [ ] Collect metadata only in the first pass. Do not read file contents or
+  calculate recursive directory sizes until bounded traversal, cancellation,
+  privacy, and performance tests exist.
+- [ ] Project observed file associations into the same live relationship map
+  and inspector used by synthetic profiles.
+- [ ] Add deterministic fixtures and tests for exact, probable, ambiguous,
+  absent, permission-denied, shared, and unmatched associations.
+
 ## Priority 0: composition and schema foundation
 
 - [x] Add repository rules for manifest-driven composition and synthetic/live
