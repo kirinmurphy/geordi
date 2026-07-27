@@ -2,6 +2,7 @@ import Foundation
 
 public enum EnvironmentMode: String, Sendable {
   case synthetic
+  case liveReadOnly
 }
 
 public struct LayoutConfiguration: Hashable, Sendable {

@@ -46,6 +46,7 @@ public enum Confidence: String, CaseIterable, Codable, Comparable, Sendable {
 
 public enum EvidenceKind: String, Codable, Sendable {
   case observed
+  case derived
   case inferred
 }
 
@@ -54,12 +55,82 @@ public struct Evidence: Identifiable, Hashable, Codable, Sendable {
   public let kind: EvidenceKind
   public let summary: String
   public let source: String
+  public let observationID: ObservationID?
+  public let observedAt: Date?
+  public let ruleID: String?
+  public let ruleVersion: Int?
 
-  public init(id: String, kind: EvidenceKind, summary: String, source: String) {
+  public init(
+    id: String,
+    kind: EvidenceKind,
+    summary: String,
+    source: String,
+    observationID: ObservationID? = nil,
+    observedAt: Date? = nil,
+    ruleID: String? = nil,
+    ruleVersion: Int? = nil
+  ) {
     self.id = id
     self.kind = kind
     self.summary = summary
     self.source = source
+    self.observationID = observationID
+    self.observedAt = observedAt
+    self.ruleID = ruleID
+    self.ruleVersion = ruleVersion
+  }
+}
+
+public struct FindingID: Hashable, Codable, Sendable, ExpressibleByStringLiteral {
+  public let rawValue: String
+
+  public init(_ rawValue: String) {
+    self.rawValue = rawValue
+  }
+
+  public init(stringLiteral value: StringLiteralType) {
+    self.init(value)
+  }
+}
+
+public enum FindingState: String, Codable, Sendable {
+  case active
+  case dismissed
+  case deferred
+  case resolved
+}
+
+public struct Finding: Identifiable, Hashable, Codable, Sendable {
+  public let id: FindingID
+  public let ruleID: String
+  public let ruleVersion: Int
+  public let detectedAt: Date
+  public let summary: String
+  public let relatedEntities: [EntityID]
+  public let confidence: Confidence
+  public let evidence: [Evidence]
+  public let state: FindingState
+
+  public init(
+    id: FindingID,
+    ruleID: String,
+    ruleVersion: Int,
+    detectedAt: Date,
+    summary: String,
+    relatedEntities: [EntityID],
+    confidence: Confidence,
+    evidence: [Evidence],
+    state: FindingState = .active
+  ) {
+    self.id = id
+    self.ruleID = ruleID
+    self.ruleVersion = ruleVersion
+    self.detectedAt = detectedAt
+    self.summary = summary
+    self.relatedEntities = relatedEntities
+    self.confidence = confidence
+    self.evidence = evidence
+    self.state = state
   }
 }
 

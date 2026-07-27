@@ -1,9 +1,12 @@
+import Foundation
 import Testing
 
 @testable import HALDomain
 
 @Suite("Domain")
 struct DomainTests {
+  private let referenceDate = Date(timeIntervalSince1970: 1_753_545_600)
+
   @Test("Relationship direction and evidence remain explicit")
   func relationshipDirection() {
     let relationship = Relationship(
@@ -81,5 +84,123 @@ struct DomainTests {
     let projection = graph.neighborhood(around: "app", depth: 2)
     #expect(Set(projection.entities.map(\.id)) == ["app", "process", "file"])
     #expect(Set(projection.relationships.map(\.id)) == ["launches", "writes"])
+  }
+
+  @Test("Typed observations preserve source, subject, time, and sensitivity")
+  func typedObservation() throws {
+    struct ApplicationValue: Hashable, Codable, Sendable {
+      let bundleIdentifier: String
+      let version: String
+    }
+
+    let observation = CollectedObservation(
+      id: ObservationID("application-1"),
+      scanID: ScanID("scan-1"),
+      collectorID: CollectorID("applications"),
+      schemaVersion: 1,
+      observedAt: referenceDate,
+      subject: SubjectIdentity(
+        primary: IdentityClaim(
+          kind: .bundleIdentifier,
+          value: "com.example.Application"
+        ),
+        aliases: [
+          IdentityClaim(kind: .canonicalPath, value: "/Applications/Example.app")
+        ]
+      ),
+      sensitivity: .ordinary,
+      sourceReference: "/Applications/Example.app/Contents/Info.plist",
+      value: ApplicationValue(
+        bundleIdentifier: "com.example.Application",
+        version: "1.0"
+      )
+    )
+
+    let encoded = try JSONEncoder().encode(observation)
+    let decoded = try JSONDecoder().decode(
+      CollectedObservation<ApplicationValue>.self,
+      from: encoded
+    )
+    #expect(decoded == observation)
+    #expect(decoded.subject.aliases.first?.kind == .canonicalPath)
+  }
+
+  @Test("Freshness distinguishes age, partial results, and permissions")
+  func freshnessStates() {
+    let policy = FreshnessPolicy(agingAfter: 120, staleAfter: 900)
+    let completeRun = CollectorRun(
+      collectorID: "applications",
+      collectorVersion: 1,
+      availability: .available,
+      state: .complete,
+      startedAt: referenceDate,
+      completedAt: referenceDate
+    )
+    let scan = ScanContext(
+      id: "scan",
+      environment: .liveReadOnly,
+      startedAt: referenceDate,
+      completedAt: referenceDate,
+      collectorRuns: [completeRun]
+    )
+
+    #expect(policy.state(for: scan, at: referenceDate) == .fresh)
+    #expect(
+      policy.state(
+        for: scan,
+        at: referenceDate.addingTimeInterval(180)
+      ) == .aging
+    )
+    #expect(
+      policy.state(
+        for: scan,
+        at: referenceDate.addingTimeInterval(1_000)
+      ) == .stale
+    )
+
+    let deniedRun = CollectorRun(
+      collectorID: "protected-files",
+      collectorVersion: 1,
+      availability: .permissionDenied,
+      state: .skipped,
+      startedAt: referenceDate,
+      completedAt: referenceDate
+    )
+    let deniedScan = ScanContext(
+      id: "denied",
+      environment: .liveReadOnly,
+      startedAt: referenceDate,
+      completedAt: referenceDate,
+      collectorRuns: [deniedRun]
+    )
+    #expect(policy.state(for: deniedScan, at: referenceDate) == .permissionDenied)
+  }
+
+  @Test("Findings retain versioned rules and observation evidence")
+  func findingsRemainSeparate() {
+    let evidence = Evidence(
+      id: "evidence",
+      kind: .derived,
+      summary: "The cache exceeded the review threshold.",
+      source: "Storage rule",
+      observationID: "storage-observation",
+      observedAt: referenceDate,
+      ruleID: "large-cache",
+      ruleVersion: 2
+    )
+    let finding = Finding(
+      id: "finding",
+      ruleID: "large-cache",
+      ruleVersion: 2,
+      detectedAt: referenceDate,
+      summary: "Review a large cache.",
+      relatedEntities: ["file.cache"],
+      confidence: .high,
+      evidence: [evidence]
+    )
+
+    #expect(finding.ruleVersion == 2)
+    #expect(finding.evidence.first?.observationID == "storage-observation")
+    #expect(finding.state == .active)
   }
 }

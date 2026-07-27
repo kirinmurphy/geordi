@@ -1,3 +1,4 @@
+import Foundation
 import HALDomain
 import HALFixtures
 import Testing
@@ -145,5 +146,23 @@ struct FixtureTests {
       nearby.allSatisfy {
         !$0.explanation.localizedCaseInsensitiveContains("caused")
       })
+  }
+
+  @Test("Synthetic provider preserves deterministic scan context")
+  func syntheticProviderContext() {
+    let timestamp = Date(timeIntervalSince1970: 1_753_545_600)
+    let provider = SyntheticGraphProvider(
+      fixtureID: "simple-application",
+      clock: FixedClock(timestamp)
+    )
+
+    let first = provider.snapshot()
+    let second = provider.snapshot()
+    #expect(first == second)
+    #expect(first.graph.metadata.id == "simple-application")
+    #expect(first.scan.environment == .synthetic)
+    #expect(first.scan.completedAt == timestamp)
+    #expect(!first.scan.isPartial)
+    #expect(first.scan.collectorRuns.map(\.collectorID) == ["synthetic-fixture"])
   }
 }

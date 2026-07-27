@@ -10,8 +10,13 @@ struct HALApp: App {
 
   var body: some Scene {
     WindowGroup {
-      ContentView(configuration: .phaseZero)
-        .frame(minWidth: 1_080, minHeight: 680)
+      ContentView(
+        configuration: .phaseZero,
+        snapshotProvider: SyntheticGraphProvider(
+          fixtureID: AppConfiguration.phaseZero.initialFixtureID
+        )
+      )
+      .frame(minWidth: 1_080, minHeight: 680)
     }
     .windowStyle(.hiddenTitleBar)
     .commands {
@@ -49,6 +54,7 @@ final class AppModel {
   }
 
   let configuration: AppConfiguration
+  let scanContext: ScanContext
   var fixture: SystemGraph
   var destination: Destination = .overview
   var selection: GraphSelection?
@@ -60,11 +66,12 @@ final class AppModel {
   var entityTypeReferencePresented: EntityType?
   private(set) var lastSuccessfulUpdate = Date()
 
-  init(configuration: AppConfiguration) {
+  init(configuration: AppConfiguration, snapshotProvider: any GraphSnapshotProvider) {
     self.configuration = configuration
-    fixture =
-      FixtureCatalog.fixture(id: configuration.initialFixtureID)
-      ?? FixtureCatalog.all[0]
+    let snapshot = snapshotProvider.snapshot()
+    fixture = snapshot.graph
+    scanContext = snapshot.scan
+    lastSuccessfulUpdate = snapshot.scan.completedAt ?? snapshot.scan.startedAt
   }
 
   var layout: LayoutResult {

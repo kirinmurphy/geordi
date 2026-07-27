@@ -6,8 +6,13 @@ import SwiftUI
 struct ContentView: View {
   @State private var model: AppModel
 
-  init(configuration: AppConfiguration) {
-    _model = State(initialValue: AppModel(configuration: configuration))
+  init(configuration: AppConfiguration, snapshotProvider: any GraphSnapshotProvider) {
+    _model = State(
+      initialValue: AppModel(
+        configuration: configuration,
+        snapshotProvider: snapshotProvider
+      )
+    )
   }
 
   var body: some View {
