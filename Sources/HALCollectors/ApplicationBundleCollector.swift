@@ -26,20 +26,6 @@ public struct ApplicationBundleCollector: Sendable {
     self.clock = clock
   }
 
-  public static func standardRoots(
-    homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
-  ) -> [ApplicationSearchRoot] {
-    [
-      ApplicationSearchRoot(url: URL(fileURLWithPath: "/Applications"), required: true),
-      ApplicationSearchRoot(url: URL(fileURLWithPath: "/System/Applications"), required: true),
-      ApplicationSearchRoot(
-        url: URL(fileURLWithPath: "/System/Library/CoreServices"),
-        required: true
-      ),
-      ApplicationSearchRoot(url: homeDirectory.appending(path: "Applications")),
-    ]
-  }
-
   public func collect(scanID: ScanID) -> CollectorOutput<ApplicationBundleValue> {
     let startedAt = clock.now()
     var observations: [CollectedObservation<ApplicationBundleValue>] = []

@@ -14,6 +14,11 @@ struct FixtureTests {
     }
   }
 
+  @Test("Every committed profile manifest validates through the central schema")
+  func profileManifestsValidate() throws {
+    #expect(try FixtureCatalog.validateManifestProfiles() == 1)
+  }
+
   @Test("Catalog has all required Phase 0 scenarios")
   func requiredScenarios() {
     let ids = Set(FixtureCatalog.all.map(\.metadata.id))

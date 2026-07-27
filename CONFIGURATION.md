@@ -61,3 +61,25 @@ configuration representation for structured settings. Secrets, if ever needed,
 belong in Keychain rather than configuration files.
 
 Debug and Release preferences must be isolated by bundle identifier.
+
+## Manifest composition
+
+Growable collections and entity resources are versioned manifests, not Swift
+arrays or entity-instance switches. Small related resources may share a
+collection manifest. Complicated or independently discoverable resources use
+individual manifest files.
+
+`HALProfileSchema/SystemProfileSchema.swift` is the centralized schema and
+validation boundary for normalized system profiles. Synthetic and live
+normalized profiles must conform to the same versioned shape. Decoding rejects
+unknown keys, invalid enum values, unsupported versions, broken relationship
+endpoints, and evidence-free relationships.
+
+The fixture validator runs as part of `make verify` and validates every
+committed synthetic profile manifest. An invalid or stale manifest is a build
+failure, not a runtime warning.
+
+Collector roots, rebuildable-data locations, path categories, and other
+growable detector knowledge must move into schema-validated manifests before
+those features are enabled in the application. Security invariants remain in
+code and cannot be weakened by manifest configuration.

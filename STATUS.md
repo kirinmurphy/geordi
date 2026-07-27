@@ -89,7 +89,11 @@ Milestone 0 — repository and interactive concept.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 33 deterministic tests plus fixture and bundle validation
+- Test harness: 37 deterministic tests plus fixture and bundle validation
+- Profile schema: centralized version 1 schema with strict unknown-key,
+  version, endpoint, evidence, and enum validation
+- Manifest migration: simple-application fixture migrated end-to-end; remaining
+  synthetic profiles still require migration
 - Real-data preparation: typed observations, scan and collector outcomes,
   capability and freshness states, versioned finding evidence, and an injected
   graph-snapshot provider boundary

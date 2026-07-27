@@ -2,6 +2,8 @@ import Darwin
 import HALFixtures
 
 do {
+  let manifestCount = try FixtureCatalog.validateManifestProfiles()
+  print("✓ Validated \(manifestCount) schema-backed synthetic profile manifest(s).")
   for fixture in FixtureCatalog.all {
     try fixture.validate()
     print(

@@ -8,6 +8,7 @@ let package = Package(
   products: [
     .library(name: "HALDomain", targets: ["HALDomain"]),
     .library(name: "HALCollectors", targets: ["HALCollectors"]),
+    .library(name: "HALProfileSchema", targets: ["HALProfileSchema"]),
     .library(name: "HALFixtures", targets: ["HALFixtures"]),
     .library(name: "HALVisualization", targets: ["HALVisualization"]),
     .executable(name: "HALApp", targets: ["HALApp"]),
@@ -16,7 +17,12 @@ let package = Package(
   targets: [
     .target(name: "HALDomain"),
     .target(name: "HALCollectors", dependencies: ["HALDomain"]),
-    .target(name: "HALFixtures", dependencies: ["HALDomain"]),
+    .target(name: "HALProfileSchema", dependencies: ["HALDomain"]),
+    .target(
+      name: "HALFixtures",
+      dependencies: ["HALDomain", "HALProfileSchema"],
+      resources: [.process("Resources")]
+    ),
     .target(name: "HALVisualization", dependencies: ["HALDomain"]),
     .executableTarget(
       name: "HALApp",
@@ -27,6 +33,10 @@ let package = Package(
       dependencies: ["HALDomain", "HALFixtures"]
     ),
     .testTarget(name: "HALDomainTests", dependencies: ["HALDomain"]),
+    .testTarget(
+      name: "HALProfileSchemaTests",
+      dependencies: ["HALDomain", "HALProfileSchema"]
+    ),
     .testTarget(
       name: "HALCollectorsTests",
       dependencies: ["HALCollectors", "HALDomain"]

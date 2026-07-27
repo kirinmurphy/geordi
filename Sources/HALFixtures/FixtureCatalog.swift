@@ -326,6 +326,10 @@ public enum FixtureCatalog {
     all.first { $0.metadata.id == id }
   }
 
+  public static func validateManifestProfiles() throws -> Int {
+    try ManifestProfileCatalog.validateAll().count
+  }
+
   static func entity(
     _ id: String,
     _ type: EntityType,
@@ -365,67 +369,8 @@ public enum FixtureCatalog {
     )
   }
 
-  public static let simpleApplication = SystemGraph(
-    metadata: FixtureMetadata(
-      id: "simple-application",
-      name: "Simple application",
-      summary: "A straightforward application with one process and ordinary activity."
-    ),
-    entities: [
-      entity(
-        "app.notes", .application, "Northstar Notes", "A signed note-taking application.",
-        [
-          Detail("Identity", "Northstar Notes"),
-          Detail("Origin", "App Store"),
-          Detail("State", "Installed · Approved · Running"),
-        ]),
-      entity(
-        "process.notes", .process, "Northstar Notes process",
-        "The application's main running process."),
-      entity(
-        "file.notes", .file, "Northstar support folder", "Preferences and local support data.",
-        [
-          Detail("Data class", "Private application support"),
-          Detail("Activity", "Recently used"),
-        ]),
-      entity(
-        "resource.notes", .resource, "Ordinary resource use",
-        "Low CPU and memory use in this scenario.",
-        [
-          Detail("Memory", "182 MB"),
-          Detail("CPU", "1.2%"),
-        ]),
-    ],
-    relationships: [
-      link(
-        "notes-launches", "app.notes", "process.notes", .launches, .confirmed,
-        "Northstar Notes launched its main process.",
-        [
-          evidence(
-            "notes-process-record", .observed,
-            "The process record names Northstar Notes as its executable.",
-            "Synthetic process observation")
-        ]),
-      link(
-        "notes-files", "process.notes", "file.notes", .readsWrites, .high,
-        "The running application uses this support folder.",
-        [
-          evidence(
-            "notes-file-activity", .observed,
-            "File activity occurred while the process was active.", "Synthetic file event"),
-          evidence(
-            "notes-path-match", .inferred, "The folder identity matches the application identity.",
-            "Relationship rule v1"),
-        ]),
-      link(
-        "notes-resource", "process.notes", "resource.notes", .consumes, .confirmed,
-        "The process accounts for this measured resource use.",
-        [
-          evidence(
-            "notes-resource-sample", .observed,
-            "The sample identifies the process as the contributor.", "Synthetic resource sample")
-        ]),
-    ]
+  public static let simpleApplication = ManifestProfileCatalog.loadRequired(
+    "simple-application"
   )
 
   public static let helperRichApplication = SystemGraph(
