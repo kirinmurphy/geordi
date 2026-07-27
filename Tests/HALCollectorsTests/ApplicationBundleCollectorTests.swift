@@ -93,6 +93,28 @@ struct ApplicationBundleCollectorTests {
     )
   }
 
+  @Test("Live provider remains explicit and deterministic with injected scope")
+  func liveProvider() throws {
+    let root = try temporaryDirectory()
+    try createBundle(
+      at: root.appending(path: "Example.app"),
+      name: "Example",
+      identifier: "com.example.application",
+      version: "1.0",
+      build: "7"
+    )
+    let provider = ApplicationInventorySnapshotProvider(
+      scanID: "manual-scan",
+      roots: [ApplicationSearchRoot(url: root, required: true)],
+      clock: FixedClock(timestamp)
+    )
+
+    let snapshot = provider.snapshot()
+    #expect(snapshot.scan.id == "manual-scan")
+    #expect(snapshot.scan.environment == .liveReadOnly)
+    #expect(snapshot.graph.entities.map(\.name) == ["Example"])
+  }
+
   private func temporaryDirectory() throws -> URL {
     let url = FileManager.default.temporaryDirectory
       .appending(path: UUID().uuidString, directoryHint: .isDirectory)

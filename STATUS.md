@@ -89,19 +89,22 @@ Milestone 0 — repository and interactive concept.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 26 deterministic tests plus fixture and bundle validation
+- Test harness: 30 deterministic tests plus fixture and bundle validation
 - Real-data preparation: typed observations, scan and collector outcomes,
   capability and freshness states, versioned finding evidence, and an injected
   graph-snapshot provider boundary
 - SQLite schema: not created
-- Real collectors: not created
+- Real collectors: bounded read-only application-bundle inventory implemented
+  behind an explicit live snapshot provider; not selected by the application
 - Visualization: stable semantic Phase 0 canvas created
 - Signing and distribution: not configured
 
-The app still runs exclusively through the deterministic synthetic provider.
-No collector reads the real Mac. The absent SQLite schema, collectors, and
-distribution signing were Phase 0 non-goals; their preparation and sequencing
-are documented in `REAL_DATA_ASSESSMENT.md`.
+The app still runs exclusively through the deterministic synthetic provider, so
+launching HAL does not inspect the real Mac. The application collector is
+available only through explicit dependency injection and currently reads bundle
+metadata from caller-provided roots. Signing, process inventory, SQLite, and
+distribution remain unimplemented. Their sequencing is documented in
+`REAL_DATA_ASSESSMENT.md`.
 
 ## How to run
 
