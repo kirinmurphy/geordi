@@ -1,3 +1,4 @@
+import Foundation
 import HALDomain
 
 public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
@@ -19,6 +20,21 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       clock: clock
     )
     projector = ApplicationGraphProjector()
+  }
+
+  public init(
+    scanID: ScanID,
+    configuration: ApplicationCollectorConfiguration,
+    userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
+    signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
+    clock: any HALClock = SystemClock()
+  ) throws {
+    try self.init(
+      scanID: scanID,
+      roots: configuration.searchRoots(userHome: userHome),
+      signatureInspector: signatureInspector,
+      clock: clock
+    )
   }
 
   public func snapshot() -> GraphSnapshot {

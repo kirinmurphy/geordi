@@ -89,7 +89,7 @@ Milestone 0 — repository and interactive concept.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 38 deterministic tests plus fixture and bundle validation
+- Test harness: 41 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -101,7 +101,8 @@ Milestone 0 — repository and interactive concept.
 - SQLite schema: not created
 - Real collectors: bounded read-only application-bundle inventory implemented
   with static code-signing validation behind an explicit live snapshot provider;
-  not selected by the application
+  search roots are selected through a validated declarative manifest, and the
+  provider is not yet selected by the application
 - Visualization: stable semantic Phase 0 canvas created
 - Signing and distribution: not configured
 

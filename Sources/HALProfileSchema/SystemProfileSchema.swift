@@ -1,6 +1,6 @@
 import Foundation
 import HALDomain
-import JSONSchema
+import HALManifestKit
 
 public enum SystemProfileSchema {
   public static let currentVersion = 1
@@ -32,15 +32,10 @@ public enum SystemProfileSchema {
 
   private static func validateAgainstDeclarativeSchema(_ data: Data) throws {
     do {
-      let schemaText = String(decoding: try declarativeSchemaData(), as: UTF8.self)
-      let instanceText = String(decoding: data, as: UTF8.self)
-      let schema = try Schema(instance: schemaText)
-      let result = try schema.validate(instance: instanceText)
-      guard result.isValid else {
-        throw SystemProfileSchemaError.declarativeValidation(
-          String(describing: result.errors)
-        )
-      }
+      try DeclarativeManifestValidator.validate(
+        instance: data,
+        against: declarativeSchemaData()
+      )
     } catch let error as SystemProfileSchemaError {
       throw error
     } catch {

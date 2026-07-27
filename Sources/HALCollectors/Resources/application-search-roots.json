@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "roots": [
+    {
+      "id": "system-applications",
+      "path": "/Applications",
+      "required": true,
+      "scope": "system"
+    },
+    {
+      "id": "system-provided-applications",
+      "path": "/System/Applications",
+      "required": false,
+      "scope": "system"
+    },
+    {
+      "id": "user-applications",
+      "path": "$USER_HOME/Applications",
+      "required": false,
+      "scope": "user"
+    }
+  ]
+}

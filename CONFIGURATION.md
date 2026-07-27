@@ -88,3 +88,10 @@ Collector roots, rebuildable-data locations, path categories, and other
 growable detector knowledge must move into schema-validated manifests before
 those features are enabled in the application. Security invariants remain in
 code and cannot be weakened by manifest configuration.
+
+The application inventory collector reads its default roots from
+`HALCollectors/Resources/application-search-roots.json`, validated by the
+adjacent `application-search-roots.schema.json`. System roots must be absolute.
+User roots use the explicit `$USER_HOME/` token and cannot contain parent-path
+traversal. Tests may still inject temporary roots directly without reading the
+machine-wide defaults.

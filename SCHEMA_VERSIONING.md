@@ -4,6 +4,11 @@ This document defines compatibility and migration rules for HAL's normalized
 system-profile manifests. The canonical contract is
 `Sources/HALProfileSchema/Resources/system-profile.schema.json`.
 
+Collector and composition manifests have their own adjacent schemas and
+independent version fields. They follow the same strict compatibility and
+same-change test rules, but changing a collector manifest does not change the
+normalized system-profile version unless its emitted data contract changes.
+
 ## Compatibility contract
 
 `schemaVersion` is an integer major version. A profile is accepted only when

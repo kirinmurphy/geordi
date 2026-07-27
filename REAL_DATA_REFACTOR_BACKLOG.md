@@ -20,8 +20,8 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 - [ ] Add a manifest catalog for profile composition.
 - [ ] Add per-resource manifests for independently discoverable complex items.
 - [ ] Add collection manifests for small resource sets.
-- [ ] Move collector search roots out of Swift defaults and into validated
-  manifests.
+- [x] Move application collector search roots out of Swift defaults and into a
+  validated manifest.
 - [ ] Define rebuildable-data detector manifests, including locations,
   classification, exclusions, and evidence rules.
 - [ ] Keep nonconfigurable security invariants in code.
@@ -80,7 +80,7 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 - [x] Add a graph snapshot provider boundary.
 - [x] Add bounded read-only application bundle enumeration.
 - [x] Add static signing observation and validation.
-- [ ] Select application collector roots from manifests.
+- [x] Select application collector roots from manifests.
 - [ ] Add receipt and provenance adapters selected through manifests.
 - [ ] Add point-in-time process collection.
 - [ ] Add deterministic process-to-application resolution.

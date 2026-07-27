@@ -7,6 +7,7 @@ let package = Package(
   platforms: [.macOS(.v15)],
   products: [
     .library(name: "HALDomain", targets: ["HALDomain"]),
+    .library(name: "HALManifestKit", targets: ["HALManifestKit"]),
     .library(name: "HALCollectors", targets: ["HALCollectors"]),
     .library(name: "HALProfileSchema", targets: ["HALProfileSchema"]),
     .library(name: "HALFixtures", targets: ["HALFixtures"]),
@@ -22,12 +23,22 @@ let package = Package(
   ],
   targets: [
     .target(name: "HALDomain"),
-    .target(name: "HALCollectors", dependencies: ["HALDomain"]),
+    .target(
+      name: "HALManifestKit",
+      dependencies: [
+        .product(name: "JSONSchema", package: "swift-json-schema")
+      ]
+    ),
+    .target(
+      name: "HALCollectors",
+      dependencies: ["HALDomain", "HALManifestKit"],
+      resources: [.process("Resources")]
+    ),
     .target(
       name: "HALProfileSchema",
       dependencies: [
         "HALDomain",
-        .product(name: "JSONSchema", package: "swift-json-schema"),
+        "HALManifestKit",
       ],
       resources: [.process("Resources")]
     ),
@@ -52,7 +63,7 @@ let package = Package(
     ),
     .testTarget(
       name: "HALCollectorsTests",
-      dependencies: ["HALCollectors", "HALDomain"]
+      dependencies: ["HALCollectors", "HALDomain", "HALManifestKit"]
     ),
     .testTarget(
       name: "HALFixturesTests",
