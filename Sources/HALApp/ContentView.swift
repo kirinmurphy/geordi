@@ -1,16 +1,28 @@
 import AppKit
+import HALDataSource
 import HALDomain
 import HALVisualization
 import SwiftUI
 
 struct ContentView: View {
   @State private var model: AppModel
+  @State private var unlinkConfirmationPresented = false
+  @State private var unlinkError: String?
 
-  init(configuration: AppConfiguration, snapshotProvider: any GraphSnapshotProvider) {
+  init(
+    configuration: AppConfiguration,
+    syntheticProvider: any GraphSnapshotProvider,
+    preferences: any DataSourcePreferenceStore,
+    userDataStore: HALUserDataStore?,
+    liveSnapshot: @escaping @Sendable () throws -> GraphSnapshot
+  ) {
     _model = State(
       initialValue: AppModel(
         configuration: configuration,
-        snapshotProvider: snapshotProvider
+        syntheticProvider: syntheticProvider,
+        preferences: preferences,
+        userDataStore: userDataStore,
+        liveSnapshot: liveSnapshot
       )
     )
   }
@@ -98,6 +110,37 @@ struct ContentView: View {
       .spring(response: 0.32, dampingFraction: 0.86),
       value: model.entityTypeReferencePresented
     )
+    .task {
+      model.resumeLinkedMacIfNeeded()
+    }
+    .confirmationDialog(
+      "Unlink this Mac?",
+      isPresented: $unlinkConfirmationPresented,
+      titleVisibility: .visible
+    ) {
+      Button("Export Backup, then Unlink") {
+        exportAndUnlink()
+      }
+      Button("Delete Compiled Data and Unlink", role: .destructive) {
+        unlinkWithoutBackup()
+      }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text(
+        "HAL will disconnect live collection and return to the fictional profile. A backup contains the last compiled application inventory."
+      )
+    }
+    .alert(
+      "Unable to Unlink",
+      isPresented: Binding(
+        get: { unlinkError != nil },
+        set: { if !$0 { unlinkError = nil } }
+      )
+    ) {
+      Button("OK") { unlinkError = nil }
+    } message: {
+      Text(unlinkError ?? "")
+    }
   }
 
   private var sidebar: some View {
@@ -115,12 +158,14 @@ struct ContentView: View {
           navigationButton("This Mac", symbol: "laptopcomputer", destination: .overview)
         }
         Section("Explore") {
-          navigationButton("Storage", symbol: "internaldrive", destination: .storage)
           navigationButton(
             "Installed software", symbol: "square.grid.2x2", destination: .applications)
-          navigationButton(
-            "Performance", symbol: "gauge.with.dots.needle.50percent",
-            destination: .performance)
+          if model.isSynthetic {
+            navigationButton("Storage", symbol: "internaldrive", destination: .storage)
+            navigationButton(
+              "Performance", symbol: "gauge.with.dots.needle.50percent",
+              destination: .performance)
+          }
         }
         Section("Installed applications") {
           ForEach(model.fixture.entities.filter { $0.type == .application }) { application in
@@ -166,6 +211,36 @@ struct ContentView: View {
           }
         }
       }
+
+      Divider()
+      HStack {
+        Image(systemName: model.isSynthetic ? "desktopcomputer" : "link")
+          .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(model.isSynthetic ? "Fictional profile" : "Linked to this Mac")
+            .font(.caption.weight(.semibold))
+          Text(model.isSynthetic ? "No machine access" : "Read-only application access")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
+        Spacer()
+        if model.isSynthetic {
+          Button("Link") { model.linkToMac() }
+            .disabled(model.isCollecting)
+        } else {
+          Menu {
+            Button("Refresh Now") { model.refreshLiveData() }
+            Button("Unlink this Mac…", role: .destructive) {
+              unlinkConfirmationPresented = true
+            }
+          } label: {
+            Image(systemName: "ellipsis.circle")
+          }
+          .menuStyle(.borderlessButton)
+          .frame(width: 24)
+        }
+      }
+      .padding(14)
     }
     .navigationSplitViewColumnWidth(min: 210, ideal: 235, max: 280)
   }
@@ -237,15 +312,18 @@ struct ContentView: View {
     if model.scanContext.environment == .synthetic {
       return "Deterministic fixture"
     }
-    return switch freshness {
-    case .fresh: "Observed recently"
-    case .aging: "Observation is aging"
-    case .stale: "Observation is stale"
-    case .partial: "Partial observation"
-    case .unavailable: "Data unavailable"
-    case .permissionDenied: "Permission required"
-    case .neverCollected: "Not yet observed"
-    }
+    let state =
+      switch freshness {
+      case .fresh: "Observed recently"
+      case .aging: "Observation is aging"
+      case .stale: "Observation is stale"
+      case .partial: "Partial observation"
+      case .unavailable: "Data unavailable"
+      case .permissionDenied: "Permission required"
+      case .neverCollected: "Not yet observed"
+      }
+    guard let completedAt = model.scanContext.completedAt else { return state }
+    return "\(state) · \(completedAt.formatted(date: .abbreviated, time: .shortened))"
   }
 
   private func freshnessSymbol(_ freshness: FreshnessState) -> String {
@@ -273,11 +351,46 @@ struct ContentView: View {
   }
 
   private var notificationSlot: some View {
-    AppBanner(
-      severity: .warning,
-      title: "Fictional Mac",
-      message: "Everything shown is deterministic synthetic data. HAL is not scanning this Mac."
-    )
+    Group {
+      if let collectionError = model.collectionError {
+        AppBanner(
+          severity: .alert,
+          title: "Collection problem",
+          message: collectionError,
+          allowsDismissal: true
+        )
+      } else if model.isSynthetic {
+        AppBanner(
+          severity: .warning,
+          title: "Fictional Mac",
+          message:
+            "Everything shown is deterministic synthetic data. HAL is not scanning this Mac.",
+          allowsDismissal: true,
+          actionTitle: model.isCollecting ? "Linking…" : "Link to your Mac",
+          action: model.linkToMac
+        )
+      }
+    }
+  }
+
+  private func unlinkWithoutBackup() {
+    do {
+      try model.unlinkMac()
+    } catch {
+      unlinkError = error.localizedDescription
+    }
+  }
+
+  private func exportAndUnlink() {
+    let panel = NSSavePanel()
+    panel.nameFieldStringValue = "HAL-live-data-backup.json"
+    panel.allowedContentTypes = [.json]
+    guard panel.runModal() == .OK, let url = panel.url else { return }
+    do {
+      try model.unlinkMac(backupURL: url)
+    } catch {
+      unlinkError = error.localizedDescription
+    }
   }
 
   private func navigationButton(
@@ -326,18 +439,24 @@ private struct AppBanner: View {
   let title: String
   let message: String
   let allowsDismissal: Bool
+  let actionTitle: String?
+  let action: (() -> Void)?
   @State private var isVisible = true
 
   init(
     severity: Severity,
     title: String,
     message: String,
-    allowsDismissal: Bool = false
+    allowsDismissal: Bool = false,
+    actionTitle: String? = nil,
+    action: (() -> Void)? = nil
   ) {
     self.severity = severity
     self.title = title
     self.message = message
     self.allowsDismissal = allowsDismissal
+    self.actionTitle = actionTitle
+    self.action = action
   }
 
   var body: some View {
@@ -351,6 +470,11 @@ private struct AppBanner: View {
           .font(.caption)
           .foregroundStyle(.secondary)
         Spacer()
+        if let actionTitle, let action {
+          Button(actionTitle, action: action)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+        }
         if allowsDismissal {
           Button {
             withAnimation(.easeInOut(duration: 0.18)) {
@@ -391,33 +515,44 @@ private struct OverviewView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 30) {
-        inventorySection(
-          title: "Alerts",
-          symbol: "exclamationmark.triangle.fill",
-          tint: .red,
-          emphasized: true
-        ) {
-          InventoryRow(
-            symbol: "memorychip",
-            tint: .red,
-            title: "Memory pressure became critical",
-            subtitle: "Docker, VS Code, and Brave were the largest contributors",
-            trailing: "Today · 9 min"
-          ) { model.navigate(to: .performance) }
-          Divider()
-          InventoryRow(
-            symbol: "internaldrive.fill",
-            tint: .orange,
-            title: "Reclaimable storage is getting large",
-            subtitle: "24.4 GB of synthetic cache and downloads can be rebuilt or fetched again",
-            trailing: "24.4 GB"
-          ) { model.navigate(to: .storage) }
+        if model.isSynthetic, !model.welcomeDismissed {
+          WelcomePrompt(
+            linkAction: model.linkToMac,
+            dismissAction: model.dismissWelcome
+          )
         }
 
-        CurrentActivityView()
+        if model.isSynthetic {
+          inventorySection(
+            title: "Alerts",
+            symbol: "exclamationmark.triangle.fill",
+            tint: .red,
+            emphasized: true
+          ) {
+            InventoryRow(
+              symbol: "memorychip",
+              tint: .red,
+              title: "Memory pressure became critical",
+              subtitle: "Docker, VS Code, and Brave were the largest contributors",
+              trailing: "Today · 9 min"
+            ) { model.navigate(to: .performance) }
+            Divider()
+            InventoryRow(
+              symbol: "internaldrive.fill",
+              tint: .orange,
+              title: "Reclaimable storage is getting large",
+              subtitle: "24.4 GB of synthetic cache and downloads can be rebuilt or fetched again",
+              trailing: "24.4 GB"
+            ) { model.navigate(to: .storage) }
+          }
+
+          CurrentActivityView()
+        } else {
+          LiveCoverageNotice(model: model)
+        }
 
         inventorySection(
-          title: "User’s Applications",
+          title: model.isSynthetic ? "User’s Applications" : "Observed Applications",
           symbol: "square.grid.2x2"
         ) {
           ForEach(Array(applications.enumerated()), id: \.element.id) { index, application in
@@ -433,21 +568,23 @@ private struct OverviewView: View {
           }
         }
 
-        inventorySection(
-          title: "Rebuildable Data",
-          symbol: "arrow.3.trianglepath",
-          headerActionTitle: "Reclaim File Space",
-          headerAction: { model.navigate(to: .storage) }
-        ) {
-          ForEach(Array(reclaimCandidates.enumerated()), id: \.element.id) { index, file in
-            if index > 0 { Divider() }
-            InventoryRow(
-              symbol: "folder",
-              tint: .green,
-              title: file.name,
-              subtitle: file.summary,
-              trailing: detail("Synthetic size", in: file) ?? ""
-            ) { model.focus(file) }
+        if model.isSynthetic {
+          inventorySection(
+            title: "Rebuildable Data",
+            symbol: "arrow.3.trianglepath",
+            headerActionTitle: "Reclaim File Space",
+            headerAction: { model.navigate(to: .storage) }
+          ) {
+            ForEach(Array(reclaimCandidates.enumerated()), id: \.element.id) { index, file in
+              if index > 0 { Divider() }
+              InventoryRow(
+                symbol: "folder",
+                tint: .green,
+                title: file.name,
+                subtitle: file.summary,
+                trailing: detail("Synthetic size", in: file) ?? ""
+              ) { model.focus(file) }
+            }
           }
         }
       }
@@ -604,6 +741,83 @@ private struct CurrentActivityView: View {
     let context: String
     let symbol: String
     let tint: Color
+  }
+}
+
+private struct WelcomePrompt: View {
+  let linkAction: () -> Void
+  let dismissAction: () -> Void
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack {
+        Label("Welcome to HAL", systemImage: "sparkles")
+          .font(.title2.bold())
+        Spacer()
+        Button(action: dismissAction) {
+          Image(systemName: "xmark")
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Dismiss welcome")
+      }
+      Text(
+        "HAL explains the software and activity on a Mac while keeping observations, evidence, and uncertainty visible."
+      )
+      Text(
+        "You are currently exploring a fictional operating system. Link your Mac when you are ready to collect a read-only application inventory."
+      )
+      .foregroundStyle(.secondary)
+      Button("Link to your Mac", action: linkAction)
+        .buttonStyle(.borderedProminent)
+    }
+    .padding(18)
+    .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+    .overlay {
+      RoundedRectangle(cornerRadius: 16).stroke(Color.accentColor.opacity(0.3))
+    }
+    .accessibilityIdentifier("syntheticWelcomePrompt")
+  }
+}
+
+private struct LiveCoverageNotice: View {
+  let model: AppModel
+
+  var body: some View {
+    HStack(alignment: .top, spacing: 12) {
+      Image(systemName: "checkmark.shield")
+        .font(.title2)
+        .foregroundStyle(.green)
+      VStack(alignment: .leading, spacing: 5) {
+        Text("Read-only application inventory")
+          .font(.headline)
+        Text(
+          "HAL observed installed application bundles and signing information. Storage cleanup, performance incidents, persistence, and file ownership are not collected yet, so no claims about them are shown."
+        )
+        .foregroundStyle(.secondary)
+        ForEach(
+          model.scanContext.collectorRuns.flatMap(\.issues),
+          id: \.id
+        ) { issue in
+          Label(issue.summary, systemImage: "exclamationmark.triangle")
+            .font(.caption)
+            .foregroundStyle(issue.severity == .error ? .red : .orange)
+        }
+        if model.isCollecting {
+          ProgressView("Refreshing this Mac…")
+            .controlSize(.small)
+        } else {
+          Button("Refresh Now") { model.refreshLiveData() }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+      }
+      Spacer()
+    }
+    .padding(16)
+    .background(Color.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
+    .overlay {
+      RoundedRectangle(cornerRadius: 16).stroke(Color.green.opacity(0.25))
+    }
   }
 }
 
@@ -916,93 +1130,93 @@ private struct SystemReferenceView: View {
         }
 
         VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 16) {
-              Label("What HAL observes on this Mac", systemImage: "desktopcomputer")
-                .font(.headline)
+          VStack(alignment: .leading, spacing: 16) {
+            Label("What HAL observes on this Mac", systemImage: "desktopcomputer")
+              .font(.headline)
 
-              HStack(spacing: 12) {
-                referenceCard("mac")
-                referenceCard("source")
-              }
-
-              Divider()
-
-              VStack(alignment: .leading, spacing: 4) {
-                Text("Inside the machine: one software example")
-                  .font(.headline)
-                Text(
-                  "The single Software card below is one installed item. Every connected line represents one specific relationship."
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-              }
-
-              HStack(alignment: .center, spacing: 0) {
-                softwareHubCard()
-                  .frame(width: 245)
-
-                VStack(spacing: 0) {
-                  relationshipPath(
-                    verb: "launches",
-                    targetID: "runtime",
-                    followOnVerb: "consumes",
-                    followOnTargetID: "resources"
-                  )
-                  persistenceRuntimeConnector()
-                  relationshipPath(
-                    verb: "registers startup",
-                    targetID: "persistence"
-                  )
-                  Spacer().frame(height: 12)
-                  relationshipPath(
-                    verb: "reads and writes",
-                    targetID: "data",
-                    targetAtFarRight: true
-                  )
-                }
-              }
-
-              HStack(spacing: 10) {
-                Text("Changes to any component above are recorded as")
-                  .font(.callout)
-                  .foregroundStyle(.secondary)
-                connectedArrow("")
-                referenceCard("history")
-                  .frame(width: 310)
-              }
-            }
-            .padding(16)
-            .background(
-              Color(nsColor: .windowBackgroundColor).opacity(0.6),
-              in: RoundedRectangle(cornerRadius: 18)
-            )
-            .overlay {
-              RoundedRectangle(cornerRadius: 18)
-                .stroke(Color.secondary.opacity(0.2), style: StrokeStyle(lineWidth: 1, dash: [5]))
+            HStack(spacing: 12) {
+              referenceCard("mac")
+              referenceCard("source")
             }
 
-            VStack(alignment: .leading, spacing: 12) {
-              Text("How HAL turns observations into guidance")
+            Divider()
+
+            VStack(alignment: .leading, spacing: 4) {
+              Text("Inside the machine: one software example")
                 .font(.headline)
               Text(
-                "This is HAL’s review workflow, not another set of components inside the computer."
+                "The single Software card below is one installed item. Every connected line represents one specific relationship."
               )
               .font(.caption)
               .foregroundStyle(.secondary)
+            }
 
-              HStack(spacing: 10) {
-                workflowStep(1, itemID: "evidence")
-                Image(systemName: "chevron.right").foregroundStyle(.tertiary)
-                workflowStep(2, itemID: "findings")
-                Image(systemName: "chevron.right").foregroundStyle(.tertiary)
-                workflowStep(3, itemID: "decisions")
+            HStack(alignment: .center, spacing: 0) {
+              softwareHubCard()
+                .frame(width: 245)
+
+              VStack(spacing: 0) {
+                relationshipPath(
+                  verb: "launches",
+                  targetID: "runtime",
+                  followOnVerb: "consumes",
+                  followOnTargetID: "resources"
+                )
+                persistenceRuntimeConnector()
+                relationshipPath(
+                  verb: "registers startup",
+                  targetID: "persistence"
+                )
+                Spacer().frame(height: 12)
+                relationshipPath(
+                  verb: "reads and writes",
+                  targetID: "data",
+                  targetAtFarRight: true
+                )
               }
             }
-            .padding(16)
-            .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 18))
-            .overlay {
-              RoundedRectangle(cornerRadius: 18).stroke(Color.secondary.opacity(0.16))
+
+            HStack(spacing: 10) {
+              Text("Changes to any component above are recorded as")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+              connectedArrow("")
+              referenceCard("history")
+                .frame(width: 310)
             }
+          }
+          .padding(16)
+          .background(
+            Color(nsColor: .windowBackgroundColor).opacity(0.6),
+            in: RoundedRectangle(cornerRadius: 18)
+          )
+          .overlay {
+            RoundedRectangle(cornerRadius: 18)
+              .stroke(Color.secondary.opacity(0.2), style: StrokeStyle(lineWidth: 1, dash: [5]))
+          }
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text("How HAL turns observations into guidance")
+              .font(.headline)
+            Text(
+              "This is HAL’s review workflow, not another set of components inside the computer."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            HStack(spacing: 10) {
+              workflowStep(1, itemID: "evidence")
+              Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+              workflowStep(2, itemID: "findings")
+              Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+              workflowStep(3, itemID: "decisions")
+            }
+          }
+          .padding(16)
+          .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 18))
+          .overlay {
+            RoundedRectangle(cornerRadius: 18).stroke(Color.secondary.opacity(0.16))
+          }
         }
         .padding(22)
         .animation(.spring(response: 0.38, dampingFraction: 0.82), value: selectedID)
@@ -1279,7 +1493,9 @@ private struct SystemReferenceView: View {
           }
           .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
           .padding(10)
-          .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10))
+          .background(
+            Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 10)
+          )
           .overlay {
             RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.18))
           }

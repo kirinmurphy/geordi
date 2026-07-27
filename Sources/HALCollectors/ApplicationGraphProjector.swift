@@ -27,7 +27,10 @@ public struct ApplicationGraphProjector: Sendable {
         )
       )
     }
-    let completedAt = output.run.completedAt
+    let completedAt = [output.run.completedAt, signatures?.run.completedAt]
+      .compactMap { $0 }
+      .max()
+    let startedAt = min(output.run.startedAt, signatures?.run.startedAt ?? output.run.startedAt)
     var collectorRuns = [output.run]
     if let signatures {
       collectorRuns.append(signatures.run)
@@ -47,7 +50,7 @@ public struct ApplicationGraphProjector: Sendable {
       scan: ScanContext(
         id: scanID,
         environment: .liveReadOnly,
-        startedAt: output.run.startedAt,
+        startedAt: startedAt,
         completedAt: completedAt,
         collectorRuns: collectorRuns
       )

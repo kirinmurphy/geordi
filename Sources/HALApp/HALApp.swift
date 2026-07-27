@@ -1,4 +1,6 @@
 import AppKit
+import HALCollectors
+import HALDataSource
 import HALDomain
 import HALFixtures
 import HALVisualization
@@ -12,9 +14,18 @@ struct HALApp: App {
     WindowGroup {
       ContentView(
         configuration: .phaseZero,
-        snapshotProvider: SyntheticGraphProvider(
+        syntheticProvider: SyntheticGraphProvider(
           fixtureID: AppConfiguration.phaseZero.initialFixtureID
-        )
+        ),
+        preferences: UserDefaultsDataSourcePreferenceStore(),
+        userDataStore: try? HALUserDataStore.applicationSupport(),
+        liveSnapshot: {
+          let collectorConfiguration = try ApplicationCollectorConfiguration.bundled()
+          return try ApplicationInventorySnapshotProvider(
+            scanID: ScanID("live-\(UUID().uuidString)"),
+            configuration: collectorConfiguration
+          ).snapshot()
+        }
       )
       .frame(minWidth: 1_080, minHeight: 680)
     }
@@ -48,8 +59,16 @@ final class AppModel {
   }
 
   let configuration: AppConfiguration
-  let scanContext: ScanContext
+  private let syntheticProvider: any GraphSnapshotProvider
+  private let preferences: any DataSourcePreferenceStore
+  private let userDataStore: HALUserDataStore?
+  private let liveSnapshot: @Sendable () throws -> GraphSnapshot
   var fixture: SystemGraph
+  var scanContext: ScanContext
+  var dataSourceMode: DataSourceMode
+  var isCollecting = false
+  var collectionError: String?
+  var welcomeDismissed: Bool
   var destination: Destination = .overview
   var selection: GraphSelection?
   var focusedEntity: EntityID?
@@ -59,11 +78,108 @@ final class AppModel {
   var referencePresented = false
   var entityTypeReferencePresented: EntityType?
 
-  init(configuration: AppConfiguration, snapshotProvider: any GraphSnapshotProvider) {
+  init(
+    configuration: AppConfiguration,
+    syntheticProvider: any GraphSnapshotProvider,
+    preferences: any DataSourcePreferenceStore,
+    userDataStore: HALUserDataStore?,
+    liveSnapshot: @escaping @Sendable () throws -> GraphSnapshot
+  ) {
     self.configuration = configuration
-    let snapshot = snapshotProvider.snapshot()
+    self.syntheticProvider = syntheticProvider
+    self.preferences = preferences
+    self.userDataStore = userDataStore
+    self.liveSnapshot = liveSnapshot
+    let initialMode = preferences.mode()
+    dataSourceMode = initialMode
+    welcomeDismissed = preferences.syntheticWelcomeDismissed()
+    let snapshot =
+      initialMode == .linkedMac
+      ? ((try? userDataStore?.loadSnapshot()) ?? nil) ?? Self.emptyLinkedSnapshot()
+      : syntheticProvider.snapshot()
     fixture = snapshot.graph
     scanContext = snapshot.scan
+  }
+
+  var isSynthetic: Bool { dataSourceMode == .synthetic }
+
+  private static func emptyLinkedSnapshot() -> GraphSnapshot {
+    let startedAt = Date()
+    return GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(
+          id: "live-applications-pending",
+          name: "This Mac",
+          summary: "Waiting for the first read-only application inventory."
+        ),
+        entities: [],
+        relationships: []
+      ),
+      scan: ScanContext(
+        id: "live-pending",
+        environment: .liveReadOnly,
+        startedAt: startedAt
+      )
+    )
+  }
+
+  func resumeLinkedMacIfNeeded() {
+    guard dataSourceMode == .linkedMac else { return }
+    refreshLiveData()
+  }
+
+  func linkToMac() {
+    guard dataSourceMode == .synthetic else { return }
+    refreshLiveData(linkOnSuccess: true)
+  }
+
+  func refreshLiveData(linkOnSuccess: Bool = false) {
+    guard !isCollecting else { return }
+    isCollecting = true
+    collectionError = nil
+    let collect = liveSnapshot
+    Task {
+      do {
+        let snapshot = try await Task.detached { try collect() }.value
+        try userDataStore?.saveSnapshot(snapshot)
+        fixture = snapshot.graph
+        scanContext = snapshot.scan
+        dataSourceMode = .linkedMac
+        preferences.setMode(.linkedMac)
+        navigate(to: .overview)
+      } catch {
+        collectionError = "HAL could not read this Mac: \(error.localizedDescription)"
+        if linkOnSuccess {
+          dataSourceMode = .synthetic
+          preferences.setMode(.synthetic)
+        }
+      }
+      isCollecting = false
+    }
+  }
+
+  func dismissWelcome() {
+    welcomeDismissed = true
+    preferences.setSyntheticWelcomeDismissed(true)
+  }
+
+  func unlinkMac(backupURL: URL? = nil) throws {
+    if let backupURL {
+      guard let userDataStore else {
+        throw HALUserDataStoreError.noCompiledData
+      }
+      try userDataStore.exportBackup(to: backupURL)
+    }
+    try userDataStore?.reset()
+    preferences.setMode(.synthetic)
+    preferences.setSyntheticWelcomeDismissed(false)
+    dataSourceMode = .synthetic
+    welcomeDismissed = false
+    collectionError = nil
+    let snapshot = syntheticProvider.snapshot()
+    fixture = snapshot.graph
+    scanContext = snapshot.scan
+    navigate(to: .overview)
   }
 
   var layout: LayoutResult {

@@ -47,31 +47,31 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 
 ## Priority 2: data-source lifecycle
 
-- [ ] Persist `synthetic` versus `linkedMac` as a user preference.
-- [ ] Keep first launch synthetic and guarantee it performs no real collection.
-- [ ] Add **Link to your Mac** to the fictional-data banner.
-- [ ] Add a homepage welcome prompt above alerts explaining HAL and the fictional
+- [x] Persist `synthetic` versus `linkedMac` as a user preference.
+- [x] Keep first launch synthetic and guarantee it performs no real collection.
+- [x] Add **Link to your Mac** to the fictional-data banner.
+- [x] Add a homepage welcome prompt above alerts explaining HAL and the fictional
   profile.
-- [ ] Allow both onboarding prompts to be dismissed while remaining synthetic.
-- [ ] Add an obscure but discoverable data-source control in the sidebar footer.
-- [ ] When linked, label collection time, freshness, partial coverage, and
+- [x] Allow both onboarding prompts to be dismissed while remaining synthetic.
+- [x] Add an obscure but discoverable data-source control in the sidebar footer.
+- [x] When linked, label collection time, freshness, partial coverage, and
   permissions.
-- [ ] Define refresh and error behavior without silently falling back from live
+- [x] Define refresh and error behavior without silently falling back from live
   to synthetic data.
 
 ## Priority 3: unlink, backup, and reset
 
-- [ ] Inventory every persisted user-data location before implementing reset.
-- [ ] Define an export/backup format and explicit destination selection.
-- [ ] Define what preferences survive unlinking, if anything.
-- [ ] Add **Unlink this Mac** in the sidebar footer when linked.
-- [ ] Offer backup, delete, or cancel before unlinking.
-- [ ] Revalidate exact reset targets and refuse broad or unexpected paths.
-- [ ] Add temporary-root integration tests for backup, interruption, symlinks,
+- [x] Inventory every persisted user-data location before implementing reset.
+- [x] Define an export/backup format and explicit destination selection.
+- [x] Define what preferences survive unlinking, if anything.
+- [x] Add **Unlink this Mac** in the sidebar footer when linked.
+- [x] Offer backup, delete, or cancel before unlinking.
+- [x] Revalidate exact reset targets and refuse broad or unexpected paths.
+- [x] Add temporary-root integration tests for atomic backup, symlinks,
   target replacement, and complete reset.
-- [ ] After confirmed unlink, remove compiled user data and return to the
+- [x] After confirmed unlink, remove compiled user data and return to the
   deterministic first-launch profile.
-- [ ] Do not add real deletion until storage, backup, and safety tests are
+- [x] Do not add real deletion until storage, backup, and safety tests are
   complete.
 
 ## Priority 4: real application atlas
@@ -85,7 +85,7 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 - [ ] Add point-in-time process collection.
 - [ ] Add deterministic process-to-application resolution.
 - [ ] Preserve unmatched and inaccessible process records.
-- [ ] Add explicit manual refresh.
+- [x] Add explicit manual refresh.
 - [ ] Add redacted diagnostic export.
 
 ## Priority 5: history, storage, and incidents
@@ -101,6 +101,6 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 
 ## Current next step
 
-Define the schema migration/version policy and a schema-validated profile
-catalog, then continue converting code-defined synthetic fixtures. Do this
-before adding the process collector or wiring live mode into the UI.
+Complete the schema-validated synthetic profile catalog and remaining fixture
+migration. Then add receipt/provenance and process collectors without expanding
+live UI claims beyond the evidence collected.

@@ -9,6 +9,7 @@ let package = Package(
     .library(name: "HALDomain", targets: ["HALDomain"]),
     .library(name: "HALManifestKit", targets: ["HALManifestKit"]),
     .library(name: "HALCollectors", targets: ["HALCollectors"]),
+    .library(name: "HALDataSource", targets: ["HALDataSource"]),
     .library(name: "HALProfileSchema", targets: ["HALProfileSchema"]),
     .library(name: "HALFixtures", targets: ["HALFixtures"]),
     .library(name: "HALVisualization", targets: ["HALVisualization"]),
@@ -34,6 +35,7 @@ let package = Package(
       dependencies: ["HALDomain", "HALManifestKit"],
       resources: [.process("Resources")]
     ),
+    .target(name: "HALDataSource", dependencies: ["HALDomain"]),
     .target(
       name: "HALProfileSchema",
       dependencies: [
@@ -50,13 +52,19 @@ let package = Package(
     .target(name: "HALVisualization", dependencies: ["HALDomain"]),
     .executableTarget(
       name: "HALApp",
-      dependencies: ["HALDomain", "HALFixtures", "HALVisualization"]
+      dependencies: [
+        "HALCollectors", "HALDataSource", "HALDomain", "HALFixtures", "HALVisualization",
+      ]
     ),
     .executableTarget(
       name: "HALFixtureValidator",
       dependencies: ["HALDomain", "HALFixtures"]
     ),
     .testTarget(name: "HALDomainTests", dependencies: ["HALDomain"]),
+    .testTarget(
+      name: "HALDataSourceTests",
+      dependencies: ["HALDataSource", "HALDomain"]
+    ),
     .testTarget(
       name: "HALProfileSchemaTests",
       dependencies: ["HALDomain", "HALProfileSchema"]
