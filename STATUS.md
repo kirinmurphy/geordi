@@ -89,7 +89,7 @@ Milestone 0 — repository and interactive concept.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 46 deterministic tests plus fixture and bundle validation
+- Test harness: 51 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -114,9 +114,10 @@ Milestone 0 — repository and interactive concept.
 
 The app launches with the deterministic synthetic provider and performs no
 machine collection until the user explicitly links the Mac. Linked mode reads
-manifest-scoped application bundle metadata and static code-signing facts,
-persists the normalized snapshot, and refreshes it. Process inventory,
-provenance adapters, SQLite, and distribution remain unimplemented. Their
+manifest-scoped application bundle metadata, static code-signing facts, App
+Store receipt presence, and redacted download-origin hosts, then persists and
+refreshes the normalized snapshot. Installer-package and Homebrew provenance,
+process inventory, SQLite, and distribution remain unimplemented. Their
 sequencing is documented in `REAL_DATA_ASSESSMENT.md`.
 
 ## How to run
@@ -136,8 +137,10 @@ make verify
 
 ## Recommended next task
 
-Run the revised evaluation below. Do not begin Phase 1 until the contextual
-synthetic interaction is directionally useful.
+Address the linked-Mac test-drive stabilization checklist in
+`REAL_DATA_REFACTOR_BACKLOG.md`, beginning with the initial-link overlay,
+post-link handoff, refresh feedback, and default exclusion of confidently
+identified macOS system applications.
 
 ## Product evaluation checklist
 
@@ -157,6 +160,32 @@ synthetic interaction is directionally useful.
 11. Open **How this map works**, select several concepts, and confirm their
     explanations appear without changing the current page.
 
+## Linked-Mac test-drive checklist
+
+Recorded outcomes use `[x]`; unchecked items still need evaluation.
+
+- [x] First launch stayed on the fictional profile until **Link to your Mac**
+  was selected.
+- [x] The link action exposed a `Linking…` pending state.
+- [x] Linking completed and displayed a read-only application inventory.
+- [x] The completion notice did not provide a clear next step.
+- [x] **Refresh Now** was ambiguous about whether it repeated collection or
+  enabled missing associated-data capabilities.
+- [x] An unchanged refresh appeared to do nothing.
+- [x] The linked list mixed system and non-system applications.
+- [ ] Inspect several application details and confirm paths, signing facts,
+  App Store receipt presence, and redacted download origins are understandable.
+- [ ] Relaunch HAL and confirm the cached linked snapshot appears before the
+  background refresh completes.
+- [ ] Disconnect the network and confirm collection remains local and usable.
+- [ ] Exercise refresh failure and confirm the last successful snapshot remains
+  visible.
+- [ ] Exercise unlink cancel, export-and-unlink, and delete-and-unlink.
+- [ ] Confirm unlink restores the deterministic fictional profile and does not
+  modify applications or unrelated files.
+- [ ] Record representative system, non-system, and uncertain applications for
+  classification-rule tests without committing private machine paths.
+
 ## Known issues and limitations
 
 - The first interface failed product validation. The contextual-atlas revision
@@ -168,6 +197,14 @@ synthetic interaction is directionally useful.
   checklist rather than a full XCUITest runner.
 - HAL currently persists and exports only its compiled live snapshot; it has no
   historical database, notification layer, or machine cleanup actions.
+- Initial linking exposes the rest of the interface without explaining its
+  collection stages or offering cancellation.
+- The post-link coverage panel presents refresh as the primary action, even
+  though refresh only reruns the same collectors and does not add the
+  unavailable storage, performance, persistence, or ownership capabilities.
+- A successful unchanged refresh has no salient completion acknowledgement.
+- Linked application inventory currently mixes system and non-system
+  applications without a default scope filter.
 
 ## Known risks
 

@@ -5,6 +5,69 @@ code-defined fixtures with schema-validated profiles and adding explicit real
 Mac linking. Architectural rationale lives in `REAL_DATA_ASSESSMENT.md`;
 field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 
+## Test-drive stabilization: current priority
+
+These items were recorded from the first linked-Mac product test on
+2026-07-27. Complete them before expanding collection breadth.
+
+### Initial linking flow
+
+- [ ] Replace the banner-only `Linking…` state with a focused setup overlay
+  that explains HAL is performing read-only collection.
+- [ ] Disable controls whose meaning depends on the selected data source while
+  the initial link is unresolved.
+- [ ] Keep unlink, destructive reset, and ordinary refresh unavailable during
+  initial linking.
+- [ ] Offer **Cancel and keep exploring the fictional Mac**, not **Undo**:
+  linked mode is not persisted until collection succeeds, so there is no
+  committed change to undo.
+- [ ] Make initial collection cooperatively cancellable and ignore late results
+  from a cancelled link.
+- [ ] Show a compact stage indicator:
+  **Connect → Observe applications → Build your atlas → Ready**.
+- [ ] Describe which facts are being read and reiterate that no applications or
+  machine data are changed.
+- [ ] On success, land on a clear completion state with a primary
+  **Explore installed applications** action.
+- [ ] On failure, remain synthetic and show a retryable, field-path-aware or
+  collector-aware explanation.
+
+### Linked completion and refresh
+
+- [ ] Replace the green “Read-only application inventory” notification with a
+  completion/coverage panel that answers:
+  what finished, what HAL learned, what remains unavailable, and what the user
+  can explore next.
+- [ ] Remove **Refresh Now** as the primary post-link action. It is not the next
+  step in setup and currently suggests that missing capabilities will be
+  collected.
+- [ ] Rename manual refresh to **Check this Mac again** and explain that it
+  reruns the same enabled read-only collectors.
+- [ ] Keep an existing linked snapshot interactive during manual refresh; use
+  inline progress rather than a blocking overlay.
+- [ ] Show an explicit completion acknowledgement even when refreshed data is
+  unchanged, including “Checked just now,” duration, and collector coverage.
+- [ ] Show whether a refresh changed the displayed snapshot.
+- [ ] Add model/UI tests for initial-link progress, cancellation, successful
+  handoff, unchanged refresh, changed refresh, and refresh failure with retained
+  data.
+
+### Useful application scope
+
+- [ ] Default the linked application list to **Apps outside macOS**, with a
+  visible option to include system applications.
+- [ ] Define the classification through a versioned manifest using multiple
+  evidence fields such as protected system location and platform signature;
+  do not hardcode application instances or paths in presentation code.
+- [ ] Label uncertain cases honestly. Folder location alone must not become an
+  “installed by you” claim.
+- [ ] Add counts for visible, hidden system, and uncertain applications.
+- [ ] Preserve search access to hidden system applications when the user
+  explicitly includes them.
+- [ ] Later add a separate **Noteworthy activity** section only after process,
+  storage, or incident observations exist; do not rank applications using
+  synthetic or unsupported metrics in live mode.
+
 ## Priority 0: composition and schema foundation
 
 - [x] Add repository rules for manifest-driven composition and synthetic/live
@@ -105,6 +168,8 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 
 ## Current next step
 
-Complete the schema-validated synthetic profile catalog and remaining fixture
-migration. Then add receipt/provenance and process collectors without expanding
-live UI claims beyond the evidence collected.
+Stabilize the initial linked-Mac workflow and default application scope using
+the test-drive checklist above. Fix the dead-end completion and no-feedback
+refresh behavior before adding process collection. Then add the point-in-time
+process collector and deterministic application resolution without expanding
+live UI claims beyond collected evidence.
