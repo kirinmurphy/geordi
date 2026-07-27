@@ -106,7 +106,17 @@ struct ApplicationBundleCollectorTests {
     let provider = ApplicationInventorySnapshotProvider(
       scanID: "manual-scan",
       roots: [ApplicationSearchRoot(url: root, required: true)],
+      provenanceConfiguration: ApplicationProvenanceConfiguration(
+        adapters: [
+          ApplicationProvenanceAdapterConfiguration(
+            id: "test-receipt",
+            kind: .appStoreReceipt,
+            displayLabel: "Test receipt"
+          )
+        ]
+      ),
       signatureInspector: StubProviderSignatureInspector(),
+      provenanceInspector: StubProviderProvenanceInspector(),
       clock: FixedClock(timestamp)
     )
 
@@ -157,5 +167,21 @@ private struct StubProviderSignatureInspector: CodeSignatureInspecting {
       signingIdentifier: "com.example.application",
       teamIdentifier: "TEAM123"
     )
+  }
+}
+
+private struct StubProviderProvenanceInspector: ApplicationProvenanceInspecting {
+  func inspectApplication(
+    at url: URL,
+    adapters: [ApplicationProvenanceAdapterConfiguration]
+  ) -> [ApplicationProvenanceFact] {
+    [
+      ApplicationProvenanceFact(
+        kind: .appStoreReceipt,
+        displayLabel: "Test receipt",
+        status: .absent,
+        source: "Test"
+      )
+    ]
   }
 }

@@ -82,6 +82,10 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 - [x] Add static signing observation and validation.
 - [x] Select application collector roots from manifests.
 - [ ] Add receipt and provenance adapters selected through manifests.
+  - [x] Observe App Store receipt presence without retaining receipt contents.
+  - [x] Observe retained download origins with URL paths redacted to hostnames.
+  - [ ] Add installer-package receipt correlation.
+  - [ ] Add Homebrew provenance.
 - [ ] Add point-in-time process collection.
 - [ ] Add deterministic process-to-application resolution.
 - [ ] Preserve unmatched and inaccessible process records.

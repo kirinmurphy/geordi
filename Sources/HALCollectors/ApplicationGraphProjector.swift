@@ -7,10 +7,16 @@ public struct ApplicationGraphProjector: Sendable {
   public func snapshot(
     scanID: ScanID,
     output: CollectorOutput<ApplicationBundleValue>,
-    signatures: CollectorOutput<ApplicationSignatureValue>? = nil
+    signatures: CollectorOutput<ApplicationSignatureValue>? = nil,
+    provenance: CollectorOutput<ApplicationProvenanceValue>? = nil
   ) -> GraphSnapshot {
     let signaturesByPath = Dictionary(
       uniqueKeysWithValues: (signatures?.observations ?? []).map {
+        ($0.value.applicationPath, $0.value)
+      }
+    )
+    let provenanceByPath = Dictionary(
+      uniqueKeysWithValues: (provenance?.observations ?? []).map {
         ($0.value.applicationPath, $0.value)
       }
     )
@@ -23,17 +29,30 @@ public struct ApplicationGraphProjector: Sendable {
         summary: "An application bundle observed on this Mac.",
         details: details(
           for: value,
-          signature: signaturesByPath[value.path]
+          signature: signaturesByPath[value.path],
+          provenance: provenanceByPath[value.path]
         )
       )
     }
-    let completedAt = [output.run.completedAt, signatures?.run.completedAt]
-      .compactMap { $0 }
-      .max()
-    let startedAt = min(output.run.startedAt, signatures?.run.startedAt ?? output.run.startedAt)
+    let completedAt = [
+      output.run.completedAt,
+      signatures?.run.completedAt,
+      provenance?.run.completedAt,
+    ]
+    .compactMap { $0 }
+    .max()
+    let startedAt =
+      [
+        output.run.startedAt,
+        signatures?.run.startedAt,
+        provenance?.run.startedAt,
+      ].compactMap { $0 }.min() ?? output.run.startedAt
     var collectorRuns = [output.run]
     if let signatures {
       collectorRuns.append(signatures.run)
+    }
+    if let provenance {
+      collectorRuns.append(provenance.run)
     }
     let graph = SystemGraph(
       metadata: FixtureMetadata(
@@ -66,7 +85,8 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func details(
     for value: ApplicationBundleValue,
-    signature: ApplicationSignatureValue?
+    signature: ApplicationSignatureValue?,
+    provenance: ApplicationProvenanceValue?
   ) -> [Detail] {
     var details = [Detail("Path", value.path)]
     if let bundleIdentifier = value.bundleIdentifier {
@@ -101,6 +121,25 @@ public struct ApplicationGraphProjector: Sendable {
         details.append(Detail("Platform binary", "Yes"))
       }
     }
+    for fact in provenance?.facts ?? [] {
+      details.append(
+        Detail(
+          fact.displayLabel,
+          provenanceDescription(for: fact)
+        )
+      )
+    }
     return details
+  }
+
+  private func provenanceDescription(for fact: ApplicationProvenanceFact) -> String {
+    switch fact.status {
+    case .present:
+      fact.detail ?? "Present"
+    case .absent:
+      "Not retained"
+    case .unreadable:
+      "Unavailable"
+    }
   }
 }

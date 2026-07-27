@@ -101,3 +101,9 @@ adjacent `application-search-roots.schema.json`. System roots must be absolute.
 User roots use the explicit `$USER_HOME/` token and cannot contain parent-path
 traversal. Tests may still inject temporary roots directly without reading the
 machine-wide defaults.
+
+Application provenance adapters are selected and labeled by
+`HALCollectors/Resources/application-provenance-adapters.json`, validated by
+its adjacent versioned schema. The current adapters observe App Store receipt
+presence and retained download-origin metadata. Adapter manifests select
+bounded collector implementations; they cannot add arbitrary executable code.

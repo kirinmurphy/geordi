@@ -5,12 +5,16 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let scanID: ScanID
   public let collector: ApplicationBundleCollector
   public let signatureCollector: ApplicationSignatureCollector
+  public let provenanceCollector: ApplicationProvenanceCollector
   public let projector: ApplicationGraphProjector
 
   public init(
     scanID: ScanID,
     roots: [ApplicationSearchRoot],
+    provenanceConfiguration: ApplicationProvenanceConfiguration,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
+    provenanceInspector: any ApplicationProvenanceInspecting =
+      FileSystemApplicationProvenanceInspector(),
     clock: any HALClock = SystemClock()
   ) {
     self.scanID = scanID
@@ -19,20 +23,30 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       inspector: signatureInspector,
       clock: clock
     )
+    provenanceCollector = ApplicationProvenanceCollector(
+      configuration: provenanceConfiguration,
+      inspector: provenanceInspector,
+      clock: clock
+    )
     projector = ApplicationGraphProjector()
   }
 
   public init(
     scanID: ScanID,
     configuration: ApplicationCollectorConfiguration,
+    provenanceConfiguration: ApplicationProvenanceConfiguration,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
+    provenanceInspector: any ApplicationProvenanceInspecting =
+      FileSystemApplicationProvenanceInspector(),
     clock: any HALClock = SystemClock()
   ) throws {
     try self.init(
       scanID: scanID,
       roots: configuration.searchRoots(userHome: userHome),
+      provenanceConfiguration: provenanceConfiguration,
       signatureInspector: signatureInspector,
+      provenanceInspector: provenanceInspector,
       clock: clock
     )
   }
@@ -43,10 +57,15 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       scanID: scanID,
       applications: applications.observations
     )
+    let provenance = provenanceCollector.collect(
+      scanID: scanID,
+      applications: applications.observations
+    )
     return projector.snapshot(
       scanID: scanID,
       output: applications,
-      signatures: signatures
+      signatures: signatures,
+      provenance: provenance
     )
   }
 }

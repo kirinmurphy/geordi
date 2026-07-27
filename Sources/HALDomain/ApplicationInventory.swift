@@ -59,3 +59,46 @@ public struct ApplicationSignatureValue: Hashable, Codable, Sendable {
     self.statusCode = statusCode
   }
 }
+
+public enum ApplicationProvenanceKind: String, Hashable, Codable, Sendable {
+  case appStoreReceipt
+  case downloadOrigin
+}
+
+public enum ApplicationProvenanceStatus: String, Hashable, Codable, Sendable {
+  case present
+  case absent
+  case unreadable
+}
+
+public struct ApplicationProvenanceFact: Hashable, Codable, Sendable {
+  public let kind: ApplicationProvenanceKind
+  public let displayLabel: String
+  public let status: ApplicationProvenanceStatus
+  public let source: String
+  public let detail: String?
+
+  public init(
+    kind: ApplicationProvenanceKind,
+    displayLabel: String,
+    status: ApplicationProvenanceStatus,
+    source: String,
+    detail: String? = nil
+  ) {
+    self.kind = kind
+    self.displayLabel = displayLabel
+    self.status = status
+    self.source = source
+    self.detail = detail
+  }
+}
+
+public struct ApplicationProvenanceValue: Hashable, Codable, Sendable {
+  public let applicationPath: String
+  public let facts: [ApplicationProvenanceFact]
+
+  public init(applicationPath: String, facts: [ApplicationProvenanceFact]) {
+    self.applicationPath = applicationPath
+    self.facts = facts
+  }
+}

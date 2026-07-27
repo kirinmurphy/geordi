@@ -57,3 +57,14 @@ and uncataloged bundled profiles.
 
 Reason: this makes the catalog the complete composition source of truth while
 preventing a newly committed fixture from silently escaping build validation.
+
+## 2026-07-27: download provenance is redacted before normalization
+
+The download-origin adapter reads the existing
+`com.apple.metadata:kMDItemWhereFroms` extended attribute, but retains only
+unique hostnames. URL paths, queries, fragments, and the raw attribute are not
+placed in observations or compiled snapshots. Missing metadata is represented
+as not retained and does not imply that an application was a web download.
+
+The App Store adapter records only whether the conventional bundle receipt file
+exists. It does not read or retain receipt contents.

@@ -101,8 +101,10 @@ Milestone 0 — repository and interactive concept.
 - SQLite schema: not created
 - Real collectors: bounded read-only application-bundle inventory implemented
   with static code-signing validation behind an explicit live snapshot provider;
-  search roots are selected through a validated declarative manifest, and the
-  provider is selected only after explicit linking
+  search roots and provenance adapters are selected through validated
+  declarative manifests; App Store receipt presence and redacted download-origin
+  hosts are projected into the live atlas, and the provider is selected only
+  after explicit linking
 - Data-source lifecycle: first launch is synthetic; linking, cached live
   startup, manual refresh, timestamp/freshness presentation, atomic snapshot
   backup, guarded unlink/reset, and return to the fictional profile are

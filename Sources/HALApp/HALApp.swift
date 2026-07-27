@@ -21,9 +21,11 @@ struct HALApp: App {
         userDataStore: try? HALUserDataStore.applicationSupport(),
         liveSnapshot: {
           let collectorConfiguration = try ApplicationCollectorConfiguration.bundled()
+          let provenanceConfiguration = try ApplicationProvenanceConfiguration.bundled()
           return try ApplicationInventorySnapshotProvider(
             scanID: ScanID("live-\(UUID().uuidString)"),
-            configuration: collectorConfiguration
+            configuration: collectorConfiguration,
+            provenanceConfiguration: provenanceConfiguration
           ).snapshot()
         }
       )

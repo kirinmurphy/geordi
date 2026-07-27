@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "adapters": [
+    {
+      "id": "app-store-receipt",
+      "kind": "appStoreReceipt",
+      "displayLabel": "App Store receipt"
+    },
+    {
+      "id": "download-origin",
+      "kind": "downloadOrigin",
+      "displayLabel": "Download origin"
+    }
+  ]
+}
