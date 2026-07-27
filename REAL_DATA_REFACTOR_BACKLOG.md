@@ -10,6 +10,56 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 These items were recorded from the first linked-Mac product test on
 2026-07-27. Complete them before expanding collection breadth.
 
+### Relational relevance and progressive disclosure
+
+- [ ] Treat the primary graph as a curated explanation of important current
+  relationships, not a complete inventory visualization.
+- [ ] Add a schema-validated display-policy manifest with per-context node
+  budgets, relationship priorities, confidence floors, and grouping rules.
+  Presentation thresholds must not become Swift literals.
+- [ ] Prioritize relationships that answer:
+  **What is active? Why is it active? What data is meaningfully associated?
+  What changed or deserves attention?**
+- [ ] Keep observed facts even when they are omitted from the primary graph.
+  Filtering presentation must never discard collector output or evidence.
+- [ ] Put complete signing, provenance, entitlement, component, and path
+  metadata behind an accessible **Technical details** disclosure.
+- [ ] Summarize repetitive relationships as groups such as “5 support
+  locations” or “8 helper components,” expanding them only on request.
+- [ ] Surface low-confidence or unmatched records when they affect the
+  explanation, but avoid scattering ordinary uncertain candidates across the
+  default map.
+- [ ] Never rank an application as noteworthy without an observed signal.
+  Installation alone is not a warning, and a large component count is not a
+  problem.
+- [ ] Keep “actionable” read-only for this milestone: provide a clear next
+  investigation or explanation, not cleanup, termination, disabling, or other
+  machine-changing controls.
+
+#### Collector order under this policy
+
+1. [ ] Point-in-time processes and deterministic application resolution:
+   explain what is running now, helper/parent relationships, unmatched
+   processes, memory, and observation limitations.
+2. [ ] Persistence declarations and process correlation:
+   explain why something starts automatically or remains active.
+3. [ ] Associated-location relevance:
+   promote strong containers and meaningful support/configuration locations;
+   group ordinary cache/log candidates and hide weak absent candidates.
+4. [ ] Resource sampling and incident qualification:
+   identify observed outliers only after sampling semantics and overhead are
+   tested.
+5. [ ] Installer-package and Homebrew provenance:
+   explain how software arrived and connect external helpers when evidence is
+   useful.
+6. [ ] Embedded component inventory:
+   collect helpers, XPC services, login items, plug-ins, and frameworks, but
+   promote only components that are running, persistent, separately signed, or
+   otherwise explanatory.
+7. [ ] Entitlements and declared capabilities:
+   use them to resolve containers and explain specific relationships; keep the
+   complete entitlement list in technical details.
+
 ### Initial linking flow
 
 - [ ] Replace the banner-only `Linking…` state with a focused setup overlay

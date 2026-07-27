@@ -85,3 +85,21 @@ present locations become graph nodes.
 
 Group containers are deferred until HAL collects team/group identifiers.
 Guessing them from the application bundle identifier would overstate ownership.
+
+## 2026-07-27: the primary atlas is relevance-bounded
+
+Collector completeness and graph prominence are separate concerns. HAL may
+retain ordinary components, paths, negative observations, and technical
+metadata without rendering each record as a default graph node.
+
+The primary atlas prioritizes observed relationships that explain current
+activity, startup behavior, meaningful data associations, qualified resource
+outliers, and uncertainty that changes the explanation. Repetitive ordinary
+records are grouped, and deep signing, provenance, entitlement, component, and
+path metadata remains accessible through progressive disclosure.
+
+Display budgets, relationship priorities, confidence floors, and grouping
+rules must be schema-validated manifest resources. They cannot silently discard
+observations, evidence, unmatched records, permission failures, or uncertainty.
+For this read-only milestone, “actionable” means a clear next investigation or
+explanation, not a machine-changing control.

@@ -140,10 +140,11 @@ make verify
 
 ## Recommended next task
 
-Address the linked-Mac test-drive stabilization checklist in
-`REAL_DATA_REFACTOR_BACKLOG.md`, beginning with the initial-link overlay,
-post-link handoff, refresh feedback, and default exclusion of confidently
-identified macOS system applications.
+Implement point-in-time process collection and deterministic
+process-to-application resolution together with the relevance-bounded
+presentation policy in `REAL_DATA_REFACTOR_BACKLOG.md`. The main atlas should
+explain current activity without rendering every collected component or
+metadata record as a node.
 
 ## Product evaluation checklist
 
