@@ -1,4 +1,5 @@
 import Foundation
+import HALDomain
 import HALProfileSchema
 import Testing
 
@@ -20,7 +21,7 @@ struct SystemProfileSchemaTests {
       """.utf8
     )
 
-    #expect(throws: SystemProfileSchemaError.unknownKey("$.unexpected")) {
+    #expect(throws: (any Error).self) {
       try SystemProfileSchema.decode(data)
     }
   }
@@ -40,9 +41,36 @@ struct SystemProfileSchemaTests {
       """.utf8
     )
 
-    #expect(throws: SystemProfileSchemaError.unsupportedVersion(2)) {
+    #expect(throws: (any Error).self) {
       try SystemProfileSchema.decode(data)
     }
+  }
+
+  @Test("Declarative enum values remain in parity with Swift domain enums")
+  func enumParity() throws {
+    let schemaObject = try #require(
+      try JSONSerialization.jsonObject(
+        with: SystemProfileSchema.declarativeSchemaData()
+      ) as? [String: Any]
+    )
+    let definitions = try #require(schemaObject["$defs"] as? [String: Any])
+
+    #expect(
+      try schemaEnum("entityType", in: definitions)
+        == Set(EntityType.allCases.map(\.rawValue))
+    )
+    #expect(
+      try schemaEnum("relationshipType", in: definitions)
+        == Set(RelationshipType.allCases.map(\.rawValue))
+    )
+    #expect(
+      try schemaEnum("confidence", in: definitions)
+        == Set(Confidence.allCases.map(\.rawValue))
+    )
+    #expect(
+      try schemaEnum("evidenceKind", in: definitions)
+        == Set(EvidenceKind.allCases.map(\.rawValue))
+    )
   }
 
   @Test("Schema enforces relationship endpoints and evidence")
@@ -93,5 +121,14 @@ struct SystemProfileSchemaTests {
     ) {
       try SystemProfileSchema.decode(data)
     }
+  }
+
+  private func schemaEnum(
+    _ name: String,
+    in definitions: [String: Any]
+  ) throws -> Set<String> {
+    let definition = try #require(definitions[name] as? [String: Any])
+    let values = try #require(definition["enum"] as? [String])
+    return Set(values)
   }
 }

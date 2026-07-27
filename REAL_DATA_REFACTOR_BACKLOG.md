@@ -11,6 +11,9 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
   parity.
 - [x] Create one versioned `SystemProfile` schema for normalized synthetic and
   live snapshots.
+- [x] Make declarative JSON Schema the canonical structural contract; keep
+  Swift limited to generic validation, typed decoding, semantic integrity, and
+  projection.
 - [x] Define strict decoding, unknown-key rejection, semantic validation, and
   field-path diagnostics.
 - [ ] Define schema migration/version policy.
@@ -98,6 +101,6 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 
 ## Current next step
 
-Implement the centralized `SystemProfile` schema and manifest loader, then
-convert at least one synthetic fixture end-to-end. Do this before adding the
-process collector or wiring live mode into the UI.
+Define the schema migration/version policy and a schema-validated profile
+catalog, then continue converting code-defined synthetic fixtures. Do this
+before adding the process collector or wiring live mode into the UI.

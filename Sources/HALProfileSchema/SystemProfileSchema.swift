@@ -1,12 +1,24 @@
 import Foundation
 import HALDomain
+import JSONSchema
 
 public enum SystemProfileSchema {
   public static let currentVersion = 1
 
+  public static func declarativeSchemaData() throws -> Data {
+    guard
+      let schemaURL = Bundle.module.url(
+        forResource: "system-profile.schema",
+        withExtension: "json"
+      )
+    else {
+      throw SystemProfileSchemaError.schemaUnavailable
+    }
+    return try Data(contentsOf: schemaURL)
+  }
+
   public static func decode(_ data: Data) throws -> SystemProfileDocument {
-    let object = try JSONSerialization.jsonObject(with: data)
-    try validateStructure(object)
+    try validateAgainstDeclarativeSchema(data)
     let decoder = JSONDecoder()
     let document: SystemProfileDocument
     do {
@@ -18,86 +30,23 @@ public enum SystemProfileSchema {
     return document
   }
 
-  private static func validateStructure(_ object: Any) throws {
-    let root = try dictionary(object, at: "$")
-    try rejectUnknownKeys(
-      root,
-      allowed: ["schemaVersion", "id", "name", "summary", "entities", "relationships"],
-      at: "$"
-    )
-
-    for (index, value) in try array(root["entities"], at: "$.entities").enumerated() {
-      let path = "$.entities[\(index)]"
-      let entity = try dictionary(value, at: path)
-      try rejectUnknownKeys(
-        entity,
-        allowed: ["id", "type", "name", "summary", "details"],
-        at: path
-      )
-      for (detailIndex, detailValue) in try array(
-        entity["details"], at: "\(path).details", default: []
-      ).enumerated() {
-        let detailPath = "\(path).details[\(detailIndex)]"
-        try rejectUnknownKeys(
-          try dictionary(detailValue, at: detailPath),
-          allowed: ["label", "value"],
-          at: detailPath
+  private static func validateAgainstDeclarativeSchema(_ data: Data) throws {
+    do {
+      let schemaText = String(decoding: try declarativeSchemaData(), as: UTF8.self)
+      let instanceText = String(decoding: data, as: UTF8.self)
+      let schema = try Schema(instance: schemaText)
+      let result = try schema.validate(instance: instanceText)
+      guard result.isValid else {
+        throw SystemProfileSchemaError.declarativeValidation(
+          String(describing: result.errors)
         )
       }
-    }
-
-    for (index, value) in try array(root["relationships"], at: "$.relationships").enumerated() {
-      let path = "$.relationships[\(index)]"
-      let relationship = try dictionary(value, at: path)
-      try rejectUnknownKeys(
-        relationship,
-        allowed: [
-          "id", "source", "target", "type", "confidence", "explanation", "evidence",
-        ],
-        at: path
+    } catch let error as SystemProfileSchemaError {
+      throw error
+    } catch {
+      throw SystemProfileSchemaError.declarativeValidation(
+        String(describing: error)
       )
-      for (evidenceIndex, evidenceValue) in try array(
-        relationship["evidence"], at: "\(path).evidence"
-      ).enumerated() {
-        let evidencePath = "\(path).evidence[\(evidenceIndex)]"
-        try rejectUnknownKeys(
-          try dictionary(evidenceValue, at: evidencePath),
-          allowed: [
-            "id", "kind", "summary", "source", "observationID", "observedAt", "ruleID",
-            "ruleVersion",
-          ],
-          at: evidencePath
-        )
-      }
-    }
-  }
-
-  private static func dictionary(_ value: Any?, at path: String) throws -> [String: Any] {
-    guard let dictionary = value as? [String: Any] else {
-      throw SystemProfileSchemaError.expectedObject(path)
-    }
-    return dictionary
-  }
-
-  private static func array(
-    _ value: Any?,
-    at path: String,
-    default defaultValue: [Any]? = nil
-  ) throws -> [Any] {
-    if value == nil, let defaultValue { return defaultValue }
-    guard let array = value as? [Any] else {
-      throw SystemProfileSchemaError.expectedArray(path)
-    }
-    return array
-  }
-
-  private static func rejectUnknownKeys(
-    _ dictionary: [String: Any],
-    allowed: Set<String>,
-    at path: String
-  ) throws {
-    if let unknown = Set(dictionary.keys).subtracting(allowed).sorted().first {
-      throw SystemProfileSchemaError.unknownKey("\(path).\(unknown)")
     }
   }
 }
@@ -303,9 +252,8 @@ public struct ProfileEvidence: Hashable, Codable, Sendable {
 
 public enum SystemProfileSchemaError: Error, Equatable, CustomStringConvertible {
   case decoding(String)
-  case expectedObject(String)
-  case expectedArray(String)
-  case unknownKey(String)
+  case schemaUnavailable
+  case declarativeValidation(String)
   case unsupportedVersion(Int)
   case missingRequiredValue(String)
   case duplicateEntity
@@ -316,9 +264,9 @@ public enum SystemProfileSchemaError: Error, Equatable, CustomStringConvertible 
   public var description: String {
     switch self {
     case .decoding(let message): "Profile decoding failed: \(message)"
-    case .expectedObject(let path): "Expected an object at \(path)."
-    case .expectedArray(let path): "Expected an array at \(path)."
-    case .unknownKey(let path): "Unknown profile field at \(path)."
+    case .schemaUnavailable: "The declarative system-profile schema is unavailable."
+    case .declarativeValidation(let message):
+      "Profile failed declarative schema validation: \(message)"
     case .unsupportedVersion(let version): "Unsupported profile schema version \(version)."
     case .missingRequiredValue(let path): "A required value is missing at \(path)."
     case .duplicateEntity: "Profile contains a duplicate entity identifier."

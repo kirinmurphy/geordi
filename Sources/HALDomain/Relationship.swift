@@ -44,7 +44,7 @@ public enum Confidence: String, CaseIterable, Codable, Comparable, Sendable {
   }
 }
 
-public enum EvidenceKind: String, Codable, Sendable {
+public enum EvidenceKind: String, CaseIterable, Codable, Sendable {
   case observed
   case derived
   case inferred

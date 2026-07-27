@@ -14,10 +14,23 @@ let package = Package(
     .executable(name: "HALApp", targets: ["HALApp"]),
     .executable(name: "hal-fixture-validator", targets: ["HALFixtureValidator"]),
   ],
+  dependencies: [
+    .package(
+      url: "https://github.com/ajevans99/swift-json-schema",
+      from: "0.13.1"
+    )
+  ],
   targets: [
     .target(name: "HALDomain"),
     .target(name: "HALCollectors", dependencies: ["HALDomain"]),
-    .target(name: "HALProfileSchema", dependencies: ["HALDomain"]),
+    .target(
+      name: "HALProfileSchema",
+      dependencies: [
+        "HALDomain",
+        .product(name: "JSONSchema", package: "swift-json-schema"),
+      ],
+      resources: [.process("Resources")]
+    ),
     .target(
       name: "HALFixtures",
       dependencies: ["HALDomain", "HALProfileSchema"],

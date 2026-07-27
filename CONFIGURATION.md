@@ -69,11 +69,12 @@ arrays or entity-instance switches. Small related resources may share a
 collection manifest. Complicated or independently discoverable resources use
 individual manifest files.
 
-`HALProfileSchema/SystemProfileSchema.swift` is the centralized schema and
-validation boundary for normalized system profiles. Synthetic and live
-normalized profiles must conform to the same versioned shape. Decoding rejects
-unknown keys, invalid enum values, unsupported versions, broken relationship
-endpoints, and evidence-free relationships.
+`HALProfileSchema/Resources/system-profile.schema.json` is the canonical,
+declarative Draft 2020-12 structural contract for synthetic and normalized
+live system profiles. `HALProfileSchema/SystemProfileSchema.swift` is its
+generic Swift validation adapter, typed decoder, semantic graph-integrity
+validator, and domain projector. It does not maintain a second list of allowed
+fields. Tests keep schema enums in parity with their Swift domain projections.
 
 The fixture validator runs as part of `make verify` and validates every
 committed synthetic profile manifest. An invalid or stale manifest is a build

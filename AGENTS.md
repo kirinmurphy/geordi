@@ -26,8 +26,14 @@ These rules apply to every implementation task in this repository.
 
 - Keep the complete system-profile schema and its validation utilities
   colocated in one clearly named module/directory.
+- The canonical structural contract must be a declarative, versioned JSON
+  Schema resource. Swift types are projections of that contract, not a second
+  independently maintained structural schema.
 - Use typed Swift decoding plus versioned schema validation. Do not introduce a
   JavaScript runtime solely to use Zod.
+- Swift may enforce semantic invariants that JSON Schema cannot express
+  cleanly, such as unique graph identifiers and valid relationship endpoints.
+  It must not duplicate field lists, required keys, or enum sets.
 - Reject unknown keys and invalid enum values. Report paths to invalid fields.
 - Schema changes require migration/version consideration and tests.
 
