@@ -106,6 +106,7 @@ struct ApplicationBundleCollectorTests {
     let provider = ApplicationInventorySnapshotProvider(
       scanID: "manual-scan",
       roots: [ApplicationSearchRoot(url: root, required: true)],
+      signatureInspector: StubProviderSignatureInspector(),
       clock: FixedClock(timestamp)
     )
 
@@ -145,5 +146,16 @@ struct ApplicationBundleCollectorTests {
       options: 0
     )
     try data.write(to: contents.appending(path: "Info.plist"))
+  }
+}
+
+private struct StubProviderSignatureInspector: CodeSignatureInspecting {
+  func inspectApplication(at url: URL) -> ApplicationSignatureValue {
+    ApplicationSignatureValue(
+      applicationPath: url.path,
+      status: .valid,
+      signingIdentifier: "com.example.application",
+      teamIdentifier: "TEAM123"
+    )
   }
 }

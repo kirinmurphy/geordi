@@ -6,8 +6,14 @@ public struct ApplicationGraphProjector: Sendable {
 
   public func snapshot(
     scanID: ScanID,
-    output: CollectorOutput<ApplicationBundleValue>
+    output: CollectorOutput<ApplicationBundleValue>,
+    signatures: CollectorOutput<ApplicationSignatureValue>? = nil
   ) -> GraphSnapshot {
+    let signaturesByPath = Dictionary(
+      uniqueKeysWithValues: (signatures?.observations ?? []).map {
+        ($0.value.applicationPath, $0.value)
+      }
+    )
     let entities = output.observations.map { observation in
       let value = observation.value
       return Entity(
@@ -15,10 +21,17 @@ public struct ApplicationGraphProjector: Sendable {
         type: .application,
         name: value.name,
         summary: "An application bundle observed on this Mac.",
-        details: details(for: value)
+        details: details(
+          for: value,
+          signature: signaturesByPath[value.path]
+        )
       )
     }
     let completedAt = output.run.completedAt
+    var collectorRuns = [output.run]
+    if let signatures {
+      collectorRuns.append(signatures.run)
+    }
     let graph = SystemGraph(
       metadata: FixtureMetadata(
         id: "live-applications-\(scanID.rawValue)",
@@ -36,7 +49,7 @@ public struct ApplicationGraphProjector: Sendable {
         environment: .liveReadOnly,
         startedAt: output.run.startedAt,
         completedAt: completedAt,
-        collectorRuns: [output.run]
+        collectorRuns: collectorRuns
       )
     )
   }
@@ -48,7 +61,10 @@ public struct ApplicationGraphProjector: Sendable {
     return EntityID("application:\(primary.kind.rawValue):\(primary.value)")
   }
 
-  private func details(for value: ApplicationBundleValue) -> [Detail] {
+  private func details(
+    for value: ApplicationBundleValue,
+    signature: ApplicationSignatureValue?
+  ) -> [Detail] {
     var details = [Detail("Path", value.path)]
     if let bundleIdentifier = value.bundleIdentifier {
       details.append(Detail("Bundle identifier", bundleIdentifier))
@@ -61,6 +77,26 @@ public struct ApplicationGraphProjector: Sendable {
     }
     if let executableName = value.executableName {
       details.append(Detail("Executable", executableName))
+    }
+    if let signature {
+      details.append(Detail("Signature", signature.status.rawValue.capitalized))
+      if let signingIdentifier = signature.signingIdentifier {
+        details.append(Detail("Signing identifier", signingIdentifier))
+      }
+      if let teamIdentifier = signature.teamIdentifier {
+        details.append(Detail("Team identifier", teamIdentifier))
+      }
+      if !signature.authorities.isEmpty {
+        details.append(
+          Detail(
+            "Signing authorities",
+            signature.authorities.joined(separator: " → ")
+          )
+        )
+      }
+      if signature.platformBinary == true {
+        details.append(Detail("Platform binary", "Yes"))
+      }
     }
     return details
   }
