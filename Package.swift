@@ -7,6 +7,7 @@ let package = Package(
   platforms: [.macOS(.v15)],
   products: [
     .library(name: "HALDomain", targets: ["HALDomain"]),
+    .library(name: "HALCollectors", targets: ["HALCollectors"]),
     .library(name: "HALFixtures", targets: ["HALFixtures"]),
     .library(name: "HALVisualization", targets: ["HALVisualization"]),
     .executable(name: "HALApp", targets: ["HALApp"]),
@@ -14,6 +15,7 @@ let package = Package(
   ],
   targets: [
     .target(name: "HALDomain"),
+    .target(name: "HALCollectors", dependencies: ["HALDomain"]),
     .target(name: "HALFixtures", dependencies: ["HALDomain"]),
     .target(name: "HALVisualization", dependencies: ["HALDomain"]),
     .executableTarget(
@@ -25,6 +27,10 @@ let package = Package(
       dependencies: ["HALDomain", "HALFixtures"]
     ),
     .testTarget(name: "HALDomainTests", dependencies: ["HALDomain"]),
+    .testTarget(
+      name: "HALCollectorsTests",
+      dependencies: ["HALCollectors", "HALDomain"]
+    ),
     .testTarget(
       name: "HALFixturesTests",
       dependencies: ["HALDomain", "HALFixtures"]

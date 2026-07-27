@@ -75,6 +75,21 @@ public struct CollectorRun: Hashable, Codable, Sendable {
   }
 }
 
+public struct CollectorOutput<Value: Hashable & Codable & Sendable>:
+  Hashable, Codable, Sendable
+{
+  public let run: CollectorRun
+  public let observations: [CollectedObservation<Value>]
+
+  public init(
+    run: CollectorRun,
+    observations: [CollectedObservation<Value>]
+  ) {
+    self.run = run
+    self.observations = observations
+  }
+}
+
 public struct ScanContext: Hashable, Codable, Sendable {
   public let id: ScanID
   public let environment: CollectionEnvironment
