@@ -47,3 +47,13 @@ System roots are absolute manifest paths. User-relative roots use
 `$USER_HOME/`; arbitrary environment-variable and tilde expansion are not
 supported. This keeps configuration deterministic and prevents accidental path
 interpretation.
+
+## 2026-07-27: synthetic profile catalog is closed over bundled manifests
+
+The versioned profile catalog defines synthetic profile membership and ordering
+by identifier and resource name. Catalog validation requires every entry to
+resolve to a profile with the same identifier and rejects both missing entries
+and uncataloged bundled profiles.
+
+Reason: this makes the catalog the complete composition source of truth while
+preventing a newly committed fixture from silently escaping build validation.

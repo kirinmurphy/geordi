@@ -70,6 +70,15 @@ public struct SystemProfileDocument: Hashable, Codable, Sendable {
     self.relationships = relationships
   }
 
+  public init(graph: SystemGraph) {
+    schemaVersion = graph.metadata.version
+    id = graph.metadata.id
+    name = graph.metadata.name
+    summary = graph.metadata.summary
+    entities = graph.entities.map(ProfileEntity.init(entity:))
+    relationships = graph.relationships.map(ProfileRelationship.init(relationship:))
+  }
+
   public func validate() throws {
     guard schemaVersion == SystemProfileSchema.currentVersion else {
       throw SystemProfileSchemaError.unsupportedVersion(schemaVersion)
@@ -140,6 +149,14 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
     self.details = details
   }
 
+  fileprivate init(entity: Entity) {
+    id = entity.id.rawValue
+    type = entity.type
+    name = entity.name
+    summary = entity.summary
+    details = entity.details.map { ProfileDetail(label: $0.label, value: $0.value) }
+  }
+
   fileprivate var entity: Entity {
     Entity(
       id: EntityID(id),
@@ -188,6 +205,16 @@ public struct ProfileRelationship: Hashable, Codable, Sendable {
     self.evidence = evidence
   }
 
+  fileprivate init(relationship: Relationship) {
+    id = relationship.id.rawValue
+    source = relationship.source.rawValue
+    target = relationship.target.rawValue
+    type = relationship.type
+    confidence = relationship.confidence
+    explanation = relationship.explanation
+    evidence = relationship.evidence.map(ProfileEvidence.init(evidence:))
+  }
+
   fileprivate var relationship: Relationship {
     Relationship(
       id: RelationshipID(id),
@@ -229,6 +256,17 @@ public struct ProfileEvidence: Hashable, Codable, Sendable {
     self.observedAt = observedAt
     self.ruleID = ruleID
     self.ruleVersion = ruleVersion
+  }
+
+  fileprivate init(evidence: Evidence) {
+    id = evidence.id
+    kind = evidence.kind
+    summary = evidence.summary
+    source = evidence.source
+    observationID = evidence.observationID
+    observedAt = evidence.observedAt
+    ruleID = evidence.ruleID
+    ruleVersion = evidence.ruleVersion
   }
 
   fileprivate var domainEvidence: Evidence {

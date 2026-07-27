@@ -46,7 +46,7 @@ let package = Package(
     ),
     .target(
       name: "HALFixtures",
-      dependencies: ["HALDomain", "HALProfileSchema"],
+      dependencies: ["HALDomain", "HALManifestKit", "HALProfileSchema"],
       resources: [.process("Resources")]
     ),
     .target(name: "HALVisualization", dependencies: ["HALDomain"]),
@@ -58,7 +58,7 @@ let package = Package(
     ),
     .executableTarget(
       name: "HALFixtureValidator",
-      dependencies: ["HALDomain", "HALFixtures"]
+      dependencies: ["HALDomain", "HALFixtures", "HALProfileSchema"]
     ),
     .testTarget(name: "HALDomainTests", dependencies: ["HALDomain"]),
     .testTarget(

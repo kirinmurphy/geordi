@@ -17,7 +17,7 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 - [x] Define strict decoding, unknown-key rejection, semantic validation, and
   field-path diagnostics.
 - [x] Define schema migration/version policy in `SCHEMA_VERSIONING.md`.
-- [ ] Add a manifest catalog for profile composition.
+- [x] Add a manifest catalog for profile composition.
 - [ ] Add per-resource manifests for independently discoverable complex items.
 - [ ] Add collection manifests for small resource sets.
 - [x] Move application collector search roots out of Swift defaults and into a
@@ -28,12 +28,12 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 
 ## Priority 1: synthetic/live schema parity
 
-- [ ] Convert the familiar fictional Mac from Swift entity construction to a
+- [x] Convert the familiar fictional Mac from Swift entity construction to a
   schema-validated profile manifest.
 - [x] Convert the simple-application fixture end-to-end as the schema reference
   profile.
-- [ ] Convert the remaining focused fixture scenarios.
-- [ ] Make `HALFixtures` load manifests through the centralized decoder.
+- [x] Convert the remaining focused fixture scenarios.
+- [x] Make `HALFixtures` load manifests through the centralized decoder.
 - [x] Validate every manifest-backed synthetic profile in unit tests and the
   fixture validator.
 - [x] Make build verification fail when a committed profile is invalid or uses

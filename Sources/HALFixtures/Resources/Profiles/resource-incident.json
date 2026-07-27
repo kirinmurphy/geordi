@@ -1,0 +1,207 @@
+{
+  "entities" : [
+    {
+      "details" : [
+
+      ],
+      "id" : "app.canvas",
+      "name" : "Canvas Pro",
+      "summary" : "A synthetic design application.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.canvas",
+      "name" : "Canvas Pro process",
+      "summary" : "The main design process.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.render",
+      "name" : "Canvas render worker",
+      "summary" : "A child process rendering a large document.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.sync",
+      "name" : "Cloud sync helper",
+      "summary" : "A separate helper active during the incident.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Peak",
+          "value" : "Critical"
+        },
+        {
+          "label" : "Duration",
+          "value" : "8 minutes"
+        }
+      ],
+      "id" : "resource.memory",
+      "name" : "Memory pressure",
+      "summary" : "Memory pressure rose from normal to critical.",
+      "type" : "resource"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "incident.memory",
+      "name" : "July design-session incident",
+      "summary" : "A preserved synthetic memory-pressure event.",
+      "type" : "incident"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "event.document",
+      "name" : "Large document opened",
+      "summary" : "A 4.2 GB design document was opened nearby in time.",
+      "type" : "event"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "event.wake",
+      "name" : "Mac woke",
+      "summary" : "The computer woke shortly before the incident.",
+      "type" : "event"
+    }
+  ],
+  "id" : "resource-incident",
+  "name" : "Resource incident",
+  "relationships" : [
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "canvas-main-process",
+          "kind" : "observed",
+          "source" : "Synthetic process observation",
+          "summary" : "The process belongs to Canvas Pro."
+        }
+      ],
+      "explanation" : "Canvas Pro launched its main process.",
+      "id" : "canvas-main",
+      "source" : "app.canvas",
+      "target" : "process.canvas",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "canvas-render-parent",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "The render worker records Canvas Pro as parent."
+        }
+      ],
+      "explanation" : "Canvas Pro launched a render worker.",
+      "id" : "canvas-render",
+      "source" : "process.canvas",
+      "target" : "process.render",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "render-memory-sample",
+          "kind" : "observed",
+          "source" : "Synthetic resource samples",
+          "summary" : "Memory samples attribute a 4.8 GB increase to this process."
+        }
+      ],
+      "explanation" : "The render worker added 4.8 GB during the pressure event.",
+      "id" : "render-memory",
+      "source" : "process.render",
+      "target" : "resource.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "sync-memory-sample",
+          "kind" : "observed",
+          "source" : "Synthetic resource samples",
+          "summary" : "Memory samples attribute a 1.1 GB increase to this helper."
+        }
+      ],
+      "explanation" : "Cloud sync added 1.1 GB during the same event.",
+      "id" : "sync-memory",
+      "source" : "process.sync",
+      "target" : "resource.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "incident-threshold",
+          "kind" : "observed",
+          "source" : "Synthetic incident record",
+          "summary" : "Pressure remained critical for the incident window."
+        }
+      ],
+      "explanation" : "Critical memory pressure defines this recorded incident.",
+      "id" : "memory-incident",
+      "source" : "resource.memory",
+      "target" : "incident.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "probable",
+      "evidence" : [
+        {
+          "id" : "document-time",
+          "kind" : "observed",
+          "source" : "Synthetic event timeline",
+          "summary" : "The document event preceded the incident by 42 seconds."
+        },
+        {
+          "id" : "document-correlation",
+          "kind" : "inferred",
+          "source" : "Incident explanation rule v1",
+          "summary" : "Temporal proximity supports correlation, not causation."
+        }
+      ],
+      "explanation" : "Opening the large document happened shortly before pressure rose; HAL has not established causation.",
+      "id" : "document-near",
+      "source" : "event.document",
+      "target" : "incident.memory",
+      "type" : "occurred near"
+    },
+    {
+      "confidence" : "possible",
+      "evidence" : [
+        {
+          "id" : "wake-time",
+          "kind" : "observed",
+          "source" : "Synthetic event timeline",
+          "summary" : "Wake occurred three minutes before pressure rose."
+        }
+      ],
+      "explanation" : "The Mac woke three minutes earlier, but evidence is too weak to call it a trigger.",
+      "id" : "wake-near",
+      "source" : "event.wake",
+      "target" : "incident.memory",
+      "type" : "occurred near"
+    }
+  ],
+  "schemaVersion" : 1,
+  "summary" : "A memory-pressure event with multiple contributors and nearby context."
+}

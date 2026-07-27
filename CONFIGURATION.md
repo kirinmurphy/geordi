@@ -80,6 +80,12 @@ The fixture validator runs as part of `make verify` and validates every
 committed synthetic profile manifest. An invalid or stale manifest is a build
 failure, not a runtime warning.
 
+`HALFixtures/Resources/profile-catalog.json` is the versioned source of truth
+for synthetic profile membership and ordering. Its adjacent JSON Schema rejects
+unknown fields and invalid resource names. Every catalog entry must resolve to
+a system-profile manifest with the same identifier, and validation fails for
+both missing and uncataloged profile resources.
+
 `SCHEMA_VERSIONING.md` defines compatibility, version increments, migrations,
 and the required same-change updates across schemas, Swift projections,
 fixtures, and documentation.

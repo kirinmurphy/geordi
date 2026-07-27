@@ -93,8 +93,8 @@ Milestone 0 — repository and interactive concept.
 - Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
-- Manifest migration: simple-application and helper-rich-application fixtures
-  migrated end-to-end; remaining synthetic profiles still require migration
+- Manifest migration: all six synthetic profiles are schema-backed and selected
+  through a separately schema-validated profile catalog
 - Real-data preparation: typed observations, scan and collector outcomes,
   capability and freshness states, versioned finding evidence, and an injected
   graph-snapshot provider boundary
@@ -110,12 +110,12 @@ Milestone 0 — repository and interactive concept.
 - Visualization: stable semantic Phase 0 canvas created
 - Signing and distribution: not configured
 
-The app still runs exclusively through the deterministic synthetic provider, so
-launching HAL does not inspect the real Mac. The application collector is
-available only through explicit dependency injection and currently reads bundle
-metadata and static code-signing facts from caller-provided roots. Process
-inventory, provenance adapters, SQLite, and distribution remain unimplemented.
-Their sequencing is documented in `REAL_DATA_ASSESSMENT.md`.
+The app launches with the deterministic synthetic provider and performs no
+machine collection until the user explicitly links the Mac. Linked mode reads
+manifest-scoped application bundle metadata and static code-signing facts,
+persists the normalized snapshot, and refreshes it. Process inventory,
+provenance adapters, SQLite, and distribution remain unimplemented. Their
+sequencing is documented in `REAL_DATA_ASSESSMENT.md`.
 
 ## How to run
 
@@ -164,7 +164,8 @@ synthetic interaction is directionally useful.
 - The UI automation foundation currently verifies native app packaging; product
   interactions are covered at the model layer and by the manual evaluation
   checklist rather than a full XCUITest runner.
-- The app has no persistence, export, collector, notification, or action layer.
+- HAL currently persists and exports only its compiled live snapshot; it has no
+  historical database, notification layer, or machine cleanup actions.
 
 ## Known risks
 

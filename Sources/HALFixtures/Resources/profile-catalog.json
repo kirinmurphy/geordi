@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "id": "familiar-mac",
+      "resource": "familiar-mac"
+    },
+    {
+      "id": "atlas-mac",
+      "resource": "atlas-mac"
+    },
+    {
+      "id": "simple-application",
+      "resource": "simple-application"
+    },
+    {
+      "id": "helper-rich-application",
+      "resource": "helper-rich-application"
+    },
+    {
+      "id": "resource-incident",
+      "resource": "resource-incident"
+    },
+    {
+      "id": "ambiguous-ownership",
+      "resource": "ambiguous-ownership"
+    }
+  ]
+}

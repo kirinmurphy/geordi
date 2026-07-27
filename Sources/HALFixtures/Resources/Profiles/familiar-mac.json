@@ -1,0 +1,1234 @@
+{
+  "entities" : [
+    {
+      "details" : [
+        {
+          "label" : "Installed with",
+          "value" : "Web download"
+        },
+        {
+          "label" : "Synthetic footprint",
+          "value" : "31.8 GB"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Running"
+        }
+      ],
+      "id" : "app.docker",
+      "name" : "Docker Desktop",
+      "summary" : "Runs containers through a Linux virtual machine on this fictional Mac.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed with",
+          "value" : "Homebrew Cask"
+        },
+        {
+          "label" : "Synthetic footprint",
+          "value" : "5.4 GB"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Running"
+        }
+      ],
+      "id" : "app.vscode",
+      "name" : "Visual Studio Code",
+      "summary" : "A code editor with extensions and language services.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed with",
+          "value" : "Web download"
+        },
+        {
+          "label" : "Synthetic footprint",
+          "value" : "420 MB"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Running"
+        }
+      ],
+      "id" : "app.cmux",
+      "name" : "cmux",
+      "summary" : "A native terminal with workspaces, panes, and an embedded browser.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed with",
+          "value" : "Web download"
+        },
+        {
+          "label" : "Synthetic footprint",
+          "value" : "1.6 GB"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Running"
+        }
+      ],
+      "id" : "app.chatgpt",
+      "name" : "ChatGPT",
+      "summary" : "The ChatGPT desktop application.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed with",
+          "value" : "Homebrew Cask"
+        },
+        {
+          "label" : "Synthetic footprint",
+          "value" : "3.2 GB"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Running"
+        }
+      ],
+      "id" : "app.brave",
+      "name" : "Brave Browser",
+      "summary" : "A web browser with separate renderer and GPU processes.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic prefix",
+          "value" : "/opt/homebrew"
+        },
+        {
+          "label" : "Synthetic Cellar",
+          "value" : "18.6 GB"
+        },
+        {
+          "label" : "Download cache",
+          "value" : "4.1 GB"
+        }
+      ],
+      "id" : "tool.homebrew",
+      "name" : "Homebrew",
+      "summary" : "Installs command-line formulae and macOS application casks.",
+      "type" : "packageManager"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic location",
+          "value" : "~/.oh-my-zsh"
+        },
+        {
+          "label" : "Configuration",
+          "value" : "~/.zshrc"
+        },
+        {
+          "label" : "Synthetic footprint",
+          "value" : "280 MB"
+        }
+      ],
+      "id" : "tool.ohmyzsh",
+      "name" : "Oh My Zsh",
+      "summary" : "Shell configuration, themes, and plugins loaded by zsh.",
+      "type" : "shellFramework"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed with",
+          "value" : "npm"
+        },
+        {
+          "label" : "Command",
+          "value" : "tsc"
+        },
+        {
+          "label" : "Synthetic footprint",
+          "value" : "96 MB"
+        }
+      ],
+      "id" : "package.typescript",
+      "name" : "TypeScript (npm)",
+      "summary" : "A globally installed npm package providing the tsc command.",
+      "type" : "package"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic memory",
+          "value" : "2.4 GB"
+        },
+        {
+          "label" : "Synthetic CPU",
+          "value" : "18%"
+        }
+      ],
+      "id" : "process.docker",
+      "name" : "Docker backend",
+      "summary" : "Coordinates the Linux VM, networking, and container operations.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic memory",
+          "value" : "5.8 GB"
+        },
+        {
+          "label" : "Synthetic CPU",
+          "value" : "24%"
+        }
+      ],
+      "id" : "process.vm",
+      "name" : "Docker Linux VM",
+      "summary" : "The virtual machine where Docker Engine and containers run.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.vscode",
+      "name" : "VS Code window",
+      "summary" : "The main editor window.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.extension",
+      "name" : "VS Code extension host",
+      "summary" : "Runs installed editor extensions separately.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic memory",
+          "value" : "1.3 GB"
+        },
+        {
+          "label" : "Synthetic CPU",
+          "value" : "31% during incident"
+        }
+      ],
+      "id" : "process.tsserver",
+      "name" : "TypeScript language service",
+      "summary" : "Provides JavaScript and TypeScript code intelligence.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.cmux",
+      "name" : "cmux",
+      "summary" : "The native terminal application process.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.zsh",
+      "name" : "zsh session",
+      "summary" : "An interactive shell running inside a cmux pane.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.chatgpt",
+      "name" : "ChatGPT",
+      "summary" : "The desktop application's main process.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.brave",
+      "name" : "Brave Browser",
+      "summary" : "The browser's main process.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.brave-renderer",
+      "name" : "Brave tab renderer",
+      "summary" : "Renders one group of browser tabs.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "29.4 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Review inside Docker"
+        }
+      ],
+      "id" : "file.docker-disk",
+      "name" : "Docker virtual disk",
+      "summary" : "Stores synthetic container images, containers, volumes, and build cache.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "11.2 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Rebuildable after review"
+        }
+      ],
+      "id" : "file.docker-build",
+      "name" : "Docker build cache",
+      "summary" : "Rebuildable layers from local image builds.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "2.3 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Remove individual extensions"
+        }
+      ],
+      "id" : "file.vscode-extensions",
+      "name" : "VS Code extensions",
+      "summary" : "Installed editor extensions.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "2.1 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Safe to rebuild"
+        }
+      ],
+      "id" : "file.vscode-cache",
+      "name" : "VS Code workspace cache",
+      "summary" : "Rebuildable indexes and cached workspace state.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "180 MB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Keep unless resetting cmux"
+        }
+      ],
+      "id" : "file.cmux-state",
+      "name" : "cmux workspace state",
+      "summary" : "Synthetic workspace, pane, and application state.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "920 MB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Usually safe after quitting"
+        }
+      ],
+      "id" : "file.chatgpt-cache",
+      "name" : "ChatGPT cache and logs",
+      "summary" : "Synthetic rebuildable cache and diagnostic logs.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "6.8 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Protected user data"
+        }
+      ],
+      "id" : "file.brave-profile",
+      "name" : "Brave profile",
+      "summary" : "Bookmarks, settings, extensions, and browsing data.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "3.4 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Safe to rebuild"
+        }
+      ],
+      "id" : "file.brave-cache",
+      "name" : "Brave browser cache",
+      "summary" : "Rebuildable web resources.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "18.6 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Manage with Homebrew"
+        }
+      ],
+      "id" : "file.brew-cellar",
+      "name" : "Homebrew Cellar",
+      "summary" : "Versioned formula installations.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "4.1 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Safe to redownload"
+        }
+      ],
+      "id" : "file.brew-cache",
+      "name" : "Homebrew download cache",
+      "summary" : "Downloaded packages that Homebrew can fetch again.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Removal",
+          "value" : "Protected configuration"
+        }
+      ],
+      "id" : "file.zsh-config",
+      "name" : "Shell configuration",
+      "summary" : "Your .zshrc, themes, and enabled Oh My Zsh plugins.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "1.4 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Manage with npm"
+        }
+      ],
+      "id" : "file.npm-global",
+      "name" : "Global npm packages",
+      "summary" : "Packages installed for use from any shell.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic size",
+          "value" : "2.7 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Safe to redownload"
+        }
+      ],
+      "id" : "file.npm-cache",
+      "name" : "npm cache",
+      "summary" : "Downloaded package content npm can fetch again.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "persistence.docker",
+      "name" : "Docker login item",
+      "summary" : "Can start Docker Desktop after sign-in.",
+      "type" : "persistence"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "persistence.chatgpt",
+      "name" : "ChatGPT login item",
+      "summary" : "Can start ChatGPT after sign-in.",
+      "type" : "persistence"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Likely reclaimable",
+          "value" : "24.4 GB"
+        },
+        {
+          "label" : "Requires app-specific review",
+          "value" : "Docker build cache"
+        }
+      ],
+      "id" : "resource.storage",
+      "name" : "Reclaimable developer storage",
+      "summary" : "HAL estimates 24.4 GB is rebuildable or redownloadable.",
+      "type" : "resource"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Current",
+          "value" : "Normal"
+        },
+        {
+          "label" : "Synthetic peak",
+          "value" : "Critical"
+        }
+      ],
+      "id" : "resource.memory",
+      "name" : "Memory pressure",
+      "summary" : "Memory pressure became critical during a container build.",
+      "type" : "resource"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Synthetic time",
+          "value" : "Today at 3:42 PM"
+        },
+        {
+          "label" : "Duration",
+          "value" : "9 minutes"
+        }
+      ],
+      "id" : "incident.build",
+      "name" : "Container build slowdown",
+      "summary" : "Docker, VS Code, and Brave competed for memory during a build.",
+      "type" : "incident"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "event.docker-build",
+      "name" : "Docker image build started",
+      "summary" : "A multi-stage container build began.",
+      "type" : "event"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "event.vscode-index",
+      "name" : "VS Code indexed the repository",
+      "summary" : "The TypeScript service refreshed a large workspace.",
+      "type" : "event"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "event.brave-tabs",
+      "name" : "Brave restored 24 tabs",
+      "summary" : "A browser window restored shortly before pressure increased.",
+      "type" : "event"
+    }
+  ],
+  "id" : "familiar-mac",
+  "name" : "This Mac",
+  "relationships" : [
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "docker-backend-record",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The synthetic process belongs to Docker Desktop."
+        }
+      ],
+      "explanation" : "Docker Desktop launched its backend.",
+      "id" : "docker-backend",
+      "source" : "app.docker",
+      "target" : "process.docker",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "docker-vm-record",
+          "kind" : "observed",
+          "source" : "Synthetic Docker observation",
+          "summary" : "The synthetic backend reports a managed VM."
+        }
+      ],
+      "explanation" : "The Docker backend manages a Linux virtual machine.",
+      "id" : "docker-vm",
+      "source" : "process.docker",
+      "target" : "process.vm",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "docker-disk-observed",
+          "kind" : "observed",
+          "source" : "Synthetic storage observation",
+          "summary" : "The VM uses the synthetic disk image."
+        }
+      ],
+      "explanation" : "Docker stores images, containers, volumes, and build cache inside this virtual disk.",
+      "id" : "docker-disk",
+      "source" : "process.vm",
+      "target" : "file.docker-disk",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "docker-cache-observed",
+          "kind" : "observed",
+          "source" : "Synthetic Docker observation",
+          "summary" : "Build records identify these layers."
+        }
+      ],
+      "explanation" : "Container builds produced this rebuildable cache.",
+      "id" : "docker-build-cache",
+      "source" : "process.vm",
+      "target" : "file.docker-build",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "docker-login-observed",
+          "kind" : "observed",
+          "source" : "Synthetic persistence record",
+          "summary" : "A synthetic login item names Docker."
+        }
+      ],
+      "explanation" : "Docker Desktop is configured to start after sign-in.",
+      "id" : "docker-login",
+      "source" : "app.docker",
+      "target" : "persistence.docker",
+      "type" : "persists through"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "vscode-process",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The synthetic process belongs to VS Code."
+        }
+      ],
+      "explanation" : "Visual Studio Code launched its editor window.",
+      "id" : "vscode-main",
+      "source" : "app.vscode",
+      "target" : "process.vscode",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "extension-host-record",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "The editor reports an extension host."
+        }
+      ],
+      "explanation" : "VS Code launched a separate extension host.",
+      "id" : "vscode-extensions",
+      "source" : "process.vscode",
+      "target" : "process.extension",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "tsserver-parent",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "The extension host is the synthetic parent."
+        }
+      ],
+      "explanation" : "The extension host launched the TypeScript language service.",
+      "id" : "vscode-tsserver",
+      "source" : "process.extension",
+      "target" : "process.tsserver",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "vscode-extension-path",
+          "kind" : "observed",
+          "source" : "Synthetic filesystem observation",
+          "summary" : "The synthetic inventory identifies VS Code extensions."
+        }
+      ],
+      "explanation" : "These installed extensions add capabilities to VS Code.",
+      "id" : "vscode-extension-files",
+      "source" : "app.vscode",
+      "target" : "file.vscode-extensions",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "vscode-cache-write",
+          "kind" : "observed",
+          "source" : "Synthetic file activity",
+          "summary" : "Cache writes overlap language-service activity."
+        }
+      ],
+      "explanation" : "The language service is the likely producer of this rebuildable workspace cache.",
+      "id" : "vscode-cache",
+      "source" : "process.tsserver",
+      "target" : "file.vscode-cache",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cmux-process-record",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The synthetic process belongs to cmux."
+        }
+      ],
+      "explanation" : "cmux launched its native application process.",
+      "id" : "cmux-main",
+      "source" : "app.cmux",
+      "target" : "process.cmux",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cmux-shell-tree",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "The shell records cmux as its synthetic parent."
+        }
+      ],
+      "explanation" : "A cmux pane launched this interactive zsh session.",
+      "id" : "cmux-shell",
+      "source" : "process.cmux",
+      "target" : "process.zsh",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "cmux-state-observed",
+          "kind" : "observed",
+          "source" : "Synthetic filesystem observation",
+          "summary" : "The synthetic state belongs to cmux."
+        }
+      ],
+      "explanation" : "cmux uses this state to restore its workspace context.",
+      "id" : "cmux-state",
+      "source" : "app.cmux",
+      "target" : "file.cmux-state",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "zsh-framework-config",
+          "kind" : "observed",
+          "source" : "Synthetic shell observation",
+          "summary" : "The synthetic shell configuration loads Oh My Zsh."
+        }
+      ],
+      "explanation" : "This zsh session loaded the Oh My Zsh framework.",
+      "id" : "zsh-framework",
+      "source" : "process.zsh",
+      "target" : "tool.ohmyzsh",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "zsh-config-read",
+          "kind" : "observed",
+          "source" : "Synthetic shell observation",
+          "summary" : "The framework loaded the synthetic configuration."
+        }
+      ],
+      "explanation" : "Oh My Zsh reads your protected shell configuration.",
+      "id" : "zsh-config",
+      "source" : "tool.ohmyzsh",
+      "target" : "file.zsh-config",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brew-cask-vscode",
+          "kind" : "observed",
+          "source" : "Synthetic package inventory",
+          "summary" : "The synthetic Homebrew inventory contains the VS Code cask."
+        }
+      ],
+      "explanation" : "Homebrew installed Visual Studio Code as a cask.",
+      "id" : "homebrew-vscode",
+      "source" : "tool.homebrew",
+      "target" : "app.vscode",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brew-cask-brave",
+          "kind" : "observed",
+          "source" : "Synthetic package inventory",
+          "summary" : "The synthetic Homebrew inventory contains the Brave cask."
+        }
+      ],
+      "explanation" : "Homebrew installed Brave Browser as a cask.",
+      "id" : "homebrew-brave",
+      "source" : "tool.homebrew",
+      "target" : "app.brave",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brew-cellar-path",
+          "kind" : "observed",
+          "source" : "Synthetic package inventory",
+          "summary" : "The synthetic prefix identifies the Cellar."
+        }
+      ],
+      "explanation" : "Homebrew stores versioned formula installations in its Cellar.",
+      "id" : "homebrew-cellar",
+      "source" : "tool.homebrew",
+      "target" : "file.brew-cellar",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brew-cache-path",
+          "kind" : "observed",
+          "source" : "Synthetic package inventory",
+          "summary" : "The synthetic cache is managed by Homebrew."
+        }
+      ],
+      "explanation" : "Homebrew can redownload the contents of this cache.",
+      "id" : "homebrew-cache",
+      "source" : "tool.homebrew",
+      "target" : "file.brew-cache",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "npm-global-record",
+          "kind" : "observed",
+          "source" : "Synthetic package inventory",
+          "summary" : "The synthetic npm inventory lists TypeScript."
+        }
+      ],
+      "explanation" : "The global npm installation contains TypeScript and its tsc command.",
+      "id" : "npm-typescript",
+      "source" : "file.npm-global",
+      "target" : "package.typescript",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "typescript-service-record",
+          "kind" : "observed",
+          "source" : "Synthetic process observation",
+          "summary" : "The synthetic service loads TypeScript libraries."
+        }
+      ],
+      "explanation" : "VS Code uses TypeScript tooling to provide language intelligence.",
+      "id" : "typescript-service",
+      "source" : "package.typescript",
+      "target" : "process.tsserver",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "probable",
+      "evidence" : [
+        {
+          "id" : "npm-cache-record",
+          "kind" : "observed",
+          "source" : "Synthetic package event",
+          "summary" : "The synthetic installation accessed npm's cache."
+        }
+      ],
+      "explanation" : "npm used its shared cache while installing this package.",
+      "id" : "npm-cache",
+      "source" : "package.typescript",
+      "target" : "file.npm-cache",
+      "type" : "shares"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "chatgpt-process",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The synthetic process belongs to ChatGPT."
+        }
+      ],
+      "explanation" : "ChatGPT launched its desktop process.",
+      "id" : "chatgpt-main",
+      "source" : "app.chatgpt",
+      "target" : "process.chatgpt",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "chatgpt-cache-path",
+          "kind" : "observed",
+          "source" : "Synthetic filesystem observation",
+          "summary" : "The synthetic files identify ChatGPT."
+        }
+      ],
+      "explanation" : "ChatGPT produced this synthetic cache and diagnostic data.",
+      "id" : "chatgpt-cache",
+      "source" : "app.chatgpt",
+      "target" : "file.chatgpt-cache",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "chatgpt-login-record",
+          "kind" : "observed",
+          "source" : "Synthetic persistence record",
+          "summary" : "A synthetic login item names ChatGPT."
+        }
+      ],
+      "explanation" : "ChatGPT is configured to start after sign-in.",
+      "id" : "chatgpt-login",
+      "source" : "app.chatgpt",
+      "target" : "persistence.chatgpt",
+      "type" : "persists through"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brave-process",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The synthetic process belongs to Brave."
+        }
+      ],
+      "explanation" : "Brave launched its main browser process.",
+      "id" : "brave-main",
+      "source" : "app.brave",
+      "target" : "process.brave",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brave-renderer-tree",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "The browser is the renderer's synthetic parent."
+        }
+      ],
+      "explanation" : "Brave launched a separate renderer for web content.",
+      "id" : "brave-renderer",
+      "source" : "process.brave",
+      "target" : "process.brave-renderer",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brave-profile-path",
+          "kind" : "observed",
+          "source" : "Synthetic filesystem observation",
+          "summary" : "The synthetic profile belongs to Brave."
+        }
+      ],
+      "explanation" : "This protected profile contains your browser settings and data.",
+      "id" : "brave-profile",
+      "source" : "app.brave",
+      "target" : "file.brave-profile",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brave-cache-write",
+          "kind" : "observed",
+          "source" : "Synthetic file activity",
+          "summary" : "The synthetic renderer wrote the cache."
+        }
+      ],
+      "explanation" : "Brave's renderer produced this rebuildable web cache.",
+      "id" : "brave-cache",
+      "source" : "process.brave-renderer",
+      "target" : "file.brave-cache",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "docker-memory-samples",
+          "kind" : "observed",
+          "source" : "Synthetic resource samples",
+          "summary" : "Synthetic samples show a 5.8 GB contribution."
+        }
+      ],
+      "explanation" : "The Docker VM was the largest memory contributor during the incident.",
+      "id" : "docker-memory",
+      "source" : "process.vm",
+      "target" : "resource.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "vscode-memory-samples",
+          "kind" : "observed",
+          "source" : "Synthetic resource samples",
+          "summary" : "Synthetic samples identify the language service."
+        }
+      ],
+      "explanation" : "The TypeScript service contributed 1.3 GB while indexing.",
+      "id" : "vscode-memory",
+      "source" : "process.tsserver",
+      "target" : "resource.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brave-memory-samples",
+          "kind" : "observed",
+          "source" : "Synthetic resource samples",
+          "summary" : "Synthetic samples identify the renderer."
+        }
+      ],
+      "explanation" : "Restored Brave tabs contributed 2.1 GB.",
+      "id" : "brave-memory",
+      "source" : "process.brave-renderer",
+      "target" : "resource.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "incident-pressure",
+          "kind" : "observed",
+          "source" : "Synthetic incident record",
+          "summary" : "Synthetic pressure remained critical for nine minutes."
+        }
+      ],
+      "explanation" : "Critical memory pressure defines this preserved slowdown.",
+      "id" : "memory-incident",
+      "source" : "resource.memory",
+      "target" : "incident.build",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "build-timeline",
+          "kind" : "observed",
+          "source" : "Synthetic event timeline",
+          "summary" : "The synthetic build preceded the spike by 22 seconds."
+        }
+      ],
+      "explanation" : "The container build began shortly before memory pressure rose.",
+      "id" : "build-event",
+      "source" : "event.docker-build",
+      "target" : "incident.build",
+      "type" : "occurred near"
+    },
+    {
+      "confidence" : "probable",
+      "evidence" : [
+        {
+          "id" : "index-timeline",
+          "kind" : "observed",
+          "source" : "Synthetic event timeline",
+          "summary" : "Synthetic indexing overlapped the incident."
+        }
+      ],
+      "explanation" : "VS Code indexing overlapped the slowdown; HAL does not claim it caused the incident.",
+      "id" : "index-event",
+      "source" : "event.vscode-index",
+      "target" : "incident.build",
+      "type" : "occurred near"
+    },
+    {
+      "confidence" : "possible",
+      "evidence" : [
+        {
+          "id" : "tabs-timeline",
+          "kind" : "observed",
+          "source" : "Synthetic event timeline",
+          "summary" : "The synthetic restore occurred two minutes earlier."
+        }
+      ],
+      "explanation" : "Brave restored 24 tabs nearby in time, but evidence is insufficient to call it a trigger.",
+      "id" : "tabs-event",
+      "source" : "event.brave-tabs",
+      "target" : "incident.build",
+      "type" : "occurred near"
+    },
+    {
+      "confidence" : "probable",
+      "evidence" : [
+        {
+          "id" : "docker-cache-size",
+          "kind" : "observed",
+          "source" : "Synthetic storage snapshot",
+          "summary" : "The synthetic cache measures 11.2 GB."
+        }
+      ],
+      "explanation" : "Docker can rebuild these layers after app-specific review.",
+      "id" : "docker-reclaim",
+      "source" : "file.docker-build",
+      "target" : "resource.storage",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "vscode-cache-size",
+          "kind" : "observed",
+          "source" : "Synthetic storage snapshot",
+          "summary" : "The synthetic cache measures 2.1 GB."
+        }
+      ],
+      "explanation" : "VS Code can rebuild this 2.1 GB workspace cache.",
+      "id" : "vscode-reclaim",
+      "source" : "file.vscode-cache",
+      "target" : "resource.storage",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brave-cache-size",
+          "kind" : "observed",
+          "source" : "Synthetic storage snapshot",
+          "summary" : "The synthetic cache measures 3.4 GB."
+        }
+      ],
+      "explanation" : "Brave can rebuild this 3.4 GB web cache.",
+      "id" : "brave-reclaim",
+      "source" : "file.brave-cache",
+      "target" : "resource.storage",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "brew-cache-size",
+          "kind" : "observed",
+          "source" : "Synthetic storage snapshot",
+          "summary" : "The synthetic cache measures 4.1 GB."
+        }
+      ],
+      "explanation" : "Homebrew can redownload this 4.1 GB cache.",
+      "id" : "brew-reclaim",
+      "source" : "file.brew-cache",
+      "target" : "resource.storage",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "npm-cache-size",
+          "kind" : "observed",
+          "source" : "Synthetic storage snapshot",
+          "summary" : "The synthetic cache measures 2.7 GB."
+        }
+      ],
+      "explanation" : "npm can redownload this 2.7 GB cache.",
+      "id" : "npm-reclaim",
+      "source" : "file.npm-cache",
+      "target" : "resource.storage",
+      "type" : "contributes to"
+    }
+  ],
+  "schemaVersion" : 1,
+  "summary" : "A fictional developer Mac shaped around familiar installed software."
+}

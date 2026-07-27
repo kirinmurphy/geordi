@@ -1,0 +1,698 @@
+{
+  "entities" : [
+    {
+      "details" : [
+        {
+          "label" : "Installed from",
+          "value" : "Developer website"
+        },
+        {
+          "label" : "Publisher",
+          "value" : "North Coast Software"
+        },
+        {
+          "label" : "Total footprint",
+          "value" : "12.8 GB"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Running"
+        }
+      ],
+      "id" : "app.cutline",
+      "name" : "Cutline Video",
+      "summary" : "A web-downloaded video editor.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed from",
+          "value" : "Homebrew"
+        },
+        {
+          "label" : "Publisher",
+          "value" : "Helix Tools"
+        },
+        {
+          "label" : "Total footprint",
+          "value" : "4.6 GB"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Running"
+        }
+      ],
+      "id" : "app.helix",
+      "name" : "Helix Code",
+      "summary" : "A code editor installed with Homebrew.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed from",
+          "value" : "App Store"
+        },
+        {
+          "label" : "Total footprint",
+          "value" : "2.1 GB"
+        },
+        {
+          "label" : "Starts automatically",
+          "value" : "Yes"
+        }
+      ],
+      "id" : "app.cloudline",
+      "name" : "Cloudline Drive",
+      "summary" : "A file-sync application.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Installed from",
+          "value" : "macOS"
+        },
+        {
+          "label" : "Current state",
+          "value" : "Not running"
+        }
+      ],
+      "id" : "app.photos",
+      "name" : "Photos",
+      "summary" : "A macOS system application.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Memory now",
+          "value" : "1.4 GB"
+        },
+        {
+          "label" : "CPU now",
+          "value" : "8%"
+        }
+      ],
+      "id" : "process.cutline",
+      "name" : "Cutline Video",
+      "summary" : "The editor's main running process.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Memory now",
+          "value" : "3.8 GB"
+        },
+        {
+          "label" : "CPU now",
+          "value" : "42%"
+        }
+      ],
+      "id" : "process.render",
+      "name" : "Cutline render worker",
+      "summary" : "Renders previews and exports.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Memory now",
+          "value" : "620 MB"
+        },
+        {
+          "label" : "CPU now",
+          "value" : "3%"
+        }
+      ],
+      "id" : "process.helix",
+      "name" : "Helix Code",
+      "summary" : "The editor's main process.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Memory now",
+          "value" : "1.2 GB"
+        },
+        {
+          "label" : "CPU now",
+          "value" : "12%"
+        }
+      ],
+      "id" : "process.language",
+      "name" : "Swift language service",
+      "summary" : "Provides code completion and diagnostics.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Memory now",
+          "value" : "310 MB"
+        },
+        {
+          "label" : "CPU now",
+          "value" : "1%"
+        }
+      ],
+      "id" : "process.cloudline",
+      "name" : "Cloudline sync service",
+      "summary" : "Keeps selected folders synchronized.",
+      "type" : "process"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Size",
+          "value" : "84.2 GB"
+        },
+        {
+          "label" : "Category",
+          "value" : "User-created work"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Protected"
+        }
+      ],
+      "id" : "file.cutline-projects",
+      "name" : "Video projects",
+      "summary" : "Your original projects and media.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Size",
+          "value" : "9.6 GB"
+        },
+        {
+          "label" : "Last used",
+          "value" : "Today"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Safe to rebuild"
+        }
+      ],
+      "id" : "file.cutline-cache",
+      "name" : "Cutline render cache",
+      "summary" : "Temporary previews that Cutline can rebuild.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Size",
+          "value" : "640 MB"
+        },
+        {
+          "label" : "Last used",
+          "value" : "Yesterday"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Usually safe"
+        }
+      ],
+      "id" : "file.cutline-logs",
+      "name" : "Cutline diagnostic logs",
+      "summary" : "Diagnostic history produced by Cutline.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Size",
+          "value" : "3.7 GB"
+        },
+        {
+          "label" : "Last used",
+          "value" : "6 days ago"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Safe to rebuild"
+        }
+      ],
+      "id" : "file.helix-build",
+      "name" : "Helix build cache",
+      "summary" : "Compiled intermediates for recent projects.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Size",
+          "value" : "38.4 GB"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Not a cleanup candidate"
+        }
+      ],
+      "id" : "file.cloudline-copy",
+      "name" : "Cloudline local files",
+      "summary" : "Local copies of synchronized documents.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Size",
+          "value" : "1.1 GB"
+        },
+        {
+          "label" : "Ownership",
+          "value" : "Shared"
+        },
+        {
+          "label" : "Removal",
+          "value" : "Protected"
+        }
+      ],
+      "id" : "file.shared-media",
+      "name" : "Shared media support",
+      "summary" : "Media components used by more than one application.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "persistence.cloudline",
+      "name" : "Cloudline login item",
+      "summary" : "Starts Cloudline after you sign in.",
+      "type" : "persistence"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "persistence.cutline",
+      "name" : "Cutline update helper",
+      "summary" : "Checks for Cutline updates after sign-in.",
+      "type" : "persistence"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Current",
+          "value" : "Normal"
+        },
+        {
+          "label" : "Peak today",
+          "value" : "Critical"
+        }
+      ],
+      "id" : "resource.memory",
+      "name" : "Memory pressure",
+      "summary" : "Memory pressure is currently normal.",
+      "type" : "resource"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Likely reclaimable",
+          "value" : "13.9 GB"
+        },
+        {
+          "label" : "Protected user files",
+          "value" : "122.6 GB"
+        }
+      ],
+      "id" : "resource.storage",
+      "name" : "Reclaimable storage",
+      "summary" : "HAL estimates 13.9 GB can be safely rebuilt.",
+      "type" : "resource"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Occurred",
+          "value" : "Today at 2:14 PM"
+        },
+        {
+          "label" : "Duration",
+          "value" : "7 minutes"
+        },
+        {
+          "label" : "Largest contributor",
+          "value" : "Cutline render worker"
+        }
+      ],
+      "id" : "incident.render",
+      "name" : "Memory spike during video export",
+      "summary" : "Memory pressure became critical for seven minutes.",
+      "type" : "incident"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "event.export",
+      "name" : "4K export started",
+      "summary" : "A 4K video export began shortly before memory pressure rose.",
+      "type" : "event"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "event.project",
+      "name" : "Archive project opened",
+      "summary" : "A large Helix workspace was opened nearby in time.",
+      "type" : "event"
+    }
+  ],
+  "id" : "atlas-mac",
+  "name" : "This Mac",
+  "relationships" : [
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cutline-main-observed",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The process belongs to the Cutline application."
+        }
+      ],
+      "explanation" : "Cutline Video launched its main process.",
+      "id" : "cutline-main",
+      "source" : "app.cutline",
+      "target" : "process.cutline",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "render-parent",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "Cutline is the render worker's parent process."
+        }
+      ],
+      "explanation" : "Cutline launched a render worker for preview and export work.",
+      "id" : "cutline-render",
+      "source" : "process.cutline",
+      "target" : "process.render",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "project-access",
+          "kind" : "observed",
+          "source" : "Synthetic file activity",
+          "summary" : "Cutline opened project files in this location."
+        }
+      ],
+      "explanation" : "Cutline opens these projects, but they are your work and are protected.",
+      "id" : "cutline-projects",
+      "source" : "app.cutline",
+      "target" : "file.cutline-projects",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cache-writes",
+          "kind" : "observed",
+          "source" : "Synthetic file activity",
+          "summary" : "The render worker wrote the cache files."
+        }
+      ],
+      "explanation" : "The render worker produces this rebuildable preview cache.",
+      "id" : "cutline-cache",
+      "source" : "process.render",
+      "target" : "file.cutline-cache",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "log-identity",
+          "kind" : "observed",
+          "source" : "Synthetic filesystem observation",
+          "summary" : "The path and file metadata identify Cutline."
+        }
+      ],
+      "explanation" : "These diagnostic logs belong to Cutline and are usually removable.",
+      "id" : "cutline-logs",
+      "source" : "app.cutline",
+      "target" : "file.cutline-logs",
+      "type" : "owns"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "update-team",
+          "kind" : "observed",
+          "source" : "Synthetic signing observation",
+          "summary" : "The helper has Cutline's signing identity."
+        }
+      ],
+      "explanation" : "Cutline installed an update helper that starts after sign-in.",
+      "id" : "cutline-update",
+      "source" : "app.cutline",
+      "target" : "persistence.cutline",
+      "type" : "persists through"
+    },
+    {
+      "confidence" : "ambiguous",
+      "evidence" : [
+        {
+          "id" : "cutline-shared-access",
+          "kind" : "observed",
+          "source" : "Synthetic file activity",
+          "summary" : "Cutline accessed this shared location."
+        }
+      ],
+      "explanation" : "Cutline uses this shared media folder, but HAL cannot assign exclusive ownership.",
+      "id" : "cutline-shared",
+      "source" : "app.cutline",
+      "target" : "file.shared-media",
+      "type" : "shares"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "helix-main-observed",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The process belongs to Helix Code."
+        }
+      ],
+      "explanation" : "Helix Code launched its main process.",
+      "id" : "helix-main",
+      "source" : "app.helix",
+      "target" : "process.helix",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "language-parent",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "Helix is the service's parent process."
+        }
+      ],
+      "explanation" : "Helix launched the Swift language service for the open workspace.",
+      "id" : "helix-language",
+      "source" : "process.helix",
+      "target" : "process.language",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "build-activity",
+          "kind" : "observed",
+          "source" : "Synthetic file activity",
+          "summary" : "Cache writes occurred while the service was active."
+        }
+      ],
+      "explanation" : "The language service is the likely producer of this rebuildable cache.",
+      "id" : "helix-cache",
+      "source" : "process.language",
+      "target" : "file.helix-build",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cloudline-process",
+          "kind" : "observed",
+          "source" : "Synthetic process record",
+          "summary" : "The service belongs to Cloudline."
+        }
+      ],
+      "explanation" : "Cloudline launched its sync service.",
+      "id" : "cloudline-main",
+      "source" : "app.cloudline",
+      "target" : "process.cloudline",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cloudline-login-observed",
+          "kind" : "observed",
+          "source" : "Synthetic persistence record",
+          "summary" : "A login item names Cloudline."
+        }
+      ],
+      "explanation" : "Cloudline is configured to start after sign-in.",
+      "id" : "cloudline-login",
+      "source" : "app.cloudline",
+      "target" : "persistence.cloudline",
+      "type" : "persists through"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cloudline-sync",
+          "kind" : "observed",
+          "source" : "Synthetic file activity",
+          "summary" : "The sync service accesses this location."
+        }
+      ],
+      "explanation" : "Cloudline synchronizes these files; they are not ordinary disposable cache data.",
+      "id" : "cloudline-files",
+      "source" : "process.cloudline",
+      "target" : "file.cloudline-copy",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "render-samples",
+          "kind" : "observed",
+          "source" : "Synthetic resource samples",
+          "summary" : "Memory samples show a 4.7 GB increase."
+        }
+      ],
+      "explanation" : "The Cutline render worker was the largest memory contributor.",
+      "id" : "render-memory",
+      "source" : "process.render",
+      "target" : "resource.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "language-samples",
+          "kind" : "observed",
+          "source" : "Synthetic resource samples",
+          "summary" : "Memory samples identify the language service."
+        }
+      ],
+      "explanation" : "The Swift language service contributed 1.2 GB during the same period.",
+      "id" : "language-memory",
+      "source" : "process.language",
+      "target" : "resource.memory",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "pressure-window",
+          "kind" : "observed",
+          "source" : "Synthetic incident record",
+          "summary" : "Pressure remained critical for seven minutes."
+        }
+      ],
+      "explanation" : "Critical memory pressure defines this preserved incident.",
+      "id" : "memory-incident",
+      "source" : "resource.memory",
+      "target" : "incident.render",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "export-timeline",
+          "kind" : "observed",
+          "source" : "Synthetic event timeline",
+          "summary" : "The export preceded the spike by 18 seconds."
+        }
+      ],
+      "explanation" : "The export began 18 seconds before pressure rose and is strongly correlated with the spike.",
+      "id" : "export-near",
+      "source" : "event.export",
+      "target" : "incident.render",
+      "type" : "occurred near"
+    },
+    {
+      "confidence" : "possible",
+      "evidence" : [
+        {
+          "id" : "project-timeline",
+          "kind" : "observed",
+          "source" : "Synthetic event timeline",
+          "summary" : "The project event occurred four minutes earlier."
+        }
+      ],
+      "explanation" : "The workspace opened four minutes earlier; HAL has not established that it caused the spike.",
+      "id" : "project-near",
+      "source" : "event.project",
+      "target" : "incident.render",
+      "type" : "occurred near"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "cache-size",
+          "kind" : "observed",
+          "source" : "Synthetic storage snapshot",
+          "summary" : "The synthetic inventory measures 9.6 GB."
+        }
+      ],
+      "explanation" : "Removing this rebuildable cache would reclaim 9.6 GB.",
+      "id" : "cache-reclaim",
+      "source" : "file.cutline-cache",
+      "target" : "resource.storage",
+      "type" : "contributes to"
+    },
+    {
+      "confidence" : "probable",
+      "evidence" : [
+        {
+          "id" : "build-size",
+          "kind" : "observed",
+          "source" : "Synthetic storage snapshot",
+          "summary" : "The synthetic inventory measures 3.7 GB."
+        }
+      ],
+      "explanation" : "Removing this stale build cache would reclaim 3.7 GB and require rebuilding it later.",
+      "id" : "build-reclaim",
+      "source" : "file.helix-build",
+      "target" : "resource.storage",
+      "type" : "contributes to"
+    }
+  ],
+  "schemaVersion" : 1,
+  "summary" : "A coherent fictional Mac for exploring applications, storage, and performance."
+}

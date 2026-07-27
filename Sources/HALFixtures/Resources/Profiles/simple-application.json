@@ -1,102 +1,125 @@
 {
-  "schemaVersion": 1,
-  "id": "simple-application",
-  "name": "Simple application",
-  "summary": "A straightforward application with one process and ordinary activity.",
-  "entities": [
+  "entities" : [
     {
-      "id": "app.notes",
-      "type": "application",
-      "name": "Northstar Notes",
-      "summary": "A signed note-taking application.",
-      "details": [
-        { "label": "Identity", "value": "Northstar Notes" },
-        { "label": "Origin", "value": "App Store" },
-        { "label": "State", "value": "Installed · Approved · Running" }
-      ]
-    },
-    {
-      "id": "process.notes",
-      "type": "process",
-      "name": "Northstar Notes process",
-      "summary": "The application's main running process.",
-      "details": []
-    },
-    {
-      "id": "file.notes",
-      "type": "file",
-      "name": "Northstar support folder",
-      "summary": "Preferences and local support data.",
-      "details": [
-        { "label": "Data class", "value": "Private application support" },
-        { "label": "Activity", "value": "Recently used" }
-      ]
-    },
-    {
-      "id": "resource.notes",
-      "type": "resource",
-      "name": "Ordinary resource use",
-      "summary": "Low CPU and memory use in this scenario.",
-      "details": [
-        { "label": "Memory", "value": "182 MB" },
-        { "label": "CPU", "value": "1.2%" }
-      ]
-    }
-  ],
-  "relationships": [
-    {
-      "id": "notes-launches",
-      "source": "app.notes",
-      "target": "process.notes",
-      "type": "launches",
-      "confidence": "confirmed",
-      "explanation": "Northstar Notes launched its main process.",
-      "evidence": [
+      "details" : [
         {
-          "id": "notes-process-record",
-          "kind": "observed",
-          "summary": "The process record names Northstar Notes as its executable.",
-          "source": "Synthetic process observation"
-        }
-      ]
-    },
-    {
-      "id": "notes-files",
-      "source": "process.notes",
-      "target": "file.notes",
-      "type": "reads and writes",
-      "confidence": "high",
-      "explanation": "The running application uses this support folder.",
-      "evidence": [
-        {
-          "id": "notes-file-activity",
-          "kind": "observed",
-          "summary": "File activity occurred while the process was active.",
-          "source": "Synthetic file event"
+          "label" : "Identity",
+          "value" : "Northstar Notes"
         },
         {
-          "id": "notes-path-match",
-          "kind": "inferred",
-          "summary": "The folder identity matches the application identity.",
-          "source": "Relationship rule v1"
+          "label" : "Origin",
+          "value" : "App Store"
+        },
+        {
+          "label" : "State",
+          "value" : "Installed · Approved · Running"
         }
-      ]
+      ],
+      "id" : "app.notes",
+      "name" : "Northstar Notes",
+      "summary" : "A signed note-taking application.",
+      "type" : "application"
     },
     {
-      "id": "notes-resource",
-      "source": "process.notes",
-      "target": "resource.notes",
-      "type": "consumes",
-      "confidence": "confirmed",
-      "explanation": "The process accounts for this measured resource use.",
-      "evidence": [
+      "details" : [
+
+      ],
+      "id" : "process.notes",
+      "name" : "Northstar Notes process",
+      "summary" : "The application's main running process.",
+      "type" : "process"
+    },
+    {
+      "details" : [
         {
-          "id": "notes-resource-sample",
-          "kind": "observed",
-          "summary": "The sample identifies the process as the contributor.",
-          "source": "Synthetic resource sample"
+          "label" : "Data class",
+          "value" : "Private application support"
+        },
+        {
+          "label" : "Activity",
+          "value" : "Recently used"
         }
-      ]
+      ],
+      "id" : "file.notes",
+      "name" : "Northstar support folder",
+      "summary" : "Preferences and local support data.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Memory",
+          "value" : "182 MB"
+        },
+        {
+          "label" : "CPU",
+          "value" : "1.2%"
+        }
+      ],
+      "id" : "resource.notes",
+      "name" : "Ordinary resource use",
+      "summary" : "Low CPU and memory use in this scenario.",
+      "type" : "resource"
     }
-  ]
+  ],
+  "id" : "simple-application",
+  "name" : "Simple application",
+  "relationships" : [
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "notes-process-record",
+          "kind" : "observed",
+          "source" : "Synthetic process observation",
+          "summary" : "The process record names Northstar Notes as its executable."
+        }
+      ],
+      "explanation" : "Northstar Notes launched its main process.",
+      "id" : "notes-launches",
+      "source" : "app.notes",
+      "target" : "process.notes",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "high",
+      "evidence" : [
+        {
+          "id" : "notes-file-activity",
+          "kind" : "observed",
+          "source" : "Synthetic file event",
+          "summary" : "File activity occurred while the process was active."
+        },
+        {
+          "id" : "notes-path-match",
+          "kind" : "inferred",
+          "source" : "Relationship rule v1",
+          "summary" : "The folder identity matches the application identity."
+        }
+      ],
+      "explanation" : "The running application uses this support folder.",
+      "id" : "notes-files",
+      "source" : "process.notes",
+      "target" : "file.notes",
+      "type" : "reads and writes"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "notes-resource-sample",
+          "kind" : "observed",
+          "source" : "Synthetic resource sample",
+          "summary" : "The sample identifies the process as the contributor."
+        }
+      ],
+      "explanation" : "The process accounts for this measured resource use.",
+      "id" : "notes-resource",
+      "source" : "process.notes",
+      "target" : "resource.notes",
+      "type" : "consumes"
+    }
+  ],
+  "schemaVersion" : 1,
+  "summary" : "A straightforward application with one process and ordinary activity."
 }

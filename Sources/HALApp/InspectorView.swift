@@ -176,13 +176,15 @@ struct InspectorView: View {
         .foregroundStyle(tint)
       }
 
-      Text(groupTitle(
-        relationship: first,
-        count: counterparts.count,
-        counterparts: counterparts,
-        selectedEntity: selectedEntity,
-        isUpstream: isUpstream
-      ))
+      Text(
+        groupTitle(
+          relationship: first,
+          count: counterparts.count,
+          counterparts: counterparts,
+          selectedEntity: selectedEntity,
+          isUpstream: isUpstream
+        )
+      )
       .font(.callout.bold())
 
       if relationships.count > 1 {
@@ -223,8 +225,8 @@ struct InspectorView: View {
       let type = graph.entity(counterpartID)?.type.rawValue ?? "unknown"
       return "\(relationship.type.rawValue)|\(type)"
     }
-      .map { (key: $0.key, relationships: $0.value) }
-      .sorted { $0.key < $1.key }
+    .map { (key: $0.key, relationships: $0.value) }
+    .sorted { $0.key < $1.key }
   }
 
   private func groupTitle(

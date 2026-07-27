@@ -1,0 +1,177 @@
+{
+  "entities" : [
+    {
+      "details" : [
+
+      ],
+      "id" : "app.orbit",
+      "name" : "Orbit Writer",
+      "summary" : "A writing application from Example Cooperative.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "app.quill",
+      "name" : "Quill Review",
+      "summary" : "A review application from Example Cooperative.",
+      "type" : "application"
+    },
+    {
+      "details" : [
+        {
+          "label" : "State",
+          "value" : "Unresolved"
+        },
+        {
+          "label" : "Why unresolved",
+          "value" : "Two durable identities agree equally"
+        }
+      ],
+      "id" : "persistence.shared",
+      "name" : "Document update helper",
+      "summary" : "A login helper shared or left behind by one of two applications.",
+      "type" : "persistence"
+    },
+    {
+      "details" : [
+        {
+          "label" : "Ownership",
+          "value" : "Shared or ambiguous"
+        },
+        {
+          "label" : "Action",
+          "value" : "Protected from automatic removal"
+        }
+      ],
+      "id" : "file.shared",
+      "name" : "Shared document services",
+      "summary" : "Support data used by both applications.",
+      "type" : "file"
+    },
+    {
+      "details" : [
+
+      ],
+      "id" : "process.shared",
+      "name" : "Document service process",
+      "summary" : "A running process started by the helper.",
+      "type" : "process"
+    }
+  ],
+  "id" : "ambiguous-ownership",
+  "name" : "Ambiguous ownership",
+  "relationships" : [
+    {
+      "confidence" : "ambiguous",
+      "evidence" : [
+        {
+          "id" : "orbit-team",
+          "kind" : "observed",
+          "source" : "Synthetic signing observation",
+          "summary" : "Orbit and the helper share a signing Team ID."
+        },
+        {
+          "id" : "orbit-name",
+          "kind" : "inferred",
+          "source" : "Ownership resolver v1",
+          "summary" : "The helper serves document features used by Orbit."
+        }
+      ],
+      "explanation" : "Orbit Writer is one plausible owner, but the evidence does not distinguish it from Quill Review.",
+      "id" : "orbit-helper",
+      "source" : "persistence.shared",
+      "target" : "app.orbit",
+      "type" : "may belong to"
+    },
+    {
+      "confidence" : "ambiguous",
+      "evidence" : [
+        {
+          "id" : "quill-team",
+          "kind" : "observed",
+          "source" : "Synthetic signing observation",
+          "summary" : "Quill and the helper share a signing Team ID."
+        },
+        {
+          "id" : "quill-name",
+          "kind" : "inferred",
+          "source" : "Ownership resolver v1",
+          "summary" : "The helper serves document features used by Quill."
+        }
+      ],
+      "explanation" : "Quill Review is equally plausible; HAL cannot select a confident owner.",
+      "id" : "quill-helper",
+      "source" : "persistence.shared",
+      "target" : "app.quill",
+      "type" : "may belong to"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "helper-process-tree",
+          "kind" : "observed",
+          "source" : "Synthetic process tree",
+          "summary" : "The process record identifies the helper as parent."
+        }
+      ],
+      "explanation" : "The login helper launched the document service process.",
+      "id" : "helper-process",
+      "source" : "persistence.shared",
+      "target" : "process.shared",
+      "type" : "launches"
+    },
+    {
+      "confidence" : "ambiguous",
+      "evidence" : [
+        {
+          "id" : "orbit-folder-use",
+          "kind" : "observed",
+          "source" : "Synthetic file event",
+          "summary" : "Orbit accessed files in the shared folder."
+        }
+      ],
+      "explanation" : "Orbit accesses this folder, but the folder is not exclusively its data.",
+      "id" : "orbit-folder",
+      "source" : "app.orbit",
+      "target" : "file.shared",
+      "type" : "shares"
+    },
+    {
+      "confidence" : "ambiguous",
+      "evidence" : [
+        {
+          "id" : "quill-folder-use",
+          "kind" : "observed",
+          "source" : "Synthetic file event",
+          "summary" : "Quill accessed files in the shared folder."
+        }
+      ],
+      "explanation" : "Quill also accesses this folder, so HAL cannot assign exclusive ownership.",
+      "id" : "quill-folder",
+      "source" : "app.quill",
+      "target" : "file.shared",
+      "type" : "shares"
+    },
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "shared-folder-event",
+          "kind" : "observed",
+          "source" : "Synthetic file event",
+          "summary" : "File events identify the document service process."
+        }
+      ],
+      "explanation" : "The shared service process reads and writes this support folder.",
+      "id" : "process-folder",
+      "source" : "process.shared",
+      "target" : "file.shared",
+      "type" : "reads and writes"
+    }
+  ],
+  "schemaVersion" : 1,
+  "summary" : "Two applications plausibly own a shared helper and folder; evidence is inconclusive."
+}
