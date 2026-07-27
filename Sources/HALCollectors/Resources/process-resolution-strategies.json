@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "strategies": [
+    {
+      "id": "exact-main-executable",
+      "kind": "exactMainExecutable",
+      "confidence": "confirmed",
+      "priority": 100
+    },
+    {
+      "id": "contained-in-application-bundle",
+      "kind": "containedInApplicationBundle",
+      "confidence": "high",
+      "priority": 80
+    }
+  ]
+}
