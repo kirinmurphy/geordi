@@ -81,6 +81,7 @@ More than one classification can apply to a field.
 | Recently used or stale | Requires historical collection; heuristically inferred | HAL observation history plus weak filesystem evidence | Access time is often unreliable. |
 | Reads or writes relationship | Requires historical collection; often elevated | FSEvents for coarse changes; Endpoint Security for later high-fidelity attribution | FSEvents does not reliably identify the writing process. |
 | Exact ownership | Deterministically derived for containment and authoritative package paths; otherwise inferred | Bundle containment, receipts, containers, bundle-ID conventions, historical writers | Shared support and documents often have multiple consumers. |
+| Current conventional application association | Direct path observation plus derived or inferred match | Manifest-selected user-Library candidates using exact bundle IDs or application names | Implemented metadata-only; exact bundle-ID paths are strong associations, name matches are weak, and neither proves current access or exclusive ownership. |
 | Application footprint | Deterministically derived over qualified relationships, but incomplete | Sum explicitly associated items with deduplication rules | Present as “observed associated footprint,” not complete ownership. |
 | Current fixture sizes, rebuildability, protection, and removal text | Currently hardcoded/demo-only | Fixture literals | These are demo findings, not machine facts. |
 

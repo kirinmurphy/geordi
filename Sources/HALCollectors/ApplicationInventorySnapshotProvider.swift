@@ -6,15 +6,20 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let collector: ApplicationBundleCollector
   public let signatureCollector: ApplicationSignatureCollector
   public let provenanceCollector: ApplicationProvenanceCollector
+  public let associatedLocationCollector: ApplicationAssociatedLocationCollector
   public let projector: ApplicationGraphProjector
 
   public init(
     scanID: ScanID,
     roots: [ApplicationSearchRoot],
     provenanceConfiguration: ApplicationProvenanceConfiguration,
+    associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
+    userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
       FileSystemApplicationProvenanceInspector(),
+    associatedLocationInspector: any AssociatedLocationInspecting =
+      FileSystemAssociatedLocationInspector(),
     clock: any HALClock = SystemClock()
   ) {
     self.scanID = scanID
@@ -28,6 +33,12 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       inspector: provenanceInspector,
       clock: clock
     )
+    associatedLocationCollector = ApplicationAssociatedLocationCollector(
+      configuration: associatedLocationConfiguration,
+      userHome: userHome,
+      inspector: associatedLocationInspector,
+      clock: clock
+    )
     projector = ApplicationGraphProjector()
   }
 
@@ -35,18 +46,24 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     scanID: ScanID,
     configuration: ApplicationCollectorConfiguration,
     provenanceConfiguration: ApplicationProvenanceConfiguration,
+    associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
       FileSystemApplicationProvenanceInspector(),
+    associatedLocationInspector: any AssociatedLocationInspecting =
+      FileSystemAssociatedLocationInspector(),
     clock: any HALClock = SystemClock()
   ) throws {
     try self.init(
       scanID: scanID,
       roots: configuration.searchRoots(userHome: userHome),
       provenanceConfiguration: provenanceConfiguration,
+      associatedLocationConfiguration: associatedLocationConfiguration,
+      userHome: userHome,
       signatureInspector: signatureInspector,
       provenanceInspector: provenanceInspector,
+      associatedLocationInspector: associatedLocationInspector,
       clock: clock
     )
   }
@@ -61,11 +78,16 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       scanID: scanID,
       applications: applications.observations
     )
+    let associatedLocations = associatedLocationCollector.collect(
+      scanID: scanID,
+      applications: applications.observations
+    )
     return projector.snapshot(
       scanID: scanID,
       output: applications,
       signatures: signatures,
-      provenance: provenance
+      provenance: provenance,
+      associatedLocations: associatedLocations
     )
   }
 }

@@ -115,8 +115,12 @@ struct ApplicationBundleCollectorTests {
           )
         ]
       ),
+      associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration(
+        locations: []
+      ),
       signatureInspector: StubProviderSignatureInspector(),
       provenanceInspector: StubProviderProvenanceInspector(),
+      associatedLocationInspector: StubAssociatedLocationInspector(),
       clock: FixedClock(timestamp)
     )
 
@@ -156,6 +160,12 @@ struct ApplicationBundleCollectorTests {
       options: 0
     )
     try data.write(to: contents.appending(path: "Info.plist"))
+  }
+}
+
+private struct StubAssociatedLocationInspector: AssociatedLocationInspecting {
+  func inspectLocation(at url: URL) -> AssociatedLocationInspection {
+    AssociatedLocationInspection(status: .absent)
   }
 }
 

@@ -68,3 +68,20 @@ as not retained and does not imply that an application was a web download.
 
 The App Store adapter records only whether the conventional bundle receipt file
 exists. It does not read or retain receipt contents.
+
+## 2026-07-27: first file associations are conventional metadata observations
+
+The first associated-location collector resolves a bounded manifest of
+conventional user-Library paths for each observed application. It uses
+`lstat`-level metadata only, does not enumerate or descend into those locations,
+does not read contents, does not calculate sizes, and never performs cleanup.
+
+An exact bundle-identifier path is a strong conventional association, not proof
+of current use or exclusive ownership. Application-name matches are weaker.
+Both are projected as **may belong to** relationships with their match rule and
+filesystem observation preserved as separate evidence. Missing, unreadable,
+and permission-denied candidates remain collector outcomes even though only
+present locations become graph nodes.
+
+Group containers are deferred until HAL collects team/group identifiers.
+Guessing them from the application bundle identifier would overstate ownership.

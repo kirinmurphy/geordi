@@ -86,29 +86,35 @@ These items were recorded from the first linked-Mac product test on
 
 ### First useful live relationships: application-associated files
 
-- [ ] Add a bounded, read-only associated-file collector before expanding to
+- [x] Add a bounded, read-only associated-file collector before expanding to
   broad storage scanning.
-- [ ] Select conventional candidate locations and match strategies through
+- [x] Select conventional candidate locations and match strategies through
   versioned manifests rather than Swift path arrays. Initial candidates should
   cover application support, caches, preferences, logs, saved state, sandbox
-  containers, group containers, HTTP storage, and WebKit data.
-- [ ] Match exact bundle identifiers and authoritative bundle/container
+  containers, HTTP storage, and WebKit data.
+- [ ] Add group-container candidates only after team/group identifiers are
+  collected; bundle identifiers alone are not sufficient to claim a match.
+- [x] Match exact bundle identifiers and authoritative bundle/container
   metadata first. Treat normalized application-name/path matches as weaker
   evidence.
-- [ ] Create file/location entities for observed candidates and connect them to
+- [x] Create file/location entities for observed candidates and connect them to
   applications with evidence-bearing confidence. Use **may belong to** for
   convention or name matches; do not claim runtime reads/writes without file
   activity observations.
-- [ ] Preserve unmatched locations, shared/group-container ambiguity,
-  permission-denied paths, unreadable metadata, absent candidates, and
-  applications with no discovered associations.
-- [ ] Collect metadata only in the first pass. Do not read file contents or
+- [x] Preserve permission-denied paths, unreadable metadata, absent candidates,
+  and applications with no discovered associations in collector output.
+- [ ] Add bounded root enumeration to preserve unmatched locations and
+  shared/group-container ambiguity without turning the collector into a broad
+  home-directory scan.
+- [x] Collect metadata only in the first pass. Do not read file contents or
   calculate recursive directory sizes until bounded traversal, cancellation,
   privacy, and performance tests exist.
-- [ ] Project observed file associations into the same live relationship map
+- [x] Project observed file associations into the same live relationship map
   and inspector used by synthetic profiles.
-- [ ] Add deterministic fixtures and tests for exact, probable, ambiguous,
-  absent, permission-denied, shared, and unmatched associations.
+- [x] Add deterministic tests for exact bundle-ID, weaker name, absent,
+  permission-denied, unreadable, and unsafe-path states.
+- [ ] Add shared, unmatched, and group-container association fixtures when
+  bounded root enumeration is implemented.
 
 ## Priority 0: composition and schema foundation
 

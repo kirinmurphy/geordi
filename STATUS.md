@@ -89,7 +89,7 @@ Milestone 0 — repository and interactive concept.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 51 deterministic tests plus fixture and bundle validation
+- Test harness: 57 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -103,8 +103,10 @@ Milestone 0 — repository and interactive concept.
   with static code-signing validation behind an explicit live snapshot provider;
   search roots and provenance adapters are selected through validated
   declarative manifests; App Store receipt presence and redacted download-origin
-  hosts are projected into the live atlas, and the provider is selected only
-  after explicit linking
+  hosts are projected into the live atlas; a bounded manifest-selected
+  associated-location collector adds evidence-bearing application/file
+  relationships without reading contents or calculating sizes; and the provider
+  is selected only after explicit linking
 - Data-source lifecycle: first launch is synthetic; linking, cached live
   startup, manual refresh, timestamp/freshness presentation, atomic snapshot
   backup, guarded unlink/reset, and return to the fictional profile are
@@ -115,9 +117,10 @@ Milestone 0 — repository and interactive concept.
 The app launches with the deterministic synthetic provider and performs no
 machine collection until the user explicitly links the Mac. Linked mode reads
 manifest-scoped application bundle metadata, static code-signing facts, App
-Store receipt presence, and redacted download-origin hosts, then persists and
-refreshes the normalized snapshot. Installer-package and Homebrew provenance,
-process inventory, SQLite, and distribution remain unimplemented. Their
+Store receipt presence, redacted download-origin hosts, and conventional
+associated-location metadata, then persists and refreshes the normalized
+snapshot. Installer-package and Homebrew provenance, group-container
+association, process inventory, SQLite, and distribution remain unimplemented. Their
 sequencing is documented in `REAL_DATA_ASSESSMENT.md`.
 
 ## How to run

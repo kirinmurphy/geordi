@@ -102,3 +102,43 @@ public struct ApplicationProvenanceValue: Hashable, Codable, Sendable {
     self.facts = facts
   }
 }
+
+public enum AssociatedLocationStatus: String, Hashable, Codable, Sendable {
+  case present
+  case absent
+  case permissionDenied
+  case unreadable
+}
+
+public enum AssociatedLocationMatch: String, Hashable, Codable, Sendable {
+  case bundleIdentifier
+  case applicationName
+}
+
+public struct ApplicationAssociatedLocationValue: Hashable, Codable, Sendable {
+  public let applicationPath: String
+  public let locationID: String
+  public let locationPath: String
+  public let categoryLabel: String
+  public let match: AssociatedLocationMatch
+  public let status: AssociatedLocationStatus
+  public let isDirectory: Bool?
+
+  public init(
+    applicationPath: String,
+    locationID: String,
+    locationPath: String,
+    categoryLabel: String,
+    match: AssociatedLocationMatch,
+    status: AssociatedLocationStatus,
+    isDirectory: Bool? = nil
+  ) {
+    self.applicationPath = applicationPath
+    self.locationID = locationID
+    self.locationPath = locationPath
+    self.categoryLabel = categoryLabel
+    self.match = match
+    self.status = status
+    self.isDirectory = isDirectory
+  }
+}

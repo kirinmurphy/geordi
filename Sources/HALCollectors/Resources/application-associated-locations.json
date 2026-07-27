@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "locations": [
+    {
+      "id": "application-support-bundle-id",
+      "categoryLabel": "Application support",
+      "pathTemplate": "$USER_HOME/Library/Application Support/$BUNDLE_ID",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "cache-bundle-id",
+      "categoryLabel": "Cache",
+      "pathTemplate": "$USER_HOME/Library/Caches/$BUNDLE_ID",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "preferences-bundle-id",
+      "categoryLabel": "Preferences",
+      "pathTemplate": "$USER_HOME/Library/Preferences/$BUNDLE_ID.plist",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "logs-bundle-id",
+      "categoryLabel": "Logs",
+      "pathTemplate": "$USER_HOME/Library/Logs/$BUNDLE_ID",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "saved-state-bundle-id",
+      "categoryLabel": "Saved application state",
+      "pathTemplate": "$USER_HOME/Library/Saved Application State/$BUNDLE_ID.savedState",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "sandbox-container-bundle-id",
+      "categoryLabel": "Sandbox container",
+      "pathTemplate": "$USER_HOME/Library/Containers/$BUNDLE_ID",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "http-storage-bundle-id",
+      "categoryLabel": "HTTP storage",
+      "pathTemplate": "$USER_HOME/Library/HTTPStorages/$BUNDLE_ID",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "webkit-bundle-id",
+      "categoryLabel": "WebKit data",
+      "pathTemplate": "$USER_HOME/Library/WebKit/$BUNDLE_ID",
+      "match": "bundleIdentifier"
+    },
+    {
+      "id": "application-support-name",
+      "categoryLabel": "Application support",
+      "pathTemplate": "$USER_HOME/Library/Application Support/$APP_NAME",
+      "match": "applicationName"
+    },
+    {
+      "id": "cache-name",
+      "categoryLabel": "Cache",
+      "pathTemplate": "$USER_HOME/Library/Caches/$APP_NAME",
+      "match": "applicationName"
+    },
+    {
+      "id": "logs-name",
+      "categoryLabel": "Logs",
+      "pathTemplate": "$USER_HOME/Library/Logs/$APP_NAME",
+      "match": "applicationName"
+    }
+  ]
+}

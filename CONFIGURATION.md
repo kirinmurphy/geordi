@@ -107,3 +107,12 @@ Application provenance adapters are selected and labeled by
 its adjacent versioned schema. The current adapters observe App Store receipt
 presence and retained download-origin metadata. Adapter manifests select
 bounded collector implementations; they cannot add arbitrary executable code.
+
+Conventional application-associated locations are defined by
+`HALCollectors/Resources/application-associated-locations.json` and its
+adjacent versioned schema. Templates are restricted to `$USER_HOME/` and the
+explicit `$BUNDLE_ID` or `$APP_NAME` match token. Parent traversal, unknown
+tokens, unsafe application-name components, and paths outside the resolved user
+home are rejected. The manifest supplies resource instances and display
+categories; code supplies only generic resolution, metadata inspection, and
+evidence projection.
