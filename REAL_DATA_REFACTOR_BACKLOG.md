@@ -16,7 +16,7 @@ field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
   projection.
 - [x] Define strict decoding, unknown-key rejection, semantic validation, and
   field-path diagnostics.
-- [ ] Define schema migration/version policy.
+- [x] Define schema migration/version policy in `SCHEMA_VERSIONING.md`.
 - [ ] Add a manifest catalog for profile composition.
 - [ ] Add per-resource manifests for independently discoverable complex items.
 - [ ] Add collection manifests for small resource sets.

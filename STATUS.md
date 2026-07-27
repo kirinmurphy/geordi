@@ -93,8 +93,8 @@ Milestone 0 — repository and interactive concept.
 - Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
-- Manifest migration: simple-application fixture migrated end-to-end; remaining
-  synthetic profiles still require migration
+- Manifest migration: simple-application and helper-rich-application fixtures
+  migrated end-to-end; remaining synthetic profiles still require migration
 - Real-data preparation: typed observations, scan and collector outcomes,
   capability and freshness states, versioned finding evidence, and an injected
   graph-snapshot provider boundary

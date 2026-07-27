@@ -80,6 +80,10 @@ The fixture validator runs as part of `make verify` and validates every
 committed synthetic profile manifest. An invalid or stale manifest is a build
 failure, not a runtime warning.
 
+`SCHEMA_VERSIONING.md` defines compatibility, version increments, migrations,
+and the required same-change updates across schemas, Swift projections,
+fixtures, and documentation.
+
 Collector roots, rebuildable-data locations, path categories, and other
 growable detector knowledge must move into schema-validated manifests before
 those features are enabled in the application. Security invariants remain in

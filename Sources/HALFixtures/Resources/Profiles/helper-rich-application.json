@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "id": "helper-rich-application",
+  "name": "Helper-rich application",
+  "summary": "An editor with child processes, persistent login helper, caches, and shared support.",
+  "entities": [
+    {
+      "id": "app.forge",
+      "type": "application",
+      "name": "Forge Studio",
+      "summary": "A developer editor with several supporting components.",
+      "details": [
+        { "label": "Origin", "value": "Signed disk image" },
+        { "label": "Publisher", "value": "Example Tools" },
+        { "label": "State", "value": "Installed · Approved · Running" }
+      ]
+    },
+    { "id": "process.forge", "type": "process", "name": "Forge Studio process", "summary": "The editor's main process.", "details": [] },
+    { "id": "process.renderer", "type": "process", "name": "Forge renderer", "summary": "Displays editor content in an isolated process.", "details": [] },
+    { "id": "process.indexer", "type": "process", "name": "Forge indexer", "summary": "Indexes the open workspace.", "details": [] },
+    { "id": "persistence.forge", "type": "persistence", "name": "Forge login helper", "summary": "Starts Forge background services after sign-in.", "details": [] },
+    { "id": "file.forge-cache", "type": "file", "name": "Forge cache", "summary": "Rebuildable editor cache.", "details": [] },
+    { "id": "file.forge-log", "type": "file", "name": "Forge logs", "summary": "Diagnostic logs written by Forge.", "details": [] },
+    { "id": "file.shared-tools", "type": "file", "name": "Developer tools support", "summary": "A shared folder used by Forge and other tools.", "details": [] },
+    { "id": "resource.forge", "type": "resource", "name": "Forge activity", "summary": "Combined editor resource use.", "details": [] }
+  ],
+  "relationships": [
+    {
+      "id": "forge-launches",
+      "source": "app.forge",
+      "target": "process.forge",
+      "type": "launches",
+      "confidence": "confirmed",
+      "explanation": "Forge Studio launched its main process.",
+      "evidence": [
+        { "id": "forge-main-observation", "kind": "observed", "summary": "The application and process identities match.", "source": "Synthetic process observation" }
+      ]
+    },
+    {
+      "id": "forge-renderer",
+      "source": "process.forge",
+      "target": "process.renderer",
+      "type": "launches",
+      "confidence": "confirmed",
+      "explanation": "The main Forge process launched its renderer.",
+      "evidence": [
+        { "id": "forge-parent-renderer", "kind": "observed", "summary": "The renderer records Forge as its parent process.", "source": "Synthetic process tree" }
+      ]
+    },
+    {
+      "id": "forge-indexer",
+      "source": "process.forge",
+      "target": "process.indexer",
+      "type": "launches",
+      "confidence": "confirmed",
+      "explanation": "The main Forge process launched its indexer.",
+      "evidence": [
+        { "id": "forge-parent-indexer", "kind": "observed", "summary": "The indexer records Forge as its parent process.", "source": "Synthetic process tree" }
+      ]
+    },
+    {
+      "id": "forge-persists",
+      "source": "app.forge",
+      "target": "persistence.forge",
+      "type": "persists through",
+      "confidence": "high",
+      "explanation": "Forge appears configured to start a helper after sign-in.",
+      "evidence": [
+        { "id": "forge-team-match", "kind": "observed", "summary": "The helper and application share a signing identity.", "source": "Synthetic signing observation" },
+        { "id": "forge-helper-rule", "kind": "inferred", "summary": "The helper label and bundle identity match Forge.", "source": "Persistence resolver v1" }
+      ]
+    },
+    {
+      "id": "forge-cache",
+      "source": "process.renderer",
+      "target": "file.forge-cache",
+      "type": "reads and writes",
+      "confidence": "high",
+      "explanation": "The renderer is the likely active user of this cache.",
+      "evidence": [
+        { "id": "forge-cache-event", "kind": "observed", "summary": "Renderer activity and cache writes overlap.", "source": "Synthetic file event" }
+      ]
+    },
+    {
+      "id": "forge-log",
+      "source": "process.indexer",
+      "target": "file.forge-log",
+      "type": "reads and writes",
+      "confidence": "confirmed",
+      "explanation": "The indexer writes diagnostic messages to these logs.",
+      "evidence": [
+        { "id": "forge-log-writer", "kind": "observed", "summary": "The synthetic write event identifies the indexer.", "source": "Synthetic file event" }
+      ]
+    },
+    {
+      "id": "forge-shared",
+      "source": "app.forge",
+      "target": "file.shared-tools",
+      "type": "shares",
+      "confidence": "probable",
+      "explanation": "Forge uses this folder, but it is not the only plausible owner.",
+      "evidence": [
+        { "id": "forge-shared-use", "kind": "observed", "summary": "Forge accessed the support folder.", "source": "Synthetic file event" },
+        { "id": "forge-shared-rule", "kind": "inferred", "summary": "Other developer tools also use this conventional path.", "source": "Ownership resolver v1" }
+      ]
+    },
+    {
+      "id": "forge-resource",
+      "source": "process.indexer",
+      "target": "resource.forge",
+      "type": "consumes",
+      "confidence": "confirmed",
+      "explanation": "The indexer contributes most of Forge's current activity.",
+      "evidence": [
+        { "id": "forge-resource-sample", "kind": "observed", "summary": "The indexer leads the sampled CPU contribution.", "source": "Synthetic resource sample" }
+      ]
+    }
+  ]
+}

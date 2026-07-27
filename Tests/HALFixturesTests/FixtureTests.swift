@@ -16,7 +16,7 @@ struct FixtureTests {
 
   @Test("Every committed profile manifest validates through the central schema")
   func profileManifestsValidate() throws {
-    #expect(try FixtureCatalog.validateManifestProfiles() == 1)
+    #expect(try FixtureCatalog.validateManifestProfiles() == 2)
   }
 
   @Test("Catalog has all required Phase 0 scenarios")
