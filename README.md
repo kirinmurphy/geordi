@@ -84,6 +84,17 @@ Verify it:
 make verify
 ```
 
+Export every cataloged synthetic profile through the canonical deterministic
+encoder:
+
+```bash
+swift run hal-fixture-validator --export /tmp/hal-profile-export
+```
+
+The export validates each graph, sorts entities, relationships, details, and
+evidence, emits stable JSON keys, and revalidates the encoded document against
+the versioned system-profile schema.
+
 Open `Package.swift` in Xcode and select the `HALApp` scheme for Xcode builds
 and debugging. The prototype never reads system inventory, requests
 permissions, mutates the machine, or connects to a remote service.

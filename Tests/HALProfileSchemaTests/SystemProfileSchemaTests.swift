@@ -5,6 +5,54 @@ import Testing
 
 @Suite("System profile schema")
 struct SystemProfileSchemaTests {
+  @Test("Canonical export is deterministic, sorted, and round trips")
+  func deterministicExport() throws {
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "export", name: "Export", summary: "Export"),
+      entities: [
+        Entity(id: "z", type: .file, name: "Z", summary: "Z"),
+        Entity(
+          id: "a",
+          type: .application,
+          name: "A",
+          summary: "A",
+          details: [Detail("Z detail", "2"), Detail("A detail", "1")]
+        ),
+      ],
+      relationships: [
+        Relationship(
+          id: "edge",
+          source: "a",
+          target: "z",
+          type: .mayBelongTo,
+          confidence: .possible,
+          explanation: "Possible",
+          evidence: [
+            Evidence(id: "z-evidence", kind: .inferred, summary: "Z", source: "Test"),
+            Evidence(id: "a-evidence", kind: .observed, summary: "A", source: "Test"),
+          ]
+        )
+      ]
+    )
+
+    let first = try SystemProfileSchema.encode(graph)
+    let second = try SystemProfileSchema.encode(graph)
+    #expect(first == second)
+    #expect(first.last == 0x0A)
+    let decoded = try SystemProfileSchema.decode(first).graph()
+    #expect(decoded.metadata == graph.metadata)
+    #expect(decoded.entities.map(\.id) == ["a", "z"])
+    #expect(decoded.relationships.map(\.id) == ["edge"])
+
+    let text = try #require(String(data: first, encoding: .utf8))
+    let a = try #require(text.range(of: "\"id\" : \"a\""))
+    let z = try #require(text.range(of: "\"id\" : \"z\""))
+    let aEvidence = try #require(text.range(of: "\"id\" : \"a-evidence\""))
+    let zEvidence = try #require(text.range(of: "\"id\" : \"z-evidence\""))
+    #expect(a.lowerBound < z.lowerBound)
+    #expect(aEvidence.lowerBound < zEvidence.lowerBound)
+  }
+
   @Test("Strict decoding rejects unknown fields with a field path")
   func unknownField() {
     let data = Data(

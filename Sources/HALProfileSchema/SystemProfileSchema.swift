@@ -30,6 +30,18 @@ public enum SystemProfileSchema {
     return document
   }
 
+  public static func encode(_ graph: SystemGraph) throws -> Data {
+    try graph.validate()
+    let document = SystemProfileDocument(graph: graph)
+    try document.validate()
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+    var data = try encoder.encode(document)
+    data.append(0x0A)
+    try validateAgainstDeclarativeSchema(data)
+    return data
+  }
+
   private static func validateAgainstDeclarativeSchema(_ data: Data) throws {
     do {
       try DeclarativeManifestValidator.validate(
@@ -75,8 +87,10 @@ public struct SystemProfileDocument: Hashable, Codable, Sendable {
     id = graph.metadata.id
     name = graph.metadata.name
     summary = graph.metadata.summary
-    entities = graph.entities.map(ProfileEntity.init(entity:))
-    relationships = graph.relationships.map(ProfileRelationship.init(relationship:))
+    entities = graph.entities.map(ProfileEntity.init(entity:)).sorted { $0.id < $1.id }
+    relationships = graph.relationships.map(ProfileRelationship.init(relationship:)).sorted {
+      $0.id < $1.id
+    }
   }
 
   public func validate() throws {
@@ -154,7 +168,10 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
     type = entity.type
     name = entity.name
     summary = entity.summary
-    details = entity.details.map { ProfileDetail(label: $0.label, value: $0.value) }
+    details = entity.details.map { ProfileDetail(label: $0.label, value: $0.value) }.sorted {
+      if $0.label != $1.label { return $0.label < $1.label }
+      return $0.value < $1.value
+    }
   }
 
   fileprivate var entity: Entity {
@@ -212,7 +229,9 @@ public struct ProfileRelationship: Hashable, Codable, Sendable {
     type = relationship.type
     confidence = relationship.confidence
     explanation = relationship.explanation
-    evidence = relationship.evidence.map(ProfileEvidence.init(evidence:))
+    evidence = relationship.evidence.map(ProfileEvidence.init(evidence:)).sorted {
+      $0.id < $1.id
+    }
   }
 
   fileprivate var relationship: Relationship {

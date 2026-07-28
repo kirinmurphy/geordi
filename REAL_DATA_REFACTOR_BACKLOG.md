@@ -207,7 +207,7 @@ These items were recorded from the first linked-Mac product test on
   an unsupported schema version.
 - [x] Add schema fixtures for partial, unavailable, permission-denied,
   ambiguous, stale, and negative states.
-- [ ] Add a deterministic fixture-generation/export format based on the same
+- [x] Add a deterministic fixture-generation/export format based on the same
   schema.
 - [ ] Remove entity-instance switches and hardcoded entity presentation behavior
   from Swift once equivalent manifest fields exist.
@@ -272,5 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Define a deterministic fixture export format based on the canonical schema,
-then remove remaining entity-instance presentation switches from Swift.
+Remove remaining entity-instance presentation switches from Swift, then add a
+redacted diagnostic export for linked snapshots.

@@ -10,13 +10,8 @@ do {
       at: directory,
       withIntermediateDirectories: true
     )
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
     for fixture in FixtureCatalog.all {
-      let document = SystemProfileDocument(graph: fixture)
-      try document.validate()
-      var data = try encoder.encode(document)
-      data.append(0x0A)
+      let data = try SystemProfileSchema.encode(fixture)
       try data.write(
         to: directory.appendingPathComponent("\(fixture.metadata.id).json"),
         options: .atomic

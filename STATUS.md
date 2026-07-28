@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Define a deterministic fixture export format based on the canonical schema,
-then remove remaining entity-instance presentation switches from Swift. The
-catalog now includes a schema-validated observation-state reference covering
-partial, unavailable, permission-denied, ambiguous, stale, and negative
-evidence.
+Remove remaining entity-instance presentation switches from Swift, then add a
+redacted diagnostic export for linked snapshots. `SystemProfileSchema` now
+owns canonical deterministic encoding, the fixture CLI uses that path, and
+full verification covers stable ordering, round-trip decoding, all seven
+cataloged profiles, application packaging, and the native smoke test.
 
 ## Product evaluation checklist
 
