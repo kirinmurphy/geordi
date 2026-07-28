@@ -37,6 +37,7 @@ public struct ApplicationSignatureValue: Hashable, Codable, Sendable {
   public let status: CodeSignatureStatus
   public let signingIdentifier: String?
   public let teamIdentifier: String?
+  public let applicationGroupIdentifiers: [String]
   public let authorities: [String]
   public let platformBinary: Bool?
   public let statusCode: Int32?
@@ -46,6 +47,7 @@ public struct ApplicationSignatureValue: Hashable, Codable, Sendable {
     status: CodeSignatureStatus,
     signingIdentifier: String? = nil,
     teamIdentifier: String? = nil,
+    applicationGroupIdentifiers: [String] = [],
     authorities: [String] = [],
     platformBinary: Bool? = nil,
     statusCode: Int32? = nil
@@ -54,6 +56,7 @@ public struct ApplicationSignatureValue: Hashable, Codable, Sendable {
     self.status = status
     self.signingIdentifier = signingIdentifier
     self.teamIdentifier = teamIdentifier
+    self.applicationGroupIdentifiers = applicationGroupIdentifiers
     self.authorities = authorities
     self.platformBinary = platformBinary
     self.statusCode = statusCode
@@ -113,6 +116,7 @@ public enum AssociatedLocationStatus: String, Hashable, Codable, Sendable {
 public enum AssociatedLocationMatch: String, Hashable, Codable, Sendable {
   case bundleIdentifier
   case applicationName
+  case applicationGroupIdentifier
   case unmatched
   case groupIdentifierUnavailable
 }

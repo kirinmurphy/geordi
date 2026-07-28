@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "locations": [
     {
       "id": "application-support-bundle-id",
@@ -94,7 +94,7 @@
       "id": "group-container-children",
       "categoryLabel": "Group container",
       "path": "$USER_HOME/Library/Group Containers",
-      "matching": "groupIdentifierUnavailable",
+      "matching": "applicationGroupIdentifiers",
       "maxEntries": 512
     }
   ]

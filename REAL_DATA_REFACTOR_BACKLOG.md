@@ -148,7 +148,7 @@ These items were recorded from the first linked-Mac product test on
   versioned manifests rather than Swift path arrays. Initial candidates should
   cover application support, caches, preferences, logs, saved state, sandbox
   containers, HTTP storage, and WebKit data.
-- [ ] Add group-container candidates only after team/group identifiers are
+- [x] Add group-container candidates only after team/group identifiers are
   collected; bundle identifiers alone are not sufficient to claim a match.
 - [x] Match exact bundle identifiers and authoritative bundle/container
   metadata first. Treat normalized application-name/path matches as weaker
@@ -272,6 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Add authoritative team/group identifier observations before linking group
-containers, then wire the rebuildable-data detector manifest into bounded
-metadata-only collection.
+Wire the rebuildable-data detector manifest into bounded metadata-only
+collection without enabling size traversal or deletion.

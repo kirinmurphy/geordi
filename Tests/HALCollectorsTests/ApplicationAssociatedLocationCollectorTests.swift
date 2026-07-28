@@ -10,7 +10,7 @@ struct ApplicationAssociatedLocationCollectorTests {
   @Test("Bundled locations are declarative, bounded, and schema validated")
   func bundledConfiguration() throws {
     let configuration = try ApplicationAssociatedLocationConfiguration.bundled()
-    #expect(configuration.schemaVersion == 2)
+    #expect(configuration.schemaVersion == 3)
     #expect(!configuration.locations.isEmpty)
     #expect(!configuration.enumerationRoots.isEmpty)
     #expect(configuration.locations.allSatisfy { $0.pathTemplate.hasPrefix("$USER_HOME/") })
@@ -26,7 +26,7 @@ struct ApplicationAssociatedLocationCollectorTests {
     let unknownField = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "locations": [{
           "id": "support",
           "categoryLabel": "Support",
@@ -48,7 +48,7 @@ struct ApplicationAssociatedLocationCollectorTests {
     let unsafePath = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "locations": [{
           "id": "escape",
           "categoryLabel": "Support",
@@ -69,7 +69,7 @@ struct ApplicationAssociatedLocationCollectorTests {
     let unsafeRoot = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "locations": [{
           "id": "support",
           "categoryLabel": "Support",
@@ -114,7 +114,7 @@ struct ApplicationAssociatedLocationCollectorTests {
           id: "group-root",
           categoryLabel: "Group container",
           path: "$USER_HOME/Library/Group Containers",
-          matching: .groupIdentifierUnavailable,
+          matching: .applicationGroupIdentifiers,
           maxEntries: 2
         ),
       ]
@@ -144,6 +144,87 @@ struct ApplicationAssociatedLocationCollectorTests {
     )
     #expect(output.run.state == .partial)
     #expect(output.run.issues.map(\.id) == ["associated-location-budget-cache-root"])
+  }
+
+  @Test("Signed application-group identifiers preserve shared container membership")
+  func applicationGroupMembership() throws {
+    let configuration = ApplicationAssociatedLocationConfiguration(
+      locations: [],
+      enumerationRoots: [
+        AssociatedLocationEnumerationRoot(
+          id: "group-root",
+          categoryLabel: "Group container",
+          path: "$USER_HOME/Library/Group Containers",
+          matching: .applicationGroupIdentifiers,
+          maxEntries: 2
+        )
+      ]
+    )
+    let first = application()
+    let second = application(
+      name: "Companion",
+      path: "/Applications/Companion.app",
+      bundleIdentifier: "com.example.companion"
+    )
+    let signatures = [first, second].map {
+      CollectedObservation(
+        id: ObservationID("signature:\($0.value.path)"),
+        scanID: "scan",
+        collectorID: ApplicationSignatureCollector.id,
+        schemaVersion: 1,
+        observedAt: timestamp,
+        subject: $0.subject,
+        value: ApplicationSignatureValue(
+          applicationPath: $0.value.path,
+          status: .valid,
+          applicationGroupIdentifiers: ["TEAM.shared"]
+        )
+      )
+    }
+    let output = ApplicationAssociatedLocationCollector(
+      configuration: configuration,
+      userHome: URL(fileURLWithPath: "/test-home"),
+      inspector: PresentDirectoryInspector(),
+      enumerator: StubAssociatedLocationEnumerator(),
+      clock: FixedClock(timestamp)
+    ).collect(
+      scanID: "scan",
+      applications: [first, second],
+      signatures: signatures
+    )
+
+    #expect(output.observations.count == 3)
+    let shared = output.observations.filter {
+      $0.value.match == .applicationGroupIdentifier
+    }
+    #expect(shared.count == 2)
+    #expect(
+      shared.map(\.value.applicationPath).compactMap { $0 }.sorted() == [
+        "/Applications/Companion.app", "/Applications/Example.app",
+      ])
+    #expect(
+      shared.allSatisfy {
+        $0.value.candidateApplicationPaths == [
+          "/Applications/Companion.app", "/Applications/Example.app",
+        ]
+      }
+    )
+    #expect(
+      output.observations.count { $0.value.match == .groupIdentifierUnavailable } == 1
+    )
+
+    let snapshot = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: CollectorOutput(
+        run: completeRun(collectorID: ApplicationBundleCollector.id),
+        observations: [first, second]
+      ),
+      associatedLocations: output
+    )
+    try snapshot.graph.validate()
+    #expect(snapshot.graph.relationships.count == 2)
+    #expect(snapshot.graph.relationships.allSatisfy { $0.type == .shares })
+    #expect(snapshot.graph.relationships.allSatisfy { $0.confidence == .high })
   }
 
   @Test("Collector preserves present, absent, permission-denied, and unreadable states")
@@ -359,21 +440,23 @@ struct ApplicationAssociatedLocationCollectorTests {
   }
 
   private func application(
-    name: String = "Example"
+    name: String = "Example",
+    path: String = "/Applications/Example.app",
+    bundleIdentifier: String = "com.example.application"
   ) -> CollectedObservation<ApplicationBundleValue> {
     CollectedObservation(
-      id: "application",
+      id: ObservationID("application:\(path)"),
       scanID: "scan",
       collectorID: ApplicationBundleCollector.id,
       schemaVersion: 1,
       observedAt: timestamp,
       subject: SubjectIdentity(
-        primary: IdentityClaim(kind: .bundleIdentifier, value: "com.example.application")
+        primary: IdentityClaim(kind: .bundleIdentifier, value: bundleIdentifier)
       ),
       value: ApplicationBundleValue(
-        path: "/Applications/Example.app",
+        path: path,
         name: name,
-        bundleIdentifier: "com.example.application"
+        bundleIdentifier: bundleIdentifier
       )
     )
   }

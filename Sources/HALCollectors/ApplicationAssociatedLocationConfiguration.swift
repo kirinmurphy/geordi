@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ApplicationAssociatedLocationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 2
+  public static let currentVersion = 3
 
   public let schemaVersion: Int
   public let locations: [AssociatedLocationConfiguration]
@@ -86,7 +86,7 @@ public struct ApplicationAssociatedLocationConfiguration: Codable, Hashable, Sen
 public struct AssociatedLocationEnumerationRoot: Codable, Hashable, Sendable {
   public enum Matching: String, Codable, Hashable, Sendable {
     case applicationIdentifiers
-    case groupIdentifierUnavailable
+    case applicationGroupIdentifiers
   }
 
   public let id: String
@@ -157,7 +157,7 @@ public struct AssociatedLocationConfiguration: Codable, Hashable, Sendable {
       switch match {
       case .bundleIdentifier: "$BUNDLE_ID"
       case .applicationName: "$APP_NAME"
-      case .unmatched, .groupIdentifierUnavailable:
+      case .applicationGroupIdentifier, .unmatched, .groupIdentifierUnavailable:
         throw ApplicationAssociatedLocationConfigurationError.invalidPath(id)
       }
     guard pathTemplate.contains(requiredToken) else {
@@ -183,7 +183,7 @@ public struct AssociatedLocationConfiguration: Codable, Hashable, Sendable {
       component = application.bundleIdentifier
     case .applicationName:
       component = application.name
-    case .unmatched, .groupIdentifierUnavailable:
+    case .applicationGroupIdentifier, .unmatched, .groupIdentifierUnavailable:
       return nil
     }
     guard let component else { return nil }

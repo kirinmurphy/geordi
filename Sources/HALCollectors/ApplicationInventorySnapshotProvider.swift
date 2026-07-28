@@ -115,7 +115,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     )
     let associatedLocations = associatedLocationCollector.collect(
       scanID: scanID,
-      applications: applications.observations
+      applications: applications.observations,
+      signatures: signatures.observations
     )
     let processes = processCollector.collect(scanID: scanID)
     let processResolutions = processResolver.resolve(

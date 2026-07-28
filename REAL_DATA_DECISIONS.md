@@ -94,6 +94,12 @@ relationship as an exact candidate. Unmatched children are retained without a
 relationship. Group-container children are retained with an explicit
 group-identifier-unavailable basis and no ownership candidate.
 
+Version 3 reads the `com.apple.security.application-groups` array from validated
+code-signing information. An exact entitlement/container-name match establishes
+shared membership for every entitled application. HAL does not infer group
+membership from a team-ID prefix or bundle identifier, and group containers
+without an exact entitlement remain unresolved observations.
+
 ## 2026-07-27: the primary atlas is relevance-bounded
 
 Collector completeness and graph prominence are separate concerns. HAL may

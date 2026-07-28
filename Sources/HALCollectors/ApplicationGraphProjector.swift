@@ -65,8 +65,7 @@ public struct ApplicationGraphProjector: Sendable {
               Detail("Path", value.locationPath),
               Detail(
                 "Association basis",
-                value.match == .bundleIdentifier
-                  ? "Exact bundle identifier" : "Application name convention"
+                associationBasis(value.match)
               ),
             ]
           )
@@ -83,18 +82,21 @@ public struct ApplicationGraphProjector: Sendable {
         return nil
       }
       let exact = value.match == .bundleIdentifier
+      let applicationGroup = value.match == .applicationGroupIdentifier
       return Relationship(
         id: RelationshipID(
           "associated-location:\(applicationID.rawValue):\(value.locationID)"
         ),
         source: applicationID,
         target: locationEntityID(for: value),
-        type: .mayBelongTo,
-        confidence: exact ? .high : .possible,
+        type: applicationGroup ? .shares : .mayBelongTo,
+        confidence: exact || applicationGroup ? .high : .possible,
         explanation:
-          exact
-          ? "This location uses the application's exact bundle identifier, a strong conventional association that may be stale."
-          : "This location matches the application name, but HAL cannot establish exclusive ownership.",
+          applicationGroup
+          ? "The application's signed entitlements authorize access to this shared group container."
+          : exact
+            ? "This location uses the application's exact bundle identifier, a strong conventional association that may be stale."
+            : "This location matches the application name, but HAL cannot establish exclusive ownership.",
         evidence: [
           Evidence(
             id: "\(association.id.rawValue):observed",
@@ -106,12 +108,17 @@ public struct ApplicationGraphProjector: Sendable {
           ),
           Evidence(
             id: "\(association.id.rawValue):match",
-            kind: exact ? .derived : .inferred,
+            kind: exact || applicationGroup ? .derived : .inferred,
             summary:
-              exact
-              ? "The final path component contains the exact application bundle identifier."
-              : "The final path component matches the application name.",
-            source: "Associated-location manifest rule",
+              applicationGroup
+              ? "The container name exactly matches a signed application-group entitlement."
+              : exact
+                ? "The final path component contains the exact application bundle identifier."
+                : "The final path component matches the application name.",
+            source:
+              applicationGroup
+              ? "Code-signing entitlements and associated-location manifest rule"
+              : "Associated-location manifest rule",
             observationID: association.id,
             observedAt: association.observedAt,
             ruleID: value.locationID,
@@ -407,7 +414,8 @@ public struct ApplicationGraphProjector: Sendable {
     let present = observations.filter {
       $0.value.status == .present
         && $0.value.applicationPath != nil
-        && ($0.value.match == .bundleIdentifier || $0.value.match == .applicationName)
+        && ($0.value.match == .bundleIdentifier || $0.value.match == .applicationName
+          || $0.value.match == .applicationGroupIdentifier)
     }
     return Dictionary(
       grouping: present,
@@ -430,8 +438,19 @@ public struct ApplicationGraphProjector: Sendable {
   private func matchPriority(_ match: AssociatedLocationMatch) -> Int {
     switch match {
     case .bundleIdentifier: 2
+    case .applicationGroupIdentifier: 2
     case .applicationName: 1
     case .unmatched, .groupIdentifierUnavailable: 0
+    }
+  }
+
+  private func associationBasis(_ match: AssociatedLocationMatch) -> String {
+    switch match {
+    case .bundleIdentifier: "Exact bundle identifier"
+    case .applicationName: "Application name convention"
+    case .applicationGroupIdentifier: "Signed application-group entitlement"
+    case .unmatched: "Unmatched"
+    case .groupIdentifierUnavailable: "Application-group identifier unavailable"
     }
   }
 

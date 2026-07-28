@@ -135,11 +135,13 @@ explicit `$BUNDLE_ID` or `$APP_NAME` match token. Parent traversal, unknown
 tokens, unsafe application-name components, and paths outside the resolved user
 home are rejected. The manifest supplies resource instances and display
 categories; code supplies only generic resolution, metadata inspection, and
-evidence projection. Version 2 also declares a small set of user-Library roots
+evidence projection. Version 2 declares a small set of user-Library roots
 whose immediate children may be enumerated, each with an explicit entry budget.
 Enumeration never descends into a child. Unmatched children remain observations
-without an application relationship, and group-container children remain
-explicitly unresolved until HAL has authoritative team/group identifiers.
+without an application relationship. Version 3 permits group-container matches
+only when the container name exactly matches an application-group identifier
+from that application's validated code-signing entitlements. A team-ID prefix
+or bundle identifier alone is never treated as group-container evidence.
 
 Process-to-application strategies, the per-application presentation budget,
 and the bounded unmatched-process retention budget are defined by

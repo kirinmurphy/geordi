@@ -30,6 +30,7 @@ struct ApplicationSignatureCollectorTests {
         status: .valid,
         signingIdentifier: "com.example.application",
         teamIdentifier: "TEAM123",
+        applicationGroupIdentifiers: ["TEAM123.shared"],
         authorities: ["Developer ID Application: Example"],
         platformBinary: false,
         statusCode: 0
@@ -45,6 +46,7 @@ struct ApplicationSignatureCollectorTests {
     #expect(signature.subject == application.subject)
     #expect(signature.value.status == .valid)
     #expect(signature.value.teamIdentifier == "TEAM123")
+    #expect(signature.value.applicationGroupIdentifiers == ["TEAM123.shared"])
     #expect(signature.value.authorities == ["Developer ID Application: Example"])
   }
 

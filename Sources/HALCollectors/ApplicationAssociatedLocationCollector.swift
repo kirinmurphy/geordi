@@ -88,7 +88,7 @@ public struct FileSystemAssociatedLocationEnumerator: AssociatedLocationEnumerat
 
 public struct ApplicationAssociatedLocationCollector: Sendable {
   public static let id: CollectorID = "application-associated-locations"
-  public static let version = 2
+  public static let version = 3
 
   private let configuration: ApplicationAssociatedLocationConfiguration
   private let userHome: URL
@@ -112,7 +112,8 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
 
   public func collect(
     scanID: ScanID,
-    applications: [CollectedObservation<ApplicationBundleValue>]
+    applications: [CollectedObservation<ApplicationBundleValue>],
+    signatures: [CollectedObservation<ApplicationSignatureValue>] = []
   ) -> CollectorOutput<ApplicationAssociatedLocationValue> {
     let startedAt = clock.now()
     var observations: [CollectedObservation<ApplicationAssociatedLocationValue>] = []
@@ -185,6 +186,7 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
         root,
         scanID: scanID,
         applications: applications,
+        signatures: signatures,
         observedAt: startedAt,
         observations: &observations,
         issues: &issues
@@ -218,6 +220,7 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
     _ root: AssociatedLocationEnumerationRoot,
     scanID: ScanID,
     applications: [CollectedObservation<ApplicationBundleValue>],
+    signatures: [CollectedObservation<ApplicationSignatureValue>],
     observedAt: Date,
     observations: inout [CollectedObservation<ApplicationAssociatedLocationValue>],
     issues: inout [CollectionIssue]
@@ -254,11 +257,12 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
           continue
         }
         observations.append(
-          enumeratedObservation(
+          contentsOf: enumeratedObservations(
             child,
             root: root,
             scanID: scanID,
             applications: applications,
+            signatures: signatures,
             observedAt: observedAt
           )
         )
@@ -285,84 +289,105 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
     }
   }
 
-  private func enumeratedObservation(
+  private func enumeratedObservations(
     _ child: URL,
     root: AssociatedLocationEnumerationRoot,
     scanID: ScanID,
     applications: [CollectedObservation<ApplicationBundleValue>],
+    signatures: [CollectedObservation<ApplicationSignatureValue>],
     observedAt: Date
-  ) -> CollectedObservation<ApplicationAssociatedLocationValue> {
+  ) -> [CollectedObservation<ApplicationAssociatedLocationValue>] {
     let matches = applicationMatches(
       child.lastPathComponent,
       matching: root.matching,
-      applications: applications
+      applications: applications,
+      signatures: signatures
     )
-    let match: AssociatedLocationMatch
-    let applicationPath: String?
-    if root.matching == .groupIdentifierUnavailable {
-      match = .groupIdentifierUnavailable
-      applicationPath = nil
+    let associations: [(path: String?, match: AssociatedLocationMatch)]
+    if !matches.applicationGroupIdentifier.isEmpty {
+      associations = matches.applicationGroupIdentifier.map {
+        (path: $0, match: .applicationGroupIdentifier)
+      }
     } else if !matches.bundleIdentifier.isEmpty {
       if matches.bundleIdentifier.count == 1 {
-        match = .bundleIdentifier
-        applicationPath = matches.bundleIdentifier[0]
+        associations = [(path: matches.bundleIdentifier[0], match: .bundleIdentifier)]
       } else {
-        match = .unmatched
-        applicationPath = nil
+        associations = [(path: nil, match: .unmatched)]
       }
     } else if !matches.applicationName.isEmpty {
       if matches.applicationName.count == 1 {
-        match = .applicationName
-        applicationPath = matches.applicationName[0]
+        associations = [(path: matches.applicationName[0], match: .applicationName)]
       } else {
-        match = .unmatched
-        applicationPath = nil
+        associations = [(path: nil, match: .unmatched)]
       }
     } else {
-      match = .unmatched
-      applicationPath = nil
+      associations = [
+        (
+          path: nil,
+          match:
+            root.matching == .applicationGroupIdentifiers
+            ? .groupIdentifierUnavailable : .unmatched
+        )
+      ]
     }
     let candidates = Array(
-      Set(matches.bundleIdentifier + matches.applicationName)
+      Set(
+        matches.bundleIdentifier + matches.applicationName
+          + matches.applicationGroupIdentifier
+      )
     ).sorted()
     let inspection = inspector.inspectLocation(at: child)
-    return CollectedObservation(
-      id: ObservationID("associated-location-enumerated:\(root.id):\(child.path)"),
-      scanID: scanID,
-      collectorID: Self.id,
-      schemaVersion: Self.version,
-      observedAt: observedAt,
-      subject: SubjectIdentity(
-        primary: IdentityClaim(kind: .canonicalPath, value: child.path)
-      ),
-      sensitivity: .privateMetadata,
-      sourceReference: child.path,
-      value: ApplicationAssociatedLocationValue(
-        applicationPath: applicationPath,
-        candidateApplicationPaths: candidates,
-        locationID: root.id,
-        locationPath: child.path,
-        categoryLabel: root.categoryLabel,
-        match: match,
-        status: inspection.status,
-        isDirectory: inspection.isDirectory
+    return associations.map { association in
+      CollectedObservation(
+        id: ObservationID(
+          "associated-location-enumerated:\(root.id):\(child.path):\(association.path ?? "unresolved")"
+        ),
+        scanID: scanID,
+        collectorID: Self.id,
+        schemaVersion: Self.version,
+        observedAt: observedAt,
+        subject: SubjectIdentity(
+          primary: IdentityClaim(kind: .canonicalPath, value: child.path)
+        ),
+        sensitivity: .privateMetadata,
+        sourceReference: child.path,
+        value: ApplicationAssociatedLocationValue(
+          applicationPath: association.path,
+          candidateApplicationPaths: candidates,
+          locationID: root.id,
+          locationPath: child.path,
+          categoryLabel: root.categoryLabel,
+          match: association.match,
+          status: inspection.status,
+          isDirectory: inspection.isDirectory
+        )
       )
-    )
+    }
   }
 
   private func applicationMatches(
     _ name: String,
     matching: AssociatedLocationEnumerationRoot.Matching,
-    applications: [CollectedObservation<ApplicationBundleValue>]
-  ) -> (bundleIdentifier: [String], applicationName: [String]) {
-    guard matching == .applicationIdentifiers else { return ([], []) }
+    applications: [CollectedObservation<ApplicationBundleValue>],
+    signatures: [CollectedObservation<ApplicationSignatureValue>]
+  ) -> (
+    bundleIdentifier: [String],
+    applicationName: [String],
+    applicationGroupIdentifier: [String]
+  ) {
+    if matching == .applicationGroupIdentifiers {
+      let groupMatches = signatures.compactMap {
+        $0.value.applicationGroupIdentifiers.contains(name) ? $0.value.applicationPath : nil
+      }
+      return ([], [], groupMatches.sorted())
+    }
     let bundleMatches = applications.compactMap {
       $0.value.bundleIdentifier == name ? $0.value.path : nil
     }
     let nameMatches = applications.compactMap {
       $0.value.name == name ? $0.value.path : nil
     }
-    return (bundleMatches.sorted(), nameMatches.sorted())
+    return (bundleMatches.sorted(), nameMatches.sorted(), [])
   }
 
   private func rootIssue(

@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/application-associated-locations/v2",
+  "$id": "https://hal.local/schemas/application-associated-locations/v3",
   "title": "HAL application associated locations",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "locations", "enumerationRoots"],
   "properties": {
     "schemaVersion": {
-      "const": 2
+      "const": 3
     },
     "locations": {
       "type": "array",
@@ -56,7 +56,7 @@
             "pattern": "^\\$USER_HOME/"
           },
           "matching": {
-            "enum": ["applicationIdentifiers", "groupIdentifierUnavailable"]
+            "enum": ["applicationIdentifiers", "applicationGroupIdentifiers"]
           },
           "maxEntries": {
             "type": "integer",

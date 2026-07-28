@@ -58,6 +58,9 @@ public struct SecurityCodeSignatureInspector: CodeSignatureInspecting {
       status: .valid,
       signingIdentifier: values[kSecCodeInfoIdentifier] as? String,
       teamIdentifier: values[kSecCodeInfoTeamIdentifier] as? String,
+      applicationGroupIdentifiers: applicationGroupIdentifiers(
+        values[kSecCodeInfoEntitlementsDict]
+      ),
       authorities: certificateAuthorities(values[kSecCodeInfoCertificates]),
       platformBinary: values[kSecCodeInfoPlatformIdentifier] != nil,
       statusCode: validationStatus
@@ -69,6 +72,16 @@ public struct SecurityCodeSignatureInspector: CodeSignatureInspecting {
     return certificates.compactMap { certificate in
       SecCertificateCopySubjectSummary(certificate) as String?
     }
+  }
+
+  private func applicationGroupIdentifiers(_ value: Any?) -> [String] {
+    guard
+      let entitlements = value as? [String: Any],
+      let identifiers = entitlements["com.apple.security.application-groups"] as? [String]
+    else {
+      return []
+    }
+    return Array(Set(identifiers.filter { !$0.isEmpty })).sorted()
   }
 }
 
