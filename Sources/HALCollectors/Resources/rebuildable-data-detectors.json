@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "classifications": [
+    {
+      "id": "build-output",
+      "label": "Build output",
+      "rebuildability": "rebuildable"
+    },
+    {
+      "id": "download-cache",
+      "label": "Download cache",
+      "rebuildability": "redownloadable"
+    }
+  ],
+  "detectors": [
+    {
+      "id": "xcode-derived-data",
+      "classificationID": "build-output",
+      "locations": [
+        {
+          "id": "default-derived-data",
+          "path": "$USER_HOME/Library/Developer/Xcode/DerivedData"
+        }
+      ],
+      "excludedDescendantNames": [
+        ".git",
+        ".svn"
+      ],
+      "evidenceRule": {
+        "id": "xcode-managed-derived-data-root",
+        "kind": "toolManagedRoot",
+        "confidence": "high",
+        "explanation": "Xcode manages this conventional DerivedData root and can rebuild its contents."
+      }
+    },
+    {
+      "id": "homebrew-download-cache",
+      "classificationID": "download-cache",
+      "locations": [
+        {
+          "id": "default-homebrew-cache",
+          "path": "$USER_HOME/Library/Caches/Homebrew"
+        }
+      ],
+      "excludedDescendantNames": [],
+      "evidenceRule": {
+        "id": "homebrew-managed-download-cache",
+        "kind": "toolManagedRoot",
+        "confidence": "high",
+        "explanation": "Homebrew manages this conventional download cache and can fetch its contents again."
+      }
+    },
+    {
+      "id": "npm-download-cache",
+      "classificationID": "download-cache",
+      "locations": [
+        {
+          "id": "default-npm-cache",
+          "path": "$USER_HOME/.npm"
+        }
+      ],
+      "excludedDescendantNames": [],
+      "evidenceRule": {
+        "id": "npm-cache-path-convention",
+        "kind": "pathConvention",
+        "confidence": "probable",
+        "explanation": "This is npm's conventional cache root; classification remains an inference until tool metadata corroborates it."
+      }
+    }
+  ]
+}

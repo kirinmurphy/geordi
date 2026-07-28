@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Define rebuildable-data detector manifests before storage observation work,
-then add bounded associated-location root enumeration. Linked coverage now
-offers an explicitly redacted diagnostic export that preserves structural and
-collector-state information while code-enforced redaction removes local
-identities, paths, scopes, observation identifiers, and free-form values.
+Add bounded associated-location root enumeration, then add shared and
+group-container ambiguity fixtures without starting broad storage traversal.
+The rebuildable-data manifest contract now defines classifications, bounded
+tool-managed roots, exclusions, and evidence rules while code-enforced path
+safety remains nonconfigurable; no storage collection or deletion was enabled.
 
 ## Product evaluation checklist
 

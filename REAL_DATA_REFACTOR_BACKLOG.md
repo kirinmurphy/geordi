@@ -189,9 +189,9 @@ These items were recorded from the first linked-Mac product test on
 - [ ] Add collection manifests for small resource sets.
 - [x] Move application collector search roots out of Swift defaults and into a
   validated manifest.
-- [ ] Define rebuildable-data detector manifests, including locations,
+- [x] Define rebuildable-data detector manifests, including locations,
   classification, exclusions, and evidence rules.
-- [ ] Keep nonconfigurable security invariants in code.
+- [x] Keep nonconfigurable security invariants in code.
 
 ## Priority 1: synthetic/live schema parity
 
@@ -272,5 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Define rebuildable-data detector manifests before storage observation work,
-then add bounded associated-location root enumeration.
+Add bounded associated-location root enumeration, then add shared and
+group-container ambiguity fixtures without starting broad storage traversal.

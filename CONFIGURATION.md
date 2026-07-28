@@ -146,6 +146,14 @@ records rank first, followed by unmatched records by observed memory. These
 records remain searchable and summarized in coverage without appearing as
 disconnected nodes in the default atlas.
 
+Rebuildable-data classifications, bounded tool-managed roots, descendant-name
+exclusions, and evidence rules are defined by
+`HALCollectors/Resources/rebuildable-data-detectors.json` and its adjacent
+versioned schema. The initial contract names Xcode DerivedData, Homebrew
+downloads, and npm cache roots but does not authorize collection or deletion.
+Swift permanently rejects parent traversal, wildcards, NULs, unsafe exclusion
+components, and resolved locations outside the configured user home.
+
 Persistence search roots are defined by
 `HALCollectors/Resources/persistence-roots.json` and its adjacent versioned
 schema. The default scope includes the user and local-domain LaunchAgent and

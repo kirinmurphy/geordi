@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hal.local/schemas/rebuildable-data-detectors-v1.json",
+  "title": "HAL rebuildable-data detectors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "classifications", "detectors"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "classifications": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "rebuildability"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "rebuildability": {
+            "enum": ["rebuildable", "redownloadable", "unknown"]
+          }
+        }
+      }
+    },
+    "detectors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "classificationID",
+          "locations",
+          "excludedDescendantNames",
+          "evidenceRule"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "classificationID": { "type": "string", "minLength": 1 },
+          "locations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "path"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "path": { "type": "string", "pattern": "^\\$USER_HOME/" }
+              }
+            }
+          },
+          "excludedDescendantNames": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "evidenceRule": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "confidence", "explanation"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "kind": { "enum": ["toolManagedRoot", "pathConvention"] },
+              "confidence": {
+                "enum": ["possible", "probable", "high", "confirmed"]
+              },
+              "explanation": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}
