@@ -60,6 +60,13 @@ final class HALApplicationDelegate: NSObject, NSApplicationDelegate {
 @MainActor
 @Observable
 final class AppModel {
+  struct ApplicationScopeCounts: Equatable {
+    let visible: Int
+    let hidden: Int
+    let uncertain: Int
+    let total: Int
+  }
+
   enum CollectionActivity: Equatable {
     case initialLink
     case refresh
@@ -165,6 +172,51 @@ final class AppModel {
         return false
       }
       return applicationClassifications.category(forApplicationPath: path).id == categoryID
+    }
+  }
+
+  var applicationScopeCounts: ApplicationScopeCounts {
+    let all = applications(in: nil)
+    let visible = applications(in: selectedApplicationCategoryID).count
+    guard !isSynthetic, let applicationClassifications else {
+      return ApplicationScopeCounts(
+        visible: visible,
+        hidden: max(0, all.count - visible),
+        uncertain: 0,
+        total: all.count
+      )
+    }
+    let fallbackIDs = Set(
+      applicationClassifications.categories.filter(\.isFallback).map(\.id)
+    )
+    let uncertain = all.filter { application in
+      guard let path = application.details.first(where: { $0.label == "Path" })?.value else {
+        return true
+      }
+      return fallbackIDs.contains(
+        applicationClassifications.category(forApplicationPath: path).id
+      )
+    }.count
+    return ApplicationScopeCounts(
+      visible: visible,
+      hidden: max(0, all.count - visible - uncertain),
+      uncertain: uncertain,
+      total: all.count
+    )
+  }
+
+  var collectorCoverageCounts: (complete: Int, limited: Int, total: Int) {
+    let runs = scanContext.collectorRuns
+    let complete = runs.filter {
+      $0.state == .complete && $0.availability == .available
+    }.count
+    return (complete, runs.count - complete, runs.count)
+  }
+
+  var applicationEvidenceFactCount: Int {
+    applications(in: nil).reduce(into: 0) { count, application in
+      count += application.details.first { $0.label == "Evidence facts" }
+        .flatMap { Int($0.value) } ?? 0
     }
   }
 

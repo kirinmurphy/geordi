@@ -414,6 +414,8 @@ public struct ApplicationGraphProjector: Sendable {
     provenance: ApplicationProvenanceValue?
   ) -> [Detail] {
     var details = [Detail("Path", value.path)]
+    let evidenceFactCount = (signature == nil ? 0 : 1) + (provenance?.facts.count ?? 0)
+    details.append(Detail("Evidence facts", "\(evidenceFactCount)"))
     if let bundleIdentifier = value.bundleIdentifier {
       details.append(Detail("Bundle identifier", bundleIdentifier))
     }

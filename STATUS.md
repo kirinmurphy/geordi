@@ -152,11 +152,12 @@ make verify
 
 ## Recommended next task
 
-Add application-scope and collector-coverage counts, then surface consequential
-low-confidence or unmatched records without adding ordinary uncertainty to the
-default map. Initial-link failures now remain synthetic, identify the failed
-collector setup when possible, preserve schema field-path diagnostics, and
-offer an immediate retry.
+Surface consequential low-confidence or unmatched records without adding
+ordinary uncertainty to the default map, then incorporate platform-signature
+evidence into manifest-driven application classification. The linked inventory
+now reports visible, hidden-by-scope, and unclassified applications; its
+coverage panel reports completed and limited collectors plus retained
+application evidence counts.
 
 ## Product evaluation checklist
 

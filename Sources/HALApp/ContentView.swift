@@ -578,7 +578,10 @@ private struct OverviewView: View {
           headerAccessory: {
             if !model.isSynthetic, let configuration = model.applicationClassifications {
               HStack(spacing: 10) {
-                Text("\(applications.count) of \(allApplications.count)")
+                let counts = model.applicationScopeCounts
+                Text(
+                  "\(counts.visible) visible · \(counts.hidden) hidden · \(counts.uncertain) unclassified"
+                )
                   .font(.callout)
                   .foregroundStyle(.secondary)
                 Picker(
@@ -920,6 +923,14 @@ private struct LiveCoverageNotice: View {
           "HAL read application bundles, signing and download provenance, conventional related locations, current processes, and startup declarations. It did not change applications or machine data. Storage totals and performance history are not collected yet."
         )
         .foregroundStyle(.secondary)
+        let coverage = model.collectorCoverageCounts
+        Text(
+          "\(coverage.complete) of \(coverage.total) collectors complete"
+            + (coverage.limited > 0 ? " · \(coverage.limited) limited" : "")
+            + " · \(model.applicationEvidenceFactCount) application evidence facts"
+        )
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(coverage.limited > 0 ? .orange : .secondary)
         ForEach(
           model.scanContext.collectorRuns.flatMap(\.issues),
           id: \.id

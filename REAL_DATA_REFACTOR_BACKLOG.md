@@ -116,7 +116,7 @@ These items were recorded from the first linked-Mac product test on
 - [x] Label uncertain cases honestly. Folder location alone does not become an
   assertion about who installed an application, and unmatched locations have
   an explicit **Other / Unclassified** category.
-- [ ] Add counts for visible, hidden system, and uncertain applications.
+- [x] Add counts for visible, hidden-by-scope, and uncertain applications.
 - [x] Show the visible and total application counts beside the scope filter.
 - [x] Preserve global search access to applications hidden by the homepage
   scope filter.
@@ -130,7 +130,7 @@ These items were recorded from the first linked-Mac product test on
   application before the technical detail grid.
 - [x] Explain unavailable provenance as an evidence state rather than silently
   presenting repeated “Not retained” rows.
-- [ ] Show collector coverage and evidence counts in the application list or
+- [x] Show collector coverage and evidence counts in the application list or
   application header so users can tell that signing/provenance collection ran.
 - [x] Add direct **Return to fictional Mac…** navigation beside the linked-data
   status. Do not hide the only return path inside an unlabeled ellipsis menu.
@@ -272,6 +272,6 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Add application-scope and collector-coverage counts, then continue
-relevance-policy coverage for low-confidence and unmatched explanatory records
-before adding another collector.
+Continue relevance-policy coverage for consequential low-confidence and
+unmatched explanatory records, then incorporate platform-signature evidence
+into manifest-driven application classification.

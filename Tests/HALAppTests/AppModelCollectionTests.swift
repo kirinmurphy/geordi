@@ -123,6 +123,17 @@ struct AppModelCollectionTests {
     #expect(message.contains("No applications or machine data were changed"))
   }
 
+  @Test("Application scope and collector coverage counts remain explicit")
+  func coverageCounts() {
+    let unused = snapshot(id: "unused", entityName: "Unused")
+    let model = makeModel(preferences: MemoryPreferences()) { unused }
+
+    #expect(model.applicationScopeCounts.visible == 1)
+    #expect(model.applicationScopeCounts.total == 1)
+    #expect(model.collectorCoverageCounts.total == 0)
+    #expect(model.applicationEvidenceFactCount == 0)
+  }
+
   private func makeModel(
     preferences: MemoryPreferences,
     store: HALUserDataStore? = nil,
