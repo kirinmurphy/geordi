@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "roots": [
+    {
+      "id": "user-launch-agents",
+      "path": "$USER_HOME/Library/LaunchAgents",
+      "kind": "launchAgent",
+      "scope": "user"
+    },
+    {
+      "id": "local-launch-agents",
+      "path": "/Library/LaunchAgents",
+      "kind": "launchAgent",
+      "scope": "system"
+    },
+    {
+      "id": "local-launch-daemons",
+      "path": "/Library/LaunchDaemons",
+      "kind": "launchDaemon",
+      "scope": "system"
+    }
+  ]
+}
