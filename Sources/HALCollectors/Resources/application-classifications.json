@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "allApplicationsLabel": "All Applications",
+  "defaultCategoryID": "user-installed",
+  "categories": [
+    {
+      "id": "system-utilities",
+      "label": "System Utilities",
+      "summary": "Utilities and supporting apps included with macOS.",
+      "priority": 300,
+      "isFallback": false,
+      "pathPrefixes": [
+        { "path": "/System/Applications/Utilities", "scope": "system" },
+        { "path": "/System/Library/CoreServices", "scope": "system" }
+      ]
+    },
+    {
+      "id": "bundled-software",
+      "label": "Bundled Software",
+      "summary": "Applications included in macOS system locations.",
+      "priority": 200,
+      "isFallback": false,
+      "pathPrefixes": [
+        { "path": "/System/Applications", "scope": "system" }
+      ]
+    },
+    {
+      "id": "user-installed",
+      "label": "User Installed",
+      "summary": "Apps outside macOS system locations; this does not prove who installed them.",
+      "priority": 100,
+      "isFallback": false,
+      "pathPrefixes": [
+        { "path": "/Applications", "scope": "system" },
+        { "path": "$USER_HOME/Applications", "scope": "user" }
+      ]
+    },
+    {
+      "id": "other",
+      "label": "Other / Unclassified",
+      "summary": "Applications whose location does not match a known software category.",
+      "priority": 0,
+      "isFallback": true,
+      "pathPrefixes": []
+    }
+  ]
+}
