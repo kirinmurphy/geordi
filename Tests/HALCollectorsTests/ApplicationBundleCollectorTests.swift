@@ -122,6 +122,7 @@ struct ApplicationBundleCollectorTests {
         maxProcessesPerApplication: 8,
         strategies: []
       ),
+      persistenceRoots: [],
       signatureInspector: StubProviderSignatureInspector(),
       provenanceInspector: StubProviderProvenanceInspector(),
       associatedLocationInspector: StubAssociatedLocationInspector(),

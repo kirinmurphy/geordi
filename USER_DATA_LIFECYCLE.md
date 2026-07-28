@@ -11,8 +11,9 @@ application metadata, conventional associated-location paths, signing and
 provenance details, evidence-bearing application/location relationships,
 point-in-time process identifiers, executable paths, parent identifiers,
 resident-memory values, application/process resolutions, collector outcomes,
-and timestamps. Command arguments, environment variables, and raw file
-contents are not collected.
+startup declaration labels, executable paths, `RunAtLoad` and `KeepAlive`
+states, application/persistence resolutions, and timestamps. Command arguments,
+environment variables, and raw file contents are not collected.
 
 Two preferences are stored in the app's `UserDefaults` domain:
 
@@ -27,7 +28,9 @@ connectors are created by this milestone.
 First launch is synthetic and performs no machine collection. Choosing
 **Link to your Mac** runs the manifest-scoped application, signing, provenance,
 associated-location, and point-in-time process collectors. HAL persists
-`linkedMac` only after a successful snapshot is available.
+`linkedMac` only after a successful snapshot is available. User/local launchd
+property lists are read for a bounded persistence inventory; full program
+arguments are not retained.
 
 ## Refresh
 

@@ -41,7 +41,7 @@ These items were recorded from the first linked-Mac product test on
 1. [x] Point-in-time processes and deterministic application resolution:
    explain what is running now, helper/parent relationships, unmatched
    processes, memory, and observation limitations.
-2. [ ] Persistence declarations and process correlation:
+2. [x] Persistence declarations and application correlation:
    explain why something starts automatically or remains active.
 3. [ ] Associated-location relevance:
    promote strong containers and meaningful support/configuration locations;

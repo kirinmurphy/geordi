@@ -91,6 +91,55 @@ struct PersistenceCollectorTests {
     #expect(resolutions.observations.first?.value.confidence == .high)
   }
 
+  @Test("Projection shows only matched declarations with evidence")
+  func projection() throws {
+    let root = try temporaryDirectory()
+    try writePlist(
+      [
+        "Label": "com.example.helper",
+        "Program": "/Applications/Example.app/Contents/Helpers/Helper",
+        "RunAtLoad": true,
+      ],
+      to: root.appending(path: "matched.plist")
+    )
+    defer { try? FileManager.default.removeItem(at: root) }
+    let declarations = PersistenceCollector(
+      roots: [PersistenceSearchRoot(id: "test", url: root, kind: .launchAgent)],
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+    let application = application()
+    let resolutions = PersistenceApplicationResolver(
+      clock: FixedClock(timestamp)
+    ).resolve(
+      scanID: "scan",
+      declarations: declarations,
+      applications: [application]
+    )
+    let applications = CollectorOutput(
+      run: CollectorRun(
+        collectorID: ApplicationBundleCollector.id,
+        collectorVersion: 1,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: [application]
+    )
+
+    let snapshot = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: applications,
+      persistence: declarations,
+      persistenceResolutions: resolutions
+    )
+
+    try snapshot.graph.validate()
+    #expect(snapshot.graph.entities.filter { $0.type == .persistence }.count == 1)
+    #expect(snapshot.graph.relationships.first?.type == .persistsThrough)
+    #expect(snapshot.graph.relationships.first?.evidence.count == 2)
+  }
+
   private func application() -> CollectedObservation<ApplicationBundleValue> {
     CollectedObservation(
       id: "application",

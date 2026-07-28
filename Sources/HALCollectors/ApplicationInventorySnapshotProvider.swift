@@ -10,6 +10,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let processCollector: ProcessCollector
   public let processResolver: ProcessApplicationResolver
   public let maxProcessesPerApplication: Int
+  public let persistenceCollector: PersistenceCollector
+  public let persistenceResolver: PersistenceApplicationResolver
   public let projector: ApplicationGraphProjector
 
   public init(
@@ -18,6 +20,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     provenanceConfiguration: ApplicationProvenanceConfiguration,
     associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
     processConfiguration: ProcessCollectorConfiguration,
+    persistenceRoots: [PersistenceSearchRoot],
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -50,6 +53,11 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       clock: clock
     )
     maxProcessesPerApplication = processConfiguration.maxProcessesPerApplication
+    persistenceCollector = PersistenceCollector(
+      roots: persistenceRoots,
+      clock: clock
+    )
+    persistenceResolver = PersistenceApplicationResolver(clock: clock)
     projector = ApplicationGraphProjector()
   }
 
@@ -59,6 +67,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     provenanceConfiguration: ApplicationProvenanceConfiguration,
     associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
     processConfiguration: ProcessCollectorConfiguration,
+    persistenceConfiguration: PersistenceCollectorConfiguration,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -74,6 +83,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       provenanceConfiguration: provenanceConfiguration,
       associatedLocationConfiguration: associatedLocationConfiguration,
       processConfiguration: processConfiguration,
+      persistenceRoots: try persistenceConfiguration.resolvedRoots(userHome: userHome),
       userHome: userHome,
       signatureInspector: signatureInspector,
       provenanceInspector: provenanceInspector,
@@ -103,6 +113,12 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       processes: processes,
       applications: applications.observations
     )
+    let persistence = persistenceCollector.collect(scanID: scanID)
+    let persistenceResolutions = persistenceResolver.resolve(
+      scanID: scanID,
+      declarations: persistence,
+      applications: applications.observations
+    )
     return projector.snapshot(
       scanID: scanID,
       output: applications,
@@ -111,7 +127,9 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       associatedLocations: associatedLocations,
       processes: processes,
       processResolutions: processResolutions,
-      maxProcessesPerApplication: maxProcessesPerApplication
+      maxProcessesPerApplication: maxProcessesPerApplication,
+      persistence: persistence,
+      persistenceResolutions: persistenceResolutions
     )
   }
 }

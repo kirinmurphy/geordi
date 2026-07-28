@@ -67,6 +67,7 @@ More than one classification can apply to a field.
 | Embedded login items, XPC services, and helpers | Directly observable | Bundle `Contents/Library` and helper directories | Containment supports association but not exclusive ownership. |
 | Privileged helpers | Directly observable; sometimes permission-limited | `/Library/PrivilegedHelperTools`, launchd declarations, signatures | Complete state may be restricted. |
 | Persists through | Directly observable or deterministically derived | Explicit persistence declaration naming an executable | App association can remain inferred. |
+| Current application/persistence association | Direct declaration observation plus deterministic containment | User/local launchd plist executable contained in an observed application bundle | Implemented for immediate plist declarations; approval, loaded, and running state remain separate and unavailable. |
 | Orphaned persistence | Requires historical collection; heuristically inferred | Complete previous app inventory plus current persistence | Missing app evidence is not automatically proof of orphaning. |
 | Current fixture persistence explanations | Currently hardcoded/demo-only | Fixture relationships | Retain as narrative coverage. |
 

@@ -12,7 +12,9 @@ public struct ApplicationGraphProjector: Sendable {
     associatedLocations: CollectorOutput<ApplicationAssociatedLocationValue>? = nil,
     processes: CollectorOutput<ProcessValue>? = nil,
     processResolutions: CollectorOutput<ProcessApplicationResolutionValue>? = nil,
-    maxProcessesPerApplication: Int = 8
+    maxProcessesPerApplication: Int = 8,
+    persistence: CollectorOutput<PersistenceDeclarationValue>? = nil,
+    persistenceResolutions: CollectorOutput<PersistenceApplicationResolutionValue>? = nil
   ) -> GraphSnapshot {
     let signaturesByPath = Dictionary(
       uniqueKeysWithValues: (signatures?.observations ?? []).map {
@@ -192,6 +194,80 @@ public struct ApplicationGraphProjector: Sendable {
         ]
       )
     }
+    let declarationsByPath = Dictionary(
+      uniqueKeysWithValues: (persistence?.observations ?? []).map {
+        ($0.value.declarationPath, $0)
+      }
+    )
+    let matchedPersistence = (persistenceResolutions?.observations ?? []).filter {
+      $0.value.state == .matched && $0.value.applicationPaths.count == 1
+    }
+    let persistenceEntities = matchedPersistence.compactMap { resolution -> Entity? in
+      guard let declaration = declarationsByPath[resolution.value.declarationPath] else {
+        return nil
+      }
+      var details = [
+        Detail("Declaration", declaration.value.declarationPath),
+        Detail(
+          "Type",
+          declaration.value.kind == .launchAgent ? "Launch agent" : "Launch daemon"
+        ),
+        Detail("Run at load", declaration.value.runAtLoad ? "Yes" : "No"),
+        Detail("Keep alive", declaration.value.keepAlive ? "Yes" : "No"),
+      ]
+      if let program = declaration.value.programPath {
+        details.append(Detail("Program", program))
+      }
+      return Entity(
+        id: persistenceEntityID(declaration.value.declarationPath),
+        type: .persistence,
+        name: declaration.value.label,
+        summary: "A startup declaration observed on this Mac.",
+        details: details
+      )
+    }
+    let persistenceRelationships = matchedPersistence.compactMap {
+      resolution -> Relationship? in
+      guard
+        let applicationPath = resolution.value.applicationPaths.first,
+        let applicationID = applicationIDsByPath[applicationPath],
+        let declaration = declarationsByPath[resolution.value.declarationPath],
+        let confidence = resolution.value.confidence
+      else {
+        return nil
+      }
+      return Relationship(
+        id: RelationshipID(
+          "application-persistence:\(applicationID.rawValue):\(declaration.value.label)"
+        ),
+        source: applicationID,
+        target: persistenceEntityID(declaration.value.declarationPath),
+        type: .persistsThrough,
+        confidence: confidence,
+        explanation:
+          "The declaration's executable is contained inside the application bundle.",
+        evidence: [
+          Evidence(
+            id: "\(resolution.id.rawValue):declaration",
+            kind: .observed,
+            summary: "HAL read the declaration label and executable without retaining arguments.",
+            source: "Read-only launchd property list",
+            observationID: declaration.id,
+            observedAt: declaration.observedAt
+          ),
+          Evidence(
+            id: "\(resolution.id.rawValue):match",
+            kind: .derived,
+            summary: "The declared executable path is contained inside the application bundle.",
+            source: "Persistence-to-application resolver",
+            observationID: resolution.id,
+            observedAt: resolution.observedAt,
+            ruleID: "declared-program-bundle-containment",
+            ruleVersion: PersistenceApplicationResolver.version
+          ),
+        ]
+      )
+    }
     let completedAt = [
       output.run.completedAt,
       signatures?.run.completedAt,
@@ -199,6 +275,8 @@ public struct ApplicationGraphProjector: Sendable {
       associatedLocations?.run.completedAt,
       processes?.run.completedAt,
       processResolutions?.run.completedAt,
+      persistence?.run.completedAt,
+      persistenceResolutions?.run.completedAt,
     ]
     .compactMap { $0 }
     .max()
@@ -210,6 +288,8 @@ public struct ApplicationGraphProjector: Sendable {
         associatedLocations?.run.startedAt,
         processes?.run.startedAt,
         processResolutions?.run.startedAt,
+        persistence?.run.startedAt,
+        persistenceResolutions?.run.startedAt,
       ].compactMap { $0 }.min() ?? output.run.startedAt
     var collectorRuns = [output.run]
     if let signatures {
@@ -227,6 +307,12 @@ public struct ApplicationGraphProjector: Sendable {
     if let processResolutions {
       collectorRuns.append(processResolutions.run)
     }
+    if let persistence {
+      collectorRuns.append(persistence.run)
+    }
+    if let persistenceResolutions {
+      collectorRuns.append(persistenceResolutions.run)
+    }
     let graph = SystemGraph(
       metadata: FixtureMetadata(
         id: "live-applications-\(scanID.rawValue)",
@@ -234,8 +320,8 @@ public struct ApplicationGraphProjector: Sendable {
         name: "This Mac",
         summary: "A read-only application inventory observed on this Mac."
       ),
-      entities: applicationEntities + processEntities + locationEntities,
-      relationships: processRelationships + relationships
+      entities: applicationEntities + processEntities + persistenceEntities + locationEntities,
+      relationships: processRelationships + persistenceRelationships + relationships
     )
     return GraphSnapshot(
       graph: graph,
@@ -274,6 +360,10 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func processEntityID(_ pid: Int32) -> EntityID {
     EntityID("process:pid:\(pid)")
+  }
+
+  private func persistenceEntityID(_ path: String) -> EntityID {
+    EntityID("persistence:declaration:\(path)")
   }
 
   private func preferredPresentAssociations(

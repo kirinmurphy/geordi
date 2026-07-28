@@ -124,3 +124,11 @@ versioned schema. Exact main-executable matches take priority over application
 bundle containment. The budget limits default graph projection only; unmatched,
 inaccessible, ambiguous, and lower-ranked process observations remain in the
 normalized collector output.
+
+Persistence search roots are defined by
+`HALCollectors/Resources/persistence-roots.json` and its adjacent versioned
+schema. The default scope includes the user and local-domain LaunchAgent and
+LaunchDaemon directories, but excludes Apple’s `/System/Library` declarations
+from the application-focused atlas. The collector reads only immediate plist
+files and retains labels, declared executable paths, `RunAtLoad`, and
+`KeepAlive`; full argument arrays are never normalized.

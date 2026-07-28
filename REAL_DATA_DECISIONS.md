@@ -117,3 +117,17 @@ inaccessible, and ambiguous records remain normalized observations. The
 primary graph shows only uniquely matched processes and applies the
 manifest-defined per-application budget, ranked by observed resident memory and
 then PID for determinism.
+
+## 2026-07-28: persistence collection is application-focused
+
+The first persistence collector reads immediate plist declarations from the
+user and local `/Library` LaunchAgent and LaunchDaemon roots selected by
+manifest. Apple’s `/System/Library` declarations are excluded from the default
+application atlas to avoid overwhelming it with operating-system infrastructure.
+
+HAL retains only the declaration label, first executable, `RunAtLoad`, and
+`KeepAlive`. It never retains the remaining `ProgramArguments`, which may
+contain sensitive values. A persistence node enters the primary graph only
+when its absolute executable path is contained inside an observed application
+bundle. Unmatched and malformed declarations remain collector outcomes rather
+than default graph nodes.
