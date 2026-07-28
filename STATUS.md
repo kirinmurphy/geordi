@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Add a redacted diagnostic export for linked snapshots, then define
-rebuildable-data detector manifests before storage observation work.
-System-profile version 2 moves entity-specific symbol, color, subtitle, and
-trailing-detail presentation into validated fixture manifests; all seven
-profiles migrated together and Swift no longer switches on application IDs.
+Define rebuildable-data detector manifests before storage observation work,
+then add bounded associated-location root enumeration. Linked coverage now
+offers an explicitly redacted diagnostic export that preserves structural and
+collector-state information while code-enforced redaction removes local
+identities, paths, scopes, observation identifiers, and free-form values.
 
 ## Product evaluation checklist
 

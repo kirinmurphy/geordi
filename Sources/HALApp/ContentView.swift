@@ -9,6 +9,7 @@ struct ContentView: View {
   @State private var model: AppModel
   @State private var unlinkConfirmationPresented = false
   @State private var unlinkError: String?
+  @State private var diagnosticExportError: String?
 
   init(
     configuration: AppConfiguration,
@@ -42,7 +43,10 @@ struct ContentView: View {
           }
           switch model.destination {
           case .overview:
-            OverviewView(model: model)
+            OverviewView(
+              model: model,
+              diagnosticExportAction: exportRedactedDiagnostics
+            )
           default:
             AtlasDetailView(model: model)
           }
@@ -149,6 +153,17 @@ struct ContentView: View {
       Button("OK") { unlinkError = nil }
     } message: {
       Text(unlinkError ?? "")
+    }
+    .alert(
+      "Unable to Export Diagnostics",
+      isPresented: Binding(
+        get: { diagnosticExportError != nil },
+        set: { if !$0 { diagnosticExportError = nil } }
+      )
+    ) {
+      Button("OK") { diagnosticExportError = nil }
+    } message: {
+      Text(diagnosticExportError ?? "")
     }
   }
 
@@ -414,6 +429,18 @@ struct ContentView: View {
     }
   }
 
+  private func exportRedactedDiagnostics() {
+    let panel = NSSavePanel()
+    panel.nameFieldStringValue = "HAL-redacted-diagnostic.json"
+    panel.allowedContentTypes = [.json]
+    guard panel.runModal() == .OK, let url = panel.url else { return }
+    do {
+      try RedactedDiagnosticExporter.write(model.currentSnapshot, to: url)
+    } catch {
+      diagnosticExportError = error.localizedDescription
+    }
+  }
+
   private func navigationButton(
     _ title: String,
     symbol: String,
@@ -532,6 +559,7 @@ private struct AppBanner: View {
 
 private struct OverviewView: View {
   let model: AppModel
+  let diagnosticExportAction: () -> Void
 
   var body: some View {
     ScrollView {
@@ -569,7 +597,7 @@ private struct OverviewView: View {
 
           CurrentActivityView()
         } else {
-          LiveCoverageNotice(model: model)
+          LiveCoverageNotice(model: model, exportAction: diagnosticExportAction)
         }
 
         inventorySection(
@@ -891,6 +919,7 @@ private struct InitialLinkOverlay: View {
 
 private struct LiveCoverageNotice: View {
   let model: AppModel
+  let exportAction: () -> Void
 
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
@@ -952,6 +981,11 @@ private struct LiveCoverageNotice: View {
             Button("Check this Mac again") { model.refreshLiveData() }
               .buttonStyle(.bordered)
               .controlSize(.small)
+            Button("Export redacted diagnostics…") {
+              exportAction()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
             Text("Reruns the same enabled read-only collectors.")
               .font(.caption)
               .foregroundStyle(.secondary)

@@ -144,6 +144,10 @@ final class AppModel {
 
   var isSynthetic: Bool { dataSourceMode == .synthetic }
 
+  var currentSnapshot: GraphSnapshot {
+    GraphSnapshot(graph: fixture, scan: scanContext)
+  }
+
   var applicationCategoryOptions: [ApplicationClassificationCategory] {
     guard let applicationClassifications else { return [] }
     let observedCategoryIDs = Set(

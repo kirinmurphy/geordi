@@ -95,6 +95,12 @@ The export validates each graph, sorts entities, relationships, details, and
 evidence, emits stable JSON keys, and revalidates the encoded document against
 the versioned system-profile schema.
 
+Linked mode also provides **Export redacted diagnostics…**. Diagnostic export
+preserves graph shape, collector states, timestamps, confidence, and evidence
+kinds while replacing local identifiers, names, paths, scopes, observation
+identifiers, and free-form values. This is intentionally different from the
+explicit unredacted backup offered during unlink.
+
 Open `Package.swift` in Xcode and select the `HALApp` scheme for Xcode builds
 and debugging. The prototype never reads system inventory, requests
 permissions, mutates the machine, or connects to a remote service.

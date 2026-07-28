@@ -54,6 +54,11 @@ Ordinary settings must never disable:
 - Audit recording for actions
 - Secret redaction defaults without an explicit privacy-controlled capability
 
+Redacted diagnostic export therefore uses a code-enforced allowlist for a
+small set of bounded status and version values. Manifests cannot opt paths,
+entity names, collector scopes, observation identifiers, or free-form evidence
+into the default diagnostic.
+
 ## Storage
 
 Use platform-appropriate preferences for simple user choices and a versioned

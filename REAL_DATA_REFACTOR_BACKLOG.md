@@ -257,7 +257,7 @@ These items were recorded from the first linked-Mac product test on
 - [x] Add deterministic process-to-application resolution.
 - [x] Preserve unmatched and inaccessible process records.
 - [x] Add explicit manual refresh.
-- [ ] Add redacted diagnostic export.
+- [x] Add redacted diagnostic export.
 
 ## Priority 5: history, storage, and incidents
 
@@ -272,5 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Add a redacted diagnostic export for linked snapshots, then define
-rebuildable-data detector manifests before storage observation work.
+Define rebuildable-data detector manifests before storage observation work,
+then add bounded associated-location root enumeration.
