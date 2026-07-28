@@ -370,7 +370,15 @@ struct ContentView: View {
           severity: .alert,
           title: "Collection problem",
           message: collectionError,
-          allowsDismissal: true
+          allowsDismissal: true,
+          actionTitle: model.isSynthetic ? "Try linking again" : "Check again",
+          action: {
+            if model.isSynthetic {
+              model.linkToMac()
+            } else {
+              model.refreshLiveData()
+            }
+          }
         )
       } else if model.isSynthetic {
         AppBanner(

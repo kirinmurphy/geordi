@@ -1,4 +1,5 @@
 import Foundation
+import HALCollectors
 import HALDataSource
 import HALDomain
 import Testing
@@ -107,6 +108,19 @@ struct AppModelCollectionTests {
     try await waitUntil { !model.isCollecting }
     #expect(model.dataSourceMode == .linkedMac)
     #expect(model.linkCompletionPending)
+  }
+
+  @Test("Configuration failures identify the collector and preserve diagnostics")
+  func collectorAwareFailure() {
+    let message = AppModel.collectionFailureMessage(
+      ApplicationCollectorConfigurationError.invalid(
+        "Validation failed at $.roots[0].path"
+      )
+    )
+
+    #expect(message.contains("application discovery"))
+    #expect(message.contains("$.roots[0].path"))
+    #expect(message.contains("No applications or machine data were changed"))
   }
 
   private func makeModel(

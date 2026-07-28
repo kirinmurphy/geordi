@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Improve retryable, collector-aware initial-link failure diagnostics, then add
-application-scope and collector-coverage counts. Model coverage now verifies
-initial-link progress, cancellation, success, retry, unchanged and changed
-refreshes, and retained-data failure. Native UI automation remains deferred
-until the interaction runner extends beyond packaging verification.
+Add application-scope and collector-coverage counts, then surface consequential
+low-confidence or unmatched records without adding ordinary uncertainty to the
+default map. Initial-link failures now remain synthetic, identify the failed
+collector setup when possible, preserve schema field-path diagnostics, and
+offer an immediate retry.
 
 ## Product evaluation checklist
 

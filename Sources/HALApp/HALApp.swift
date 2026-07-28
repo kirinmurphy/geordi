@@ -237,13 +237,36 @@ final class AppModel {
         }
       } catch {
         guard collectionGeneration == generation, !Task.isCancelled else { return }
-        collectionError = "HAL could not read this Mac: \(error.localizedDescription)"
+        collectionError = Self.collectionFailureMessage(error)
         if linkOnSuccess {
           dataSourceMode = .synthetic
           preferences.setMode(.synthetic)
         }
       }
     }
+  }
+
+  static func collectionFailureMessage(_ error: Error) -> String {
+    let stage =
+      switch error {
+      case is ApplicationCollectorConfigurationError:
+        "set up application discovery"
+      case is ApplicationProvenanceConfigurationError:
+        "set up provenance collection"
+      case is ApplicationAssociatedLocationConfigurationError:
+        "set up associated-location collection"
+      case is ProcessCollectorConfigurationError:
+        "set up process collection"
+      case is PersistenceCollectorConfigurationError:
+        "set up startup-item collection"
+      default:
+        "complete read-only collection"
+      }
+    let detail =
+      (error as? LocalizedError)?.errorDescription
+      ?? String(describing: error)
+    return
+      "HAL could not \(stage): \(detail) No applications or machine data were changed."
   }
 
   func cancelInitialLink() {

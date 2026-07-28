@@ -79,7 +79,7 @@ These items were recorded from the first linked-Mac product test on
   machine data are changed.
 - [x] On success, land on a clear completion state with a primary
   **Explore installed applications** action.
-- [ ] On failure, remain synthetic and show a retryable, field-path-aware or
+- [x] On failure, remain synthetic and show a retryable, field-path-aware or
   collector-aware explanation.
 
 ### Linked completion and refresh
@@ -134,7 +134,7 @@ These items were recorded from the first linked-Mac product test on
   application header so users can tell that signing/provenance collection ran.
 - [x] Add direct **Return to fictional Mac…** navigation beside the linked-data
   status. Do not hide the only return path inside an unlabeled ellipsis menu.
-- [ ] Keep the existing backup/delete/cancel confirmation after that action;
+- [x] Keep the existing backup/delete/cancel confirmation after that action;
   returning to the fictional profile still unlinks the live data source.
 - [x] Rename technical **Unlink this Mac** copy in user-facing navigation when
   the user’s goal is to return to the demo, while retaining “unlink” in the
@@ -272,7 +272,6 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Improve retryable initial-link failure diagnostics, then add application-scope
-and collector-coverage counts. Continue relevance-policy coverage for
-low-confidence and unmatched explanatory records before adding another
-collector.
+Add application-scope and collector-coverage counts, then continue
+relevance-policy coverage for low-confidence and unmatched explanatory records
+before adding another collector.
