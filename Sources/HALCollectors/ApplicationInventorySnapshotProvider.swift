@@ -7,6 +7,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let signatureCollector: ApplicationSignatureCollector
   public let provenanceCollector: ApplicationProvenanceCollector
   public let associatedLocationCollector: ApplicationAssociatedLocationCollector
+  public let rebuildableDataCollector: RebuildableDataCollector?
   public let processCollector: ProcessCollector
   public let processResolver: ProcessApplicationResolver
   public let maxProcessesPerApplication: Int
@@ -20,6 +21,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     roots: [ApplicationSearchRoot],
     provenanceConfiguration: ApplicationProvenanceConfiguration,
     associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
+    rebuildableDataConfiguration: RebuildableDataConfiguration? = nil,
     processConfiguration: ProcessCollectorConfiguration,
     persistenceRoots: [PersistenceSearchRoot],
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
@@ -30,6 +32,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       FileSystemAssociatedLocationInspector(),
     associatedLocationEnumerator: any AssociatedLocationEnumerating =
       FileSystemAssociatedLocationEnumerator(),
+    rebuildableDataInspector: any RebuildableDataInspecting =
+      FileSystemRebuildableDataInspector(),
     processSampler: any ProcessSampling = PSProcessSampler(),
     maxUnmatchedProcesses: Int = 0,
     clock: any HALClock = SystemClock()
@@ -52,6 +56,14 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       enumerator: associatedLocationEnumerator,
       clock: clock
     )
+    rebuildableDataCollector = rebuildableDataConfiguration.map {
+      RebuildableDataCollector(
+        configuration: $0,
+        userHome: userHome,
+        inspector: rebuildableDataInspector,
+        clock: clock
+      )
+    }
     processCollector = ProcessCollector(sampler: processSampler, clock: clock)
     processResolver = ProcessApplicationResolver(
       configuration: processConfiguration,
@@ -72,6 +84,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     configuration: ApplicationCollectorConfiguration,
     provenanceConfiguration: ApplicationProvenanceConfiguration,
     associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
+    rebuildableDataConfiguration: RebuildableDataConfiguration? = nil,
     processConfiguration: ProcessCollectorConfiguration,
     persistenceConfiguration: PersistenceCollectorConfiguration,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
@@ -82,6 +95,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       FileSystemAssociatedLocationInspector(),
     associatedLocationEnumerator: any AssociatedLocationEnumerating =
       FileSystemAssociatedLocationEnumerator(),
+    rebuildableDataInspector: any RebuildableDataInspecting =
+      FileSystemRebuildableDataInspector(),
     processSampler: any ProcessSampling = PSProcessSampler(),
     clock: any HALClock = SystemClock()
   ) throws {
@@ -90,6 +105,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       roots: configuration.searchRoots(userHome: userHome),
       provenanceConfiguration: provenanceConfiguration,
       associatedLocationConfiguration: associatedLocationConfiguration,
+      rebuildableDataConfiguration: rebuildableDataConfiguration,
       processConfiguration: processConfiguration,
       persistenceRoots: try persistenceConfiguration.resolvedRoots(userHome: userHome),
       userHome: userHome,
@@ -97,6 +113,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       provenanceInspector: provenanceInspector,
       associatedLocationInspector: associatedLocationInspector,
       associatedLocationEnumerator: associatedLocationEnumerator,
+      rebuildableDataInspector: rebuildableDataInspector,
       processSampler: processSampler,
       maxUnmatchedProcesses: processConfiguration.maxUnmatchedProcesses,
       clock: clock
@@ -118,6 +135,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       applications: applications.observations,
       signatures: signatures.observations
     )
+    let rebuildableData = rebuildableDataCollector?.collect(scanID: scanID)
     let processes = processCollector.collect(scanID: scanID)
     let processResolutions = processResolver.resolve(
       scanID: scanID,
@@ -136,6 +154,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       signatures: signatures,
       provenance: provenance,
       associatedLocations: associatedLocations,
+      rebuildableData: rebuildableData,
       processes: processes,
       processResolutions: processResolutions,
       maxProcessesPerApplication: maxProcessesPerApplication,

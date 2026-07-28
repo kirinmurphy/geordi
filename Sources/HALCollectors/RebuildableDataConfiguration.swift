@@ -85,12 +85,6 @@ public struct RebuildableDataConfiguration: Codable, Hashable, Sendable {
 }
 
 public struct RebuildableDataClassification: Codable, Hashable, Sendable, Identifiable {
-  public enum Rebuildability: String, Codable, Hashable, Sendable {
-    case rebuildable
-    case redownloadable
-    case unknown
-  }
-
   public let id: String
   public let label: String
   public let rebuildability: Rebuildability
@@ -169,6 +163,11 @@ public struct RebuildableDataDetector: Codable, Hashable, Sendable, Identifiable
 public struct RebuildableDataLocation: Codable, Hashable, Sendable, Identifiable {
   public let id: String
   public let path: String
+
+  public init(id: String, path: String) {
+    self.id = id
+    self.path = path
+  }
 }
 
 public struct RebuildableDataEvidenceRule: Codable, Hashable, Sendable {
@@ -181,6 +180,13 @@ public struct RebuildableDataEvidenceRule: Codable, Hashable, Sendable {
   public let kind: Kind
   public let confidence: Confidence
   public let explanation: String
+
+  public init(id: String, kind: Kind, confidence: Confidence, explanation: String) {
+    self.id = id
+    self.kind = kind
+    self.confidence = confidence
+    self.explanation = explanation
+  }
 }
 
 public enum RebuildableDataConfigurationError: Error, Equatable, Sendable {

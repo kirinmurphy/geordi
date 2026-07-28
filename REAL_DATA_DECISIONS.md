@@ -100,6 +100,19 @@ shared membership for every entitled application. HAL does not infer group
 membership from a team-ID prefix or bundle identifier, and group containers
 without an exact entitlement remain unresolved observations.
 
+## 2026-07-28: rebuildable-data collection begins at root metadata
+
+The initial rebuildable-data collector performs one `lstat`-level check for
+each manifest location. It preserves present, absent, permission-denied,
+unreadable, and symbolic-link states without enumerating descendants, reading
+contents, or calculating sizes. Only present directories that are not symbolic
+links become live file entities. Detector classifications and evidence remain
+visible, while size is explicitly “Not collected” and no removal action exists.
+
+Resolved paths that escape the linked user home through a symbolic-link parent
+are refused in code. Manifest exclusions are retained for a future bounded
+traversal but do not authorize traversal today.
+
 ## 2026-07-27: the primary atlas is relevance-bounded
 
 Collector completeness and graph prominence are separate concerns. HAL may

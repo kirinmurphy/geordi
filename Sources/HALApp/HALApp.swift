@@ -25,6 +25,7 @@ struct HALApp: App {
           let provenanceConfiguration = try ApplicationProvenanceConfiguration.bundled()
           let associatedLocationConfiguration =
             try ApplicationAssociatedLocationConfiguration.bundled()
+          let rebuildableDataConfiguration = try RebuildableDataConfiguration.bundled()
           let processConfiguration = try ProcessCollectorConfiguration.bundled()
           let persistenceConfiguration = try PersistenceCollectorConfiguration.bundled()
           return try ApplicationInventorySnapshotProvider(
@@ -32,6 +33,7 @@ struct HALApp: App {
             configuration: collectorConfiguration,
             provenanceConfiguration: provenanceConfiguration,
             associatedLocationConfiguration: associatedLocationConfiguration,
+            rebuildableDataConfiguration: rebuildableDataConfiguration,
             processConfiguration: processConfiguration,
             persistenceConfiguration: persistenceConfiguration
           ).snapshot()
@@ -417,7 +419,9 @@ final class AppModel {
     case .overview:
       return fixture.filtered(to: [.application, .resource, .incident])
     case .storage:
-      return fixture.neighborhood(around: "resource.storage", depth: 2)
+      return isSynthetic
+        ? fixture.neighborhood(around: "resource.storage", depth: 2)
+        : fixture.filtered(to: [.file])
     case .applications:
       return fixture.filtered(to: [
         .application, .packageManager, .shellFramework, .package, .persistence,

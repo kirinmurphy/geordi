@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Wire the rebuildable-data detector manifest into bounded metadata-only
-collection without enabling size traversal or deletion.
-The rebuildable-data manifest contract now defines classifications, bounded
-tool-managed roots, exclusions, and evidence rules while code-enforced path
-safety remains nonconfigurable; no storage collection or deletion was enabled.
+Replace remaining live-mode synthetic storage and performance copy, then define
+the next bounded size-measurement contract before implementing any traversal.
+The rebuildable-data manifest now drives linked-Mac metadata checks for Xcode,
+Homebrew, and npm roots. HAL preserves unavailable states, refuses symlink
+escapes, does not descend or calculate size, and enables no storage deletion.
 
 ## Product evaluation checklist
 

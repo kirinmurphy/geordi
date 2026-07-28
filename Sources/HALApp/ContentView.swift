@@ -1830,7 +1830,11 @@ private struct AtlasDetailView: View {
   private var summaryText: String {
     switch model.destination {
     case .storage:
-      "24.4 GB is likely rebuildable or redownloadable. Profiles, configuration, and application data remain protected."
+      if model.isSynthetic {
+        "24.4 GB is likely rebuildable or redownloadable. Profiles, configuration, and application data remain protected."
+      } else {
+        "HAL observed configured rebuildable or redownloadable roots using metadata only. Sizes were not collected, and no removal action is enabled."
+      }
     case .applications:
       "Explore familiar applications alongside Homebrew, Oh My Zsh, and an npm-installed TypeScript package."
     case .performance:

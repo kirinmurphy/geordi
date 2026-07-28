@@ -158,7 +158,11 @@ exclusions, and evidence rules are defined by
 versioned schema. The initial contract names Xcode DerivedData, Homebrew
 downloads, and npm cache roots but does not authorize collection or deletion.
 Swift permanently rejects parent traversal, wildcards, NULs, unsafe exclusion
-components, and resolved locations outside the configured user home.
+components, and resolved locations outside the configured user home. Linked-Mac
+collection now performs one `lstat`-level metadata check per configured root.
+It does not enumerate descendants, calculate sizes, read contents, or expose a
+removal action. Present symbolic links are retained as limited observations and
+are not projected as reclaim candidates.
 
 Persistence search roots are defined by
 `HALCollectors/Resources/persistence-roots.json` and its adjacent versioned

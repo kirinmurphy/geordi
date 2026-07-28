@@ -10,6 +10,7 @@ public struct ApplicationGraphProjector: Sendable {
     signatures: CollectorOutput<ApplicationSignatureValue>? = nil,
     provenance: CollectorOutput<ApplicationProvenanceValue>? = nil,
     associatedLocations: CollectorOutput<ApplicationAssociatedLocationValue>? = nil,
+    rebuildableData: CollectorOutput<RebuildableDataValue>? = nil,
     processes: CollectorOutput<ProcessValue>? = nil,
     processResolutions: CollectorOutput<ProcessApplicationResolutionValue>? = nil,
     maxProcessesPerApplication: Int = 8,
@@ -127,6 +128,37 @@ public struct ApplicationGraphProjector: Sendable {
         ]
       )
     }
+    let rebuildableDataEntities = Dictionary(
+      (rebuildableData?.observations ?? [])
+        .filter {
+          $0.value.status == .present
+            && $0.value.isDirectory == true
+            && $0.value.isSymbolicLink != true
+        }
+        .map { observation in
+          let value = observation.value
+          return (
+            rebuildableDataEntityID(value.path),
+            Entity(
+              id: rebuildableDataEntityID(value.path),
+              type: .file,
+              name: URL(fileURLWithPath: value.path).lastPathComponent,
+              summary:
+                "A \(value.classificationLabel.lowercased()) location observed through a versioned detector.",
+              details: [
+                Detail("Classification", value.classificationLabel),
+                Detail("Rebuildability", value.rebuildability.rawValue.capitalized),
+                Detail("Path", value.path),
+                Detail("Size", "Not collected"),
+                Detail("Evidence rule", value.evidenceRuleID),
+                Detail("Evidence confidence", value.evidenceConfidence.plainLanguage),
+                Detail("Evidence explanation", value.evidenceExplanation),
+              ]
+            )
+          )
+        },
+      uniquingKeysWith: { first, _ in first }
+    ).values.sorted { $0.id.rawValue < $1.id.rawValue }
     let processesByPID = Dictionary(
       uniqueKeysWithValues: (processes?.observations ?? []).map {
         ($0.value.pid, $0)
@@ -293,6 +325,7 @@ public struct ApplicationGraphProjector: Sendable {
       signatures?.run.completedAt,
       provenance?.run.completedAt,
       associatedLocations?.run.completedAt,
+      rebuildableData?.run.completedAt,
       processes?.run.completedAt,
       processResolutions?.run.completedAt,
       persistence?.run.completedAt,
@@ -306,6 +339,7 @@ public struct ApplicationGraphProjector: Sendable {
         signatures?.run.startedAt,
         provenance?.run.startedAt,
         associatedLocations?.run.startedAt,
+        rebuildableData?.run.startedAt,
         processes?.run.startedAt,
         processResolutions?.run.startedAt,
         persistence?.run.startedAt,
@@ -320,6 +354,9 @@ public struct ApplicationGraphProjector: Sendable {
     }
     if let associatedLocations {
       collectorRuns.append(associatedLocations.run)
+    }
+    if let rebuildableData {
+      collectorRuns.append(rebuildableData.run)
     }
     if let processes {
       collectorRuns.append(processes.run)
@@ -340,7 +377,9 @@ public struct ApplicationGraphProjector: Sendable {
         name: "This Mac",
         summary: "A read-only application inventory observed on this Mac."
       ),
-      entities: applicationEntities + processEntities + persistenceEntities + locationEntities,
+      entities:
+        applicationEntities + processEntities + persistenceEntities + locationEntities
+        + rebuildableDataEntities,
       relationships: processRelationships + persistenceRelationships + relationships
     )
     return GraphSnapshot(
@@ -406,6 +445,10 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func persistenceEntityID(_ path: String) -> EntityID {
     EntityID("persistence:declaration:\(path)")
+  }
+
+  private func rebuildableDataEntityID(_ path: String) -> EntityID {
+    EntityID("file:rebuildable-data:\(path)")
   }
 
   private func preferredPresentAssociations(
