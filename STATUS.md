@@ -39,6 +39,8 @@ Milestone 0 — repository and interactive concept.
 - Initial link completion leads to installed applications; subsequent
   **Check this Mac again** runs keep the snapshot interactive and report
   changed versus unchanged results with timing
+- Initial linking uses a focused read-only setup overlay with stage context and
+  a cancellable return to the unchanged fictional profile
 - Distinct warning treatment for recent performance and storage alerts
 - Relationship maps appear after selecting an inventory item rather than at
   launch
@@ -219,8 +221,6 @@ Recorded outcomes use `[x]`; unchecked items still need evaluation.
   checklist rather than a full XCUITest runner.
 - HAL currently persists and exports only its compiled live snapshot; it has no
   historical database, notification layer, or machine cleanup actions.
-- Initial linking exposes the rest of the interface without explaining its
-  collection stages or offering cancellation.
 - Signing and provenance facts are projected into application details but have
   no visible evidence summary, so successful collection can appear to do
   nothing.

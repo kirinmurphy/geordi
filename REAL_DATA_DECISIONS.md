@@ -157,3 +157,11 @@ the check time and duration in the interface.
 Scan identifiers, collection timestamps, and collector-run timing do not by
 themselves count as a displayed change. This prevents every refresh from
 claiming an update merely because it produced a new scan envelope.
+
+## 2026-07-28: cancelling initial link invalidates its collection generation
+
+Initial link runs behind a focused setup overlay while the fictional profile
+remains the committed data source. Cancelling requests task cancellation and
+invalidates the collection generation. A collector that cannot stop
+immediately may finish its read-only work, but HAL ignores that late result and
+does not save it or switch data-source mode.

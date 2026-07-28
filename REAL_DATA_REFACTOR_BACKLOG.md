@@ -62,22 +62,22 @@ These items were recorded from the first linked-Mac product test on
 
 ### Initial linking flow
 
-- [ ] Replace the banner-only `Linking…` state with a focused setup overlay
+- [x] Replace the banner-only `Linking…` state with a focused setup overlay
   that explains HAL is performing read-only collection.
-- [ ] Disable controls whose meaning depends on the selected data source while
+- [x] Disable controls whose meaning depends on the selected data source while
   the initial link is unresolved.
-- [ ] Keep unlink, destructive reset, and ordinary refresh unavailable during
+- [x] Keep unlink, destructive reset, and ordinary refresh unavailable during
   initial linking.
-- [ ] Offer **Cancel and keep exploring the fictional Mac**, not **Undo**:
+- [x] Offer **Cancel and keep exploring the fictional Mac**, not **Undo**:
   linked mode is not persisted until collection succeeds, so there is no
   committed change to undo.
-- [ ] Make initial collection cooperatively cancellable and ignore late results
+- [x] Make initial collection cooperatively cancellable and ignore late results
   from a cancelled link.
-- [ ] Show a compact stage indicator:
+- [x] Show a compact stage indicator:
   **Connect → Observe applications → Build your atlas → Ready**.
-- [ ] Describe which facts are being read and reiterate that no applications or
+- [x] Describe which facts are being read and reiterate that no applications or
   machine data are changed.
-- [ ] On success, land on a clear completion state with a primary
+- [x] On success, land on a clear completion state with a primary
   **Explore installed applications** action.
 - [ ] On failure, remain synthetic and show a retryable, field-path-aware or
   collector-aware explanation.

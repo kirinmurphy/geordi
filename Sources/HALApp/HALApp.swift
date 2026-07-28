@@ -84,6 +84,8 @@ final class AppModel {
   private let preferences: any DataSourcePreferenceStore
   private let userDataStore: HALUserDataStore?
   private let liveSnapshot: @Sendable () throws -> GraphSnapshot
+  private var collectionTask: Task<Void, Never>?
+  private var collectionGeneration: UUID?
   var fixture: SystemGraph
   var scanContext: ScanContext
   var dataSourceMode: DataSourceMode
@@ -199,17 +201,24 @@ final class AppModel {
     let activity: CollectionActivity = linkOnSuccess ? .initialLink : .refresh
     let collectionStartedAt = Date()
     let previousGraph = fixture
+    let generation = UUID()
     isCollecting = true
     collectionActivity = activity
+    collectionGeneration = generation
     collectionError = nil
     let collect = liveSnapshot
-    Task {
+    collectionTask = Task {
       defer {
-        isCollecting = false
-        collectionActivity = nil
+        if collectionGeneration == generation {
+          isCollecting = false
+          collectionActivity = nil
+          collectionTask = nil
+          collectionGeneration = nil
+        }
       }
       do {
         let snapshot = try await Task.detached { try collect() }.value
+        guard collectionGeneration == generation, !Task.isCancelled else { return }
         try userDataStore?.saveSnapshot(snapshot)
         fixture = snapshot.graph
         scanContext = snapshot.scan
@@ -225,6 +234,7 @@ final class AppModel {
           lastRefreshDuration = Date().timeIntervalSince(collectionStartedAt)
         }
       } catch {
+        guard collectionGeneration == generation, !Task.isCancelled else { return }
         collectionError = "HAL could not read this Mac: \(error.localizedDescription)"
         if linkOnSuccess {
           dataSourceMode = .synthetic
@@ -232,6 +242,16 @@ final class AppModel {
         }
       }
     }
+  }
+
+  func cancelInitialLink() {
+    guard collectionActivity == .initialLink else { return }
+    collectionGeneration = nil
+    collectionTask?.cancel()
+    collectionTask = nil
+    isCollecting = false
+    collectionActivity = nil
+    collectionError = nil
   }
 
   func exploreLinkedApplications() {

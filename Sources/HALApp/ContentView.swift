@@ -108,6 +108,12 @@ struct ContentView: View {
         .zIndex(21)
       }
     }
+    .overlay {
+      if model.collectionActivity == .initialLink {
+        InitialLinkOverlay(cancelAction: model.cancelInitialLink)
+          .zIndex(30)
+      }
+    }
     .animation(.easeInOut(duration: 0.18), value: model.referencePresented)
     .animation(
       .spring(response: 0.32, dampingFraction: 0.86),
@@ -819,6 +825,72 @@ private struct WelcomePrompt: View {
       RoundedRectangle(cornerRadius: 16).stroke(Color.accentColor.opacity(0.3))
     }
     .accessibilityIdentifier("syntheticWelcomePrompt")
+  }
+}
+
+private struct InitialLinkOverlay: View {
+  let cancelAction: () -> Void
+
+  var body: some View {
+    ZStack {
+      Color.black.opacity(0.28)
+        .ignoresSafeArea()
+
+      VStack(alignment: .leading, spacing: 18) {
+        HStack(spacing: 12) {
+          ProgressView()
+            .controlSize(.regular)
+          VStack(alignment: .leading, spacing: 3) {
+            Text("Linking this Mac")
+              .font(.title2.bold())
+            Text("HAL is building a read-only application atlas.")
+              .foregroundStyle(.secondary)
+          }
+        }
+
+        HStack(spacing: 8) {
+          setupStage("Connect", complete: true)
+          Image(systemName: "chevron.right")
+          setupStage("Observe applications", active: true)
+          Image(systemName: "chevron.right")
+          setupStage("Build your atlas")
+          Image(systemName: "chevron.right")
+          setupStage("Ready")
+        }
+        .font(.caption)
+
+        Text(
+          "HAL is reading application bundles, signing facts, conventional related locations, current processes, and startup declarations. It will not modify applications or machine data."
+        )
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+
+        HStack {
+          Spacer()
+          Button("Cancel and keep exploring the fictional Mac", action: cancelAction)
+        }
+      }
+      .padding(24)
+      .frame(maxWidth: 620)
+      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+      .shadow(radius: 24, y: 10)
+      .padding(30)
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("initialLinkOverlay")
+  }
+
+  private func setupStage(
+    _ title: String,
+    complete: Bool = false,
+    active: Bool = false
+  ) -> some View {
+    Label(
+      title,
+      systemImage: complete ? "checkmark.circle.fill" : (active ? "circle.fill" : "circle")
+    )
+    .foregroundStyle(complete ? .green : (active ? Color.accentColor : .secondary))
   }
 }
 
