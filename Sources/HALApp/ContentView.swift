@@ -582,8 +582,8 @@ private struct OverviewView: View {
                 Text(
                   "\(counts.visible) visible · \(counts.hidden) hidden · \(counts.uncertain) unclassified"
                 )
-                  .font(.callout)
-                  .foregroundStyle(.secondary)
+                .font(.callout)
+                .foregroundStyle(.secondary)
                 Picker(
                   "Software type",
                   selection: Binding(

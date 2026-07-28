@@ -12,7 +12,8 @@ struct DisplayPolicyTests {
     #expect(policy.context("applicationDetail")?.nodeBudget == 12)
   }
 
-  @Test("Presenter prioritizes active relationships, groups strong locations, and keeps source intact")
+  @Test(
+    "Presenter prioritizes active relationships, groups strong locations, and keeps source intact")
   func relevanceProjection() {
     let source = graph()
     let policy = DisplayContextPolicy(

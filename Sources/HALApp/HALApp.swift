@@ -232,7 +232,8 @@ final class AppModel {
 
   var applicationEvidenceFactCount: Int {
     applications(in: nil).reduce(into: 0) { count, application in
-      count += application.details.first { $0.label == "Evidence facts" }
+      count +=
+        application.details.first { $0.label == "Evidence facts" }
         .flatMap { Int($0.value) } ?? 0
     }
   }

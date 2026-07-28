@@ -134,32 +134,32 @@ public struct ApplicationGraphProjector: Sendable {
     )
     let processEntities = (visibleProcessResolutions + unresolvedProcessResolutions)
       .compactMap { resolution -> Entity? in
-      guard let process = processesByPID[resolution.value.processID] else { return nil }
-      var details = [
-        Detail("PID", "\(process.value.pid)"),
-        Detail("Application resolution", resolution.value.state.rawValue.capitalized),
-      ]
-      if let parentPID = process.value.parentPID {
-        details.append(Detail("Parent PID", "\(parentPID)"))
-      }
-      if let bytes = process.value.residentMemoryBytes {
-        details.append(
-          Detail(
-            "Memory at observation",
-            ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+        guard let process = processesByPID[resolution.value.processID] else { return nil }
+        var details = [
+          Detail("PID", "\(process.value.pid)"),
+          Detail("Application resolution", resolution.value.state.rawValue.capitalized),
+        ]
+        if let parentPID = process.value.parentPID {
+          details.append(Detail("Parent PID", "\(parentPID)"))
+        }
+        if let bytes = process.value.residentMemoryBytes {
+          details.append(
+            Detail(
+              "Memory at observation",
+              ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+            )
           )
+        }
+        if let path = process.value.executablePath {
+          details.append(Detail("Executable", path))
+        }
+        return Entity(
+          id: processEntityID(process.value.pid),
+          type: .process,
+          name: process.value.name,
+          summary: "A process observed in the point-in-time snapshot.",
+          details: details
         )
-      }
-      if let path = process.value.executablePath {
-        details.append(Detail("Executable", path))
-      }
-      return Entity(
-        id: processEntityID(process.value.pid),
-        type: .process,
-        name: process.value.name,
-        summary: "A process observed in the point-in-time snapshot.",
-        details: details
-      )
       }
     let processRelationships = visibleProcessResolutions.compactMap {
       resolution -> Relationship? in

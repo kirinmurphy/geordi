@@ -140,9 +140,10 @@ struct ProcessCollectorTests {
     #expect(snapshot.graph.relationships.count == 1)
     #expect(snapshot.graph.relationships.first?.target == "process:pid:101")
     #expect(snapshot.graph.relationships.first?.evidence.count == 2)
-    #expect(snapshot.graph.entity("process:pid:102")?.details.contains {
-      $0.label == "Application resolution" && $0.value == "Inaccessible"
-    } == true)
+    #expect(
+      snapshot.graph.entity("process:pid:102")?.details.contains {
+        $0.label == "Application resolution" && $0.value == "Inaccessible"
+      } == true)
   }
 
   private func application() -> CollectedObservation<ApplicationBundleValue> {

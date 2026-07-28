@@ -140,7 +140,8 @@ public struct DisplayPolicyPresenter: Sendable {
             id: groupID,
             type: members[0].type,
             name: "\(members.count) \(label)",
-            summary: "A presentation group; the individual observations remain available in technical details.",
+            summary:
+              "A presentation group; the individual observations remain available in technical details.",
             details: [Detail("Includes", members.map(\.name).sorted().joined(separator: ", "))]
           )
         )
@@ -152,7 +153,8 @@ public struct DisplayPolicyPresenter: Sendable {
             target: first.source == center ? groupID : center,
             type: first.type,
             confidence: candidates.map(\.0.confidence).min() ?? first.confidence,
-            explanation: "\(members.count) similar relationships are grouped to keep this map readable.",
+            explanation:
+              "\(members.count) similar relationships are grouped to keep this map readable.",
             evidence: candidates.flatMap(\.0.evidence)
           )
         )
