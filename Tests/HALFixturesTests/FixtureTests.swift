@@ -16,7 +16,7 @@ struct FixtureTests {
 
   @Test("Every committed profile manifest validates through the central schema")
   func profileManifestsValidate() throws {
-    #expect(try FixtureCatalog.validateManifestProfiles() == 6)
+    #expect(try FixtureCatalog.validateManifestProfiles() == 7)
   }
 
   @Test("Catalog has all required Phase 0 scenarios")
@@ -30,7 +30,28 @@ struct FixtureTests {
         "helper-rich-application",
         "resource-incident",
         "ambiguous-ownership",
+        "observation-states",
       ]))
+  }
+
+  @Test("Observation-state fixture exercises incomplete and negative evidence")
+  func observationStates() {
+    let graph = FixtureCatalog.observationStates
+    let states = Set(
+      graph.entities.compactMap {
+        $0.details.first { $0.label == "Evidence state" }?.value
+      }
+    )
+
+    #expect(
+      states == [
+        "Partial", "Unavailable", "Permission denied", "Ambiguous", "Stale", "Negative",
+      ])
+    #expect(graph.relationships.first?.confidence == .ambiguous)
+    #expect(
+      graph.entity("app.negative")?.details.contains {
+        $0.label == "App Store receipt" && $0.value == "Not observed"
+      } == true)
   }
 
   @Test("Familiar Mac represents recognizable software shapes")

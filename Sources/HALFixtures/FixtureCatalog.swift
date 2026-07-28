@@ -9,6 +9,7 @@ public enum FixtureCatalog {
   public static let helperRichApplication = required("helper-rich-application")
   public static let resourceIncident = required("resource-incident")
   public static let ambiguousOwnership = required("ambiguous-ownership")
+  public static let observationStates = required("observation-states")
 
   public static func fixture(id: String) -> SystemGraph? {
     all.first { $0.metadata.id == id }

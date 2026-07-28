@@ -205,7 +205,7 @@ These items were recorded from the first linked-Mac product test on
   fixture validator.
 - [x] Make build verification fail when a committed profile is invalid or uses
   an unsupported schema version.
-- [ ] Add schema fixtures for partial, unavailable, permission-denied,
+- [x] Add schema fixtures for partial, unavailable, permission-denied,
   ambiguous, stale, and negative states.
 - [ ] Add a deterministic fixture-generation/export format based on the same
   schema.
@@ -272,5 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Add partial, unavailable, permission-denied, ambiguous, stale, and negative
-schema fixtures, then define a deterministic fixture export format.
+Define a deterministic fixture export format based on the canonical schema,
+then remove remaining entity-instance presentation switches from Swift.

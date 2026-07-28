@@ -24,6 +24,10 @@
     {
       "id": "ambiguous-ownership",
       "resource": "ambiguous-ownership"
+    },
+    {
+      "id": "observation-states",
+      "resource": "observation-states"
     }
   ]
 }

@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Add partial, unavailable, permission-denied, ambiguous, stale, and negative
-schema fixtures, then define a deterministic fixture export format.
-Classification policy schema version 2 now requires observed platform-signature
-evidence to agree with configured categories while preserving explicitly weaker
-location-only classification when signing evidence is unavailable.
+Define a deterministic fixture export format based on the canonical schema,
+then remove remaining entity-instance presentation switches from Swift. The
+catalog now includes a schema-validated observation-state reference covering
+partial, unavailable, permission-denied, ambiguous, stale, and negative
+evidence.
 
 ## Product evaluation checklist
 

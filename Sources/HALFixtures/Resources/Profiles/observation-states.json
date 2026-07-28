@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "observation-states",
+  "name": "Observation State Reference",
+  "summary": "Deterministic synthetic examples of incomplete, unavailable, uncertain, stale, and negative evidence.",
+  "entities": [
+    {
+      "id": "app.partial",
+      "type": "application",
+      "name": "Partially Observed App",
+      "summary": "Bundle identity was observed, but signing metadata was incomplete.",
+      "details": [
+        { "label": "Evidence state", "value": "Partial" },
+        { "label": "Signature", "value": "Unavailable — metadata could not be read" }
+      ]
+    },
+    {
+      "id": "app.unavailable",
+      "type": "application",
+      "name": "Unavailable App Record",
+      "summary": "The configured source was unavailable during this observation.",
+      "details": [
+        { "label": "Evidence state", "value": "Unavailable" },
+        { "label": "Reason", "value": "Configured source unavailable" }
+      ]
+    },
+    {
+      "id": "file.permission-denied",
+      "type": "file",
+      "name": "Restricted Support Location",
+      "summary": "The path was retained even though metadata access was denied.",
+      "details": [
+        { "label": "Evidence state", "value": "Permission denied" },
+        { "label": "Contents read", "value": "No" }
+      ]
+    },
+    {
+      "id": "file.ambiguous",
+      "type": "file",
+      "name": "Shared Candidate",
+      "summary": "More than one application is a plausible owner.",
+      "details": [
+        { "label": "Evidence state", "value": "Ambiguous" },
+        { "label": "Ownership", "value": "Unresolved" }
+      ]
+    },
+    {
+      "id": "process.stale",
+      "type": "process",
+      "name": "Earlier Process Observation",
+      "summary": "This point-in-time observation is intentionally stale.",
+      "details": [
+        { "label": "Evidence state", "value": "Stale" },
+        { "label": "Current state", "value": "Unknown" }
+      ]
+    },
+    {
+      "id": "app.negative",
+      "type": "application",
+      "name": "Negative Evidence App",
+      "summary": "Collection completed and the expected receipt was not observed.",
+      "details": [
+        { "label": "Evidence state", "value": "Negative" },
+        { "label": "App Store receipt", "value": "Not observed" }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship.ambiguous-owner",
+      "source": "app.partial",
+      "target": "file.ambiguous",
+      "type": "may belong to",
+      "confidence": "ambiguous",
+      "explanation": "The naming convention is plausible, but HAL cannot establish exclusive ownership.",
+      "evidence": [
+        {
+          "id": "evidence.ambiguous-owner",
+          "kind": "inferred",
+          "summary": "The names are similar but no authoritative identifier is available.",
+          "source": "Synthetic ambiguous-state fixture",
+          "ruleID": "synthetic-name-candidate",
+          "ruleVersion": 1
+        }
+      ]
+    }
+  ]
+}
