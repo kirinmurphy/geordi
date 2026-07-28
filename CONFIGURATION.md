@@ -107,8 +107,11 @@ and the default linked-data filter are defined by
 `HALCollectors/Resources/application-classifications.json`, validated by its
 adjacent versioned schema. The first rules classify bundle paths into User
 Installed, Bundled Software, System Utilities, or Other / Unclassified.
-Location classification is a presentation aid and does not prove which person
-or installer placed an application on the Mac.
+Version 2 adds `platformBinaryWhenKnown`: observed platform-signature evidence
+must agree with a category when configured, while unavailable signing evidence
+preserves the explicitly weaker location-only classification. Classification
+is a presentation aid and does not prove which person or installer placed an
+application on the Mac.
 
 Application provenance adapters are selected and labeled by
 `HALCollectors/Resources/application-provenance-adapters.json`, validated by

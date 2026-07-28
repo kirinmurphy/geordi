@@ -154,7 +154,10 @@ final class AppModel {
         else {
           return nil
         }
-        return applicationClassifications.category(forApplicationPath: path).id
+        return applicationClassifications.category(
+          forApplicationPath: path,
+          platformBinary: platformBinaryEvidence(for: application)
+        ).id
       }
     )
     return applicationClassifications.categories.filter {
@@ -171,7 +174,10 @@ final class AppModel {
       guard let path = application.details.first(where: { $0.label == "Path" })?.value else {
         return false
       }
-      return applicationClassifications.category(forApplicationPath: path).id == categoryID
+      return applicationClassifications.category(
+        forApplicationPath: path,
+        platformBinary: platformBinaryEvidence(for: application)
+      ).id == categoryID
     }
   }
 
@@ -194,7 +200,10 @@ final class AppModel {
         return true
       }
       return fallbackIDs.contains(
-        applicationClassifications.category(forApplicationPath: path).id
+        applicationClassifications.category(
+          forApplicationPath: path,
+          platformBinary: platformBinaryEvidence(for: application)
+        ).id
       )
     }.count
     return ApplicationScopeCounts(
@@ -203,6 +212,14 @@ final class AppModel {
       uncertain: uncertain,
       total: all.count
     )
+  }
+
+  private func platformBinaryEvidence(for application: Entity) -> Bool? {
+    switch application.details.first(where: { $0.label == "Platform binary" })?.value {
+    case "Yes": true
+    case "No": false
+    default: nil
+    }
   }
 
   var collectorCoverageCounts: (complete: Int, limited: Int, total: Int) {

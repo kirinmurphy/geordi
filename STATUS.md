@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Incorporate platform-signature evidence into manifest-driven application
-classification, then add partial and unavailable schema fixtures. Process
-policy schema version 2 now bounds retained unresolved processes; inaccessible
-records rank first, unmatched records remain searchable, and coverage reports
-their counts without scattering disconnected nodes across the default atlas.
+Add partial, unavailable, permission-denied, ambiguous, stale, and negative
+schema fixtures, then define a deterministic fixture export format.
+Classification policy schema version 2 now requires observed platform-signature
+evidence to agree with configured categories while preserving explicitly weaker
+location-only classification when signing evidence is unavailable.
 
 ## Product evaluation checklist
 

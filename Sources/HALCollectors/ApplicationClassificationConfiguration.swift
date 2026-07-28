@@ -2,7 +2,7 @@ import Foundation
 import HALManifestKit
 
 public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
   public let allApplicationsLabel: String
@@ -83,6 +83,7 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
 
   public func category(
     forApplicationPath path: String,
+    platformBinary: Bool? = nil,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser
   ) -> ApplicationClassificationCategory {
     let applicationURL = URL(filePath: path).standardizedFileURL
@@ -91,6 +92,12 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
       return $0.id < $1.id
     }
     for category in orderedCategories where !category.isFallback {
+      if let expected = category.platformBinaryWhenKnown,
+        let platformBinary,
+        expected != platformBinary
+      {
+        continue
+      }
       if category.pathPrefixes.contains(where: {
         $0.matches(applicationURL, userHome: userHome)
       }) {
@@ -107,6 +114,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
   public let summary: String
   public let priority: Int
   public let isFallback: Bool
+  public let platformBinaryWhenKnown: Bool?
   public let pathPrefixes: [ApplicationClassificationPathPrefix]
 
   public init(
@@ -115,6 +123,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     summary: String,
     priority: Int,
     isFallback: Bool,
+    platformBinaryWhenKnown: Bool? = nil,
     pathPrefixes: [ApplicationClassificationPathPrefix]
   ) {
     self.id = id
@@ -122,6 +131,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     self.summary = summary
     self.priority = priority
     self.isFallback = isFallback
+    self.platformBinaryWhenKnown = platformBinaryWhenKnown
     self.pathPrefixes = pathPrefixes
   }
 }

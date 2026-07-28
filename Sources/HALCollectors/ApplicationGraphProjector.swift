@@ -476,8 +476,8 @@ public struct ApplicationGraphProjector: Sendable {
           )
         )
       }
-      if signature.platformBinary == true {
-        details.append(Detail("Platform binary", "Yes"))
+      if let platformBinary = signature.platformBinary {
+        details.append(Detail("Platform binary", platformBinary ? "Yes" : "No"))
       }
     }
     for fact in provenance?.facts ?? [] {

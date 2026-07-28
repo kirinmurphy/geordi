@@ -35,6 +35,20 @@ struct ApplicationClassificationConfigurationTests {
     #expect(
       configuration.category(forApplicationPath: "/opt/Other.app", userHome: home).id == "other"
     )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/System/Applications/Calendar.app",
+        platformBinary: false,
+        userHome: home
+      ).id == "other"
+    )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/Applications/Platform.app",
+        platformBinary: true,
+        userHome: home
+      ).id == "other"
+    )
   }
 
   @Test("Classification schema rejects unknown fields")
@@ -42,7 +56,7 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
@@ -51,6 +65,7 @@ struct ApplicationClassificationConfigurationTests {
           "summary": "Fallback",
           "priority": 0,
           "isFallback": true,
+          "platformBinaryWhenKnown": null,
           "pathPrefixes": [],
           "color": "gray"
         }]
@@ -72,7 +87,7 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{
@@ -81,6 +96,7 @@ struct ApplicationClassificationConfigurationTests {
           "summary": "Apps",
           "priority": 1,
           "isFallback": false,
+          "platformBinaryWhenKnown": false,
           "pathPrefixes": [{ "path": "/Applications", "scope": "system" }]
         }]
       }
@@ -91,6 +107,27 @@ struct ApplicationClassificationConfigurationTests {
       throws: ApplicationClassificationConfigurationError.invalidFallbackCount
     ) {
       try ApplicationClassificationConfiguration.decode(missingFallback, schema: schema)
+    }
+  }
+
+  @Test("Version-one classification policy is rejected")
+  func olderVersionIsRejected() throws {
+    let data = Data(
+      """
+      {
+        "schemaVersion": 1,
+        "allApplicationsLabel": "All",
+        "defaultCategoryID": "other",
+        "categories": []
+      }
+      """.utf8
+    )
+
+    #expect(throws: ApplicationClassificationConfigurationError.self) {
+      try ApplicationClassificationConfiguration.decode(
+        data,
+        schema: ApplicationClassificationConfiguration.declarativeSchemaData()
+      )
     }
   }
 }

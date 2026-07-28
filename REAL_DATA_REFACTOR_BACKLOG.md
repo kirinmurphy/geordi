@@ -109,7 +109,7 @@ These items were recorded from the first linked-Mac product test on
 - [x] Default the linked application list to **User Installed**, with visible
   options for bundled software, system utilities, unclassified records, and
   all applications.
-- [ ] Define the classification through a versioned manifest using multiple
+- [x] Define the classification through a versioned manifest using multiple
   evidence fields such as protected system location and platform signature;
   the initial location rules are now manifest-driven, but platform-signature
   evidence still needs to be incorporated.
@@ -272,5 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Incorporate platform-signature evidence into manifest-driven application
-classification, then add partial and unavailable schema fixtures.
+Add partial, unavailable, permission-denied, ambiguous, stale, and negative
+schema fixtures, then define a deterministic fixture export format.
