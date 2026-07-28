@@ -102,6 +102,14 @@ User roots use the explicit `$USER_HOME/` token and cannot contain parent-path
 traversal. Tests may still inject temporary roots directly without reading the
 machine-wide defaults.
 
+Homepage software categories, labels, ordering priority, fallback behavior,
+and the default linked-data filter are defined by
+`HALCollectors/Resources/application-classifications.json`, validated by its
+adjacent versioned schema. The first rules classify bundle paths into User
+Installed, Bundled Software, System Utilities, or Other / Unclassified.
+Location classification is a presentation aid and does not prove which person
+or installer placed an application on the Mac.
+
 Application provenance adapters are selected and labeled by
 `HALCollectors/Resources/application-provenance-adapters.json`, validated by
 its adjacent versioned schema. The current adapters observe App Store receipt

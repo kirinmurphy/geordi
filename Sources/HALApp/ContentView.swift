@@ -1,4 +1,5 @@
 import AppKit
+import HALCollectors
 import HALDataSource
 import HALDomain
 import HALVisualization
@@ -11,6 +12,7 @@ struct ContentView: View {
 
   init(
     configuration: AppConfiguration,
+    applicationClassifications: ApplicationClassificationConfiguration?,
     syntheticProvider: any GraphSnapshotProvider,
     preferences: any DataSourcePreferenceStore,
     userDataStore: HALUserDataStore?,
@@ -19,6 +21,7 @@ struct ContentView: View {
     _model = State(
       initialValue: AppModel(
         configuration: configuration,
+        applicationClassifications: applicationClassifications,
         syntheticProvider: syntheticProvider,
         preferences: preferences,
         userDataStore: userDataStore,
@@ -553,18 +556,51 @@ private struct OverviewView: View {
 
         inventorySection(
           title: model.isSynthetic ? "User’s Applications" : "Observed Applications",
-          symbol: "square.grid.2x2"
+          symbol: "square.grid.2x2",
+          headerAccessory: {
+            if !model.isSynthetic, let configuration = model.applicationClassifications {
+              HStack(spacing: 10) {
+                Text("\(applications.count) of \(allApplications.count)")
+                  .font(.callout)
+                  .foregroundStyle(.secondary)
+                Picker(
+                  "Software type",
+                  selection: Binding(
+                    get: { model.selectedApplicationCategoryID },
+                    set: { model.selectedApplicationCategoryID = $0 }
+                  )
+                ) {
+                  Text(configuration.allApplicationsLabel).tag(String?.none)
+                  ForEach(model.applicationCategoryOptions) { category in
+                    Text(category.label).tag(Optional(category.id))
+                  }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .fixedSize()
+                .accessibilityLabel("Software type")
+              }
+            }
+          }
         ) {
-          ForEach(Array(applications.enumerated()), id: \.element.id) { index, application in
-            if index > 0 { Divider() }
-            InventoryRow(
-              symbol: applicationSymbol(application.id),
-              tint: applicationTint(application.id),
-              title: application.name,
-              subtitle: applicationBehavior(application),
-              trailing: detail("Synthetic footprint", in: application)
-                ?? detail("Current state", in: application) ?? ""
-            ) { model.focus(application) }
+          if applications.isEmpty {
+            Text("No applications match this software type.")
+              .font(.callout)
+              .foregroundStyle(.secondary)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .padding(.vertical, 8)
+          } else {
+            ForEach(Array(applications.enumerated()), id: \.element.id) { index, application in
+              if index > 0 { Divider() }
+              InventoryRow(
+                symbol: applicationSymbol(application.id),
+                tint: applicationTint(application.id),
+                title: application.name,
+                subtitle: applicationBehavior(application),
+                trailing: detail("Synthetic footprint", in: application)
+                  ?? detail("Current state", in: application) ?? ""
+              ) { model.focus(application) }
+            }
           }
         }
 
@@ -596,7 +632,11 @@ private struct OverviewView: View {
   }
 
   private var applications: [Entity] {
-    model.fixture.entities.filter { $0.type == .application }
+    model.applications(in: model.selectedApplicationCategoryID)
+  }
+
+  private var allApplications: [Entity] {
+    model.applications(in: nil)
   }
 
   private var reclaimCandidates: [Entity] {
@@ -642,7 +682,7 @@ private struct OverviewView: View {
     }
   }
 
-  private func inventorySection<Content: View>(
+  private func inventorySection<HeaderAccessory: View, Content: View>(
     title: String,
     subtitle: String? = nil,
     symbol: String,
@@ -650,6 +690,7 @@ private struct OverviewView: View {
     emphasized: Bool = false,
     headerActionTitle: String? = nil,
     headerAction: (() -> Void)? = nil,
+    @ViewBuilder headerAccessory: () -> HeaderAccessory = { EmptyView() },
     @ViewBuilder content: () -> Content
   ) -> some View {
     VStack(alignment: .leading, spacing: 12) {
@@ -658,6 +699,7 @@ private struct OverviewView: View {
           .font(.title2.bold())
           .foregroundStyle(tint)
         Spacer()
+        headerAccessory()
         if let headerActionTitle, let headerAction {
           Button(action: headerAction) {
             Text(headerActionTitle)

@@ -131,3 +131,18 @@ contain sensitive values. A persistence node enters the primary graph only
 when its absolute executable path is contained inside an observed application
 bundle. Unmatched and malformed declarations remain collector outcomes rather
 than default graph nodes.
+
+## 2026-07-28: homepage software scope is location-inferred
+
+The linked homepage defaults to applications found in `/Applications` and the
+current user's `Applications` directory. Applications under macOS system
+locations are separated into Bundled Software and the more specific System
+Utilities category. Records outside recognized locations remain visible under
+Other / Unclassified and All Applications.
+
+These categories, their labels, matching priority, path rules, fallback, and
+default selection are a schema-validated manifest rather than presentation-code
+switches. “User Installed” is concise interface language for apps outside
+macOS system locations; HAL explicitly does not treat folder location as proof
+of who installed an app. Platform-signature evidence can refine this
+classification later without changing the filter contract.

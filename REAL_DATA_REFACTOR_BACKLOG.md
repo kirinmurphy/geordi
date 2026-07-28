@@ -104,16 +104,20 @@ These items were recorded from the first linked-Mac product test on
 
 ### Useful application scope
 
-- [ ] Default the linked application list to **Apps outside macOS**, with a
-  visible option to include system applications.
+- [x] Default the linked application list to **User Installed**, with visible
+  options for bundled software, system utilities, unclassified records, and
+  all applications.
 - [ ] Define the classification through a versioned manifest using multiple
   evidence fields such as protected system location and platform signature;
-  do not hardcode application instances or paths in presentation code.
-- [ ] Label uncertain cases honestly. Folder location alone must not become an
-  “installed by you” claim.
+  the initial location rules are now manifest-driven, but platform-signature
+  evidence still needs to be incorporated.
+- [x] Label uncertain cases honestly. Folder location alone does not become an
+  assertion about who installed an application, and unmatched locations have
+  an explicit **Other / Unclassified** category.
 - [ ] Add counts for visible, hidden system, and uncertain applications.
-- [ ] Preserve search access to hidden system applications when the user
-  explicitly includes them.
+- [x] Show the visible and total application counts beside the scope filter.
+- [x] Preserve global search access to applications hidden by the homepage
+  scope filter.
 - [ ] Later add a separate **Noteworthy activity** section only after process,
   storage, or incident observations exist; do not rank applications using
   synthetic or unsupported metrics in live mode.
@@ -266,9 +270,7 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Implement the schema-validated, relevance-bounded presentation policy before
-adding another collector. Group ordinary associated locations and repeated
-processes, promote strong and actionable relationships, keep complete evidence
-available through technical details, and add deterministic projection tests.
-Then resume the initial-link handoff, refresh-feedback, and default
-non-system-application scope items in the test-drive stabilization checklist.
+Improve the initial-link handoff and refresh feedback for test-drive clarity,
+then surface compact signing/provenance evidence on selected applications.
+Continue the relevance-bounded presentation policy before adding another
+collector.

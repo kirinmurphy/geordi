@@ -14,6 +14,7 @@ struct HALApp: App {
     WindowGroup {
       ContentView(
         configuration: .phaseZero,
+        applicationClassifications: try? ApplicationClassificationConfiguration.bundled(),
         syntheticProvider: SyntheticGraphProvider(
           fixtureID: AppConfiguration.phaseZero.initialFixtureID
         ),
@@ -68,6 +69,7 @@ final class AppModel {
   }
 
   let configuration: AppConfiguration
+  let applicationClassifications: ApplicationClassificationConfiguration?
   private let syntheticProvider: any GraphSnapshotProvider
   private let preferences: any DataSourcePreferenceStore
   private let userDataStore: HALUserDataStore?
@@ -86,15 +88,19 @@ final class AppModel {
   var inspectorPresented = true
   var referencePresented = false
   var entityTypeReferencePresented: EntityType?
+  var selectedApplicationCategoryID: String?
 
   init(
     configuration: AppConfiguration,
+    applicationClassifications: ApplicationClassificationConfiguration?,
     syntheticProvider: any GraphSnapshotProvider,
     preferences: any DataSourcePreferenceStore,
     userDataStore: HALUserDataStore?,
     liveSnapshot: @escaping @Sendable () throws -> GraphSnapshot
   ) {
     self.configuration = configuration
+    self.applicationClassifications = applicationClassifications
+    selectedApplicationCategoryID = applicationClassifications?.defaultCategoryID
     self.syntheticProvider = syntheticProvider
     self.preferences = preferences
     self.userDataStore = userDataStore
@@ -111,6 +117,37 @@ final class AppModel {
   }
 
   var isSynthetic: Bool { dataSourceMode == .synthetic }
+
+  var applicationCategoryOptions: [ApplicationClassificationCategory] {
+    guard let applicationClassifications else { return [] }
+    let observedCategoryIDs = Set(
+      fixture.entities.compactMap { application -> String? in
+        guard
+          application.type == .application,
+          let path = application.details.first(where: { $0.label == "Path" })?.value
+        else {
+          return nil
+        }
+        return applicationClassifications.category(forApplicationPath: path).id
+      }
+    )
+    return applicationClassifications.categories.filter {
+      observedCategoryIDs.contains($0.id) || $0.id == selectedApplicationCategoryID
+    }
+  }
+
+  func applications(in categoryID: String?) -> [Entity] {
+    let applications = fixture.entities.filter { $0.type == .application }
+    guard !isSynthetic, let categoryID, let applicationClassifications else {
+      return applications
+    }
+    return applications.filter { application in
+      guard let path = application.details.first(where: { $0.label == "Path" })?.value else {
+        return false
+      }
+      return applicationClassifications.category(forApplicationPath: path).id == categoryID
+    }
+  }
 
   private static func emptyLinkedSnapshot() -> GraphSnapshot {
     let startedAt = Date()

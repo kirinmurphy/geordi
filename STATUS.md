@@ -33,6 +33,9 @@ Milestone 0 — repository and interactive concept.
   Performance
 - Inventory-first homepage with recent alerts, user-installed applications,
   and reclaimable storage candidates
+- Linked application inventory defaults to a manifest-classified User
+  Installed scope, with filters for bundled software, system utilities,
+  unclassified records, and all applications
 - Distinct warning treatment for recent performance and storage alerts
 - Relationship maps appear after selecting an inventory item rather than at
   launch
@@ -89,7 +92,7 @@ Milestone 0 — repository and interactive concept.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 70 deterministic tests plus fixture and bundle validation
+- Test harness: 73 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -219,16 +222,15 @@ Recorded outcomes use `[x]`; unchecked items still need evaluation.
   though refresh only reruns the same collectors and does not add the
   unavailable storage, performance, persistence, or ownership capabilities.
 - A successful unchanged refresh has no salient completion acknowledgement.
-- Linked application inventory currently mixes system and non-system
-  applications without a default scope filter.
 - Signing and provenance facts are projected into application details but have
   no visible evidence summary, so successful collection can appear to do
   nothing.
 - The return-to-fictional-data action is hidden behind the sidebar ellipsis and
   uses implementation-oriented unlink terminology.
-- Live application nodes currently have no relationships. Conventional
-  application support, cache, preference, log, saved-state, or sandbox
-  locations are not collected yet.
+- Associated application support, cache, preference, log, saved-state, sandbox,
+  process, and persistence relationships are collected conservatively, but
+  their default presentation still needs relevance grouping and product
+  evaluation.
 
 ## Known risks
 
