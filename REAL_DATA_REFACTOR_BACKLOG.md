@@ -266,8 +266,9 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Stabilize the initial linked-Mac workflow and default application scope using
-the test-drive checklist above. Fix the dead-end completion and no-feedback
-refresh behavior before adding process collection. Then add the point-in-time
-process collector and deterministic application resolution without expanding
-live UI claims beyond collected evidence.
+Implement the schema-validated, relevance-bounded presentation policy before
+adding another collector. Group ordinary associated locations and repeated
+processes, promote strong and actionable relationships, keep complete evidence
+available through technical details, and add deterministic projection tests.
+Then resume the initial-link handoff, refresh-feedback, and default
+non-system-application scope items in the test-drive stabilization checklist.

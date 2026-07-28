@@ -144,11 +144,12 @@ make verify
 
 ## Recommended next task
 
-Implement point-in-time process collection and deterministic
-process-to-application resolution together with the relevance-bounded
-presentation policy in `REAL_DATA_REFACTOR_BACKLOG.md`. The main atlas should
-explain current activity without rendering every collected component or
-metadata record as a node.
+Implement the schema-validated relevance and grouping policy described in
+`REAL_DATA_REFACTOR_BACKLOG.md`. Processes, persistence declarations, and
+associated locations are now collected; the next priority is ensuring the
+default live atlas promotes only useful relationships, groups repetitive
+ordinary records, and keeps complete technical evidence accessible without
+overloading the grid.
 
 ## Product evaluation checklist
 
