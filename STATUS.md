@@ -89,7 +89,7 @@ Milestone 0 — repository and interactive concept.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 57 deterministic tests plus fixture and bundle validation
+- Test harness: 64 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -105,8 +105,10 @@ Milestone 0 — repository and interactive concept.
   declarative manifests; App Store receipt presence and redacted download-origin
   hosts are projected into the live atlas; a bounded manifest-selected
   associated-location collector adds evidence-bearing application/file
-  relationships without reading contents or calculating sizes; and the provider
-  is selected only after explicit linking
+  relationships without reading contents or calculating sizes; point-in-time
+  processes are resolved through manifest-selected exact-executable and bundle
+  containment strategies with a relevance budget; and the provider is selected
+  only after explicit linking
 - Data-source lifecycle: first launch is synthetic; linking, cached live
   startup, manual refresh, timestamp/freshness presentation, atomic snapshot
   backup, guarded unlink/reset, and return to the fictional profile are
@@ -120,8 +122,9 @@ manifest-scoped application bundle metadata, static code-signing facts, App
 Store receipt presence, redacted download-origin hosts, and conventional
 associated-location metadata, then persists and refreshes the normalized
 snapshot. Installer-package and Homebrew provenance, group-container
-association, process inventory, SQLite, and distribution remain unimplemented. Their
-sequencing is documented in `REAL_DATA_ASSESSMENT.md`.
+association, persistence declarations, process history, SQLite, and
+distribution remain unimplemented. Their sequencing is documented in
+`REAL_DATA_ASSESSMENT.md`.
 
 ## How to run
 

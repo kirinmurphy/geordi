@@ -116,3 +116,11 @@ tokens, unsafe application-name components, and paths outside the resolved user
 home are rejected. The manifest supplies resource instances and display
 categories; code supplies only generic resolution, metadata inspection, and
 evidence projection.
+
+Process-to-application strategies and the default per-application presentation
+budget are defined by
+`HALCollectors/Resources/process-resolution-strategies.json` and its adjacent
+versioned schema. Exact main-executable matches take priority over application
+bundle containment. The budget limits default graph projection only; unmatched,
+inaccessible, ambiguous, and lower-ranked process observations remain in the
+normalized collector output.

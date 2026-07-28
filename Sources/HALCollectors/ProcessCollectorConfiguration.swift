@@ -6,13 +6,16 @@ public struct ProcessCollectorConfiguration: Codable, Hashable, Sendable {
   public static let currentVersion = 1
 
   public let schemaVersion: Int
+  public let maxProcessesPerApplication: Int
   public let strategies: [ProcessResolutionStrategy]
 
   public init(
     schemaVersion: Int = Self.currentVersion,
+    maxProcessesPerApplication: Int,
     strategies: [ProcessResolutionStrategy]
   ) {
     self.schemaVersion = schemaVersion
+    self.maxProcessesPerApplication = maxProcessesPerApplication
     self.strategies = strategies
   }
 

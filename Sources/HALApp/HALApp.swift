@@ -24,11 +24,13 @@ struct HALApp: App {
           let provenanceConfiguration = try ApplicationProvenanceConfiguration.bundled()
           let associatedLocationConfiguration =
             try ApplicationAssociatedLocationConfiguration.bundled()
+          let processConfiguration = try ProcessCollectorConfiguration.bundled()
           return try ApplicationInventorySnapshotProvider(
             scanID: ScanID("live-\(UUID().uuidString)"),
             configuration: collectorConfiguration,
             provenanceConfiguration: provenanceConfiguration,
-            associatedLocationConfiguration: associatedLocationConfiguration
+            associatedLocationConfiguration: associatedLocationConfiguration,
+            processConfiguration: processConfiguration
           ).snapshot()
         }
       )

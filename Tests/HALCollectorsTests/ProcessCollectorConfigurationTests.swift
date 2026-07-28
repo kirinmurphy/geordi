@@ -8,6 +8,7 @@ struct ProcessCollectorConfigurationTests {
   func bundledConfiguration() throws {
     let configuration = try ProcessCollectorConfiguration.bundled()
     #expect(configuration.schemaVersion == 1)
+    #expect(configuration.maxProcessesPerApplication == 8)
     #expect(
       configuration.strategies.map(\.kind) == [
         .exactMainExecutable,
@@ -22,6 +23,7 @@ struct ProcessCollectorConfigurationTests {
       """
       {
         "schemaVersion": 1,
+        "maxProcessesPerApplication": 8,
         "strategies": [{
           "id": "exact",
           "kind": "exactMainExecutable",

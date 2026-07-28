@@ -9,7 +9,10 @@ public struct ApplicationGraphProjector: Sendable {
     output: CollectorOutput<ApplicationBundleValue>,
     signatures: CollectorOutput<ApplicationSignatureValue>? = nil,
     provenance: CollectorOutput<ApplicationProvenanceValue>? = nil,
-    associatedLocations: CollectorOutput<ApplicationAssociatedLocationValue>? = nil
+    associatedLocations: CollectorOutput<ApplicationAssociatedLocationValue>? = nil,
+    processes: CollectorOutput<ProcessValue>? = nil,
+    processResolutions: CollectorOutput<ProcessApplicationResolutionValue>? = nil,
+    maxProcessesPerApplication: Int = 8
   ) -> GraphSnapshot {
     let signaturesByPath = Dictionary(
       uniqueKeysWithValues: (signatures?.observations ?? []).map {
@@ -111,11 +114,91 @@ public struct ApplicationGraphProjector: Sendable {
         ]
       )
     }
+    let processesByPID = Dictionary(
+      uniqueKeysWithValues: (processes?.observations ?? []).map {
+        ($0.value.pid, $0)
+      }
+    )
+    let visibleProcessResolutions = preferredProcessResolutions(
+      processResolutions?.observations ?? [],
+      processesByPID: processesByPID,
+      limit: maxProcessesPerApplication
+    )
+    let processEntities = visibleProcessResolutions.compactMap { resolution -> Entity? in
+      guard let process = processesByPID[resolution.value.processID] else { return nil }
+      var details = [Detail("PID", "\(process.value.pid)")]
+      if let parentPID = process.value.parentPID {
+        details.append(Detail("Parent PID", "\(parentPID)"))
+      }
+      if let bytes = process.value.residentMemoryBytes {
+        details.append(
+          Detail(
+            "Memory at observation",
+            ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+          )
+        )
+      }
+      if let path = process.value.executablePath {
+        details.append(Detail("Executable", path))
+      }
+      return Entity(
+        id: processEntityID(process.value.pid),
+        type: .process,
+        name: process.value.name,
+        summary: "A process observed in the point-in-time snapshot.",
+        details: details
+      )
+    }
+    let processRelationships = visibleProcessResolutions.compactMap {
+      resolution -> Relationship? in
+      guard
+        let applicationPath = resolution.value.applicationPaths.first,
+        let applicationID = applicationIDsByPath[applicationPath],
+        let process = processesByPID[resolution.value.processID],
+        let confidence = resolution.value.confidence,
+        let strategyID = resolution.value.strategyID
+      else {
+        return nil
+      }
+      return Relationship(
+        id: RelationshipID("application-process:\(applicationID.rawValue):\(process.value.pid)"),
+        source: applicationID,
+        target: processEntityID(process.value.pid),
+        type: .launches,
+        confidence: confidence,
+        explanation:
+          confidence == .confirmed
+          ? "The observed executable exactly matches the application's main executable."
+          : "The observed executable is contained inside the application bundle.",
+        evidence: [
+          Evidence(
+            id: "\(resolution.id.rawValue):process",
+            kind: .observed,
+            summary: "The process and executable path were present in one point-in-time snapshot.",
+            source: "Read-only process snapshot",
+            observationID: process.id,
+            observedAt: process.observedAt
+          ),
+          Evidence(
+            id: "\(resolution.id.rawValue):resolution",
+            kind: .derived,
+            summary: "The executable path matched the application using a configured strategy.",
+            source: "Process-to-application resolver",
+            observationID: resolution.id,
+            observedAt: resolution.observedAt,
+            ruleID: strategyID,
+            ruleVersion: ProcessApplicationResolver.version
+          ),
+        ]
+      )
+    }
     let completedAt = [
       output.run.completedAt,
       signatures?.run.completedAt,
       provenance?.run.completedAt,
       associatedLocations?.run.completedAt,
+      processes?.run.completedAt,
+      processResolutions?.run.completedAt,
     ]
     .compactMap { $0 }
     .max()
@@ -125,6 +208,8 @@ public struct ApplicationGraphProjector: Sendable {
         signatures?.run.startedAt,
         provenance?.run.startedAt,
         associatedLocations?.run.startedAt,
+        processes?.run.startedAt,
+        processResolutions?.run.startedAt,
       ].compactMap { $0 }.min() ?? output.run.startedAt
     var collectorRuns = [output.run]
     if let signatures {
@@ -136,6 +221,12 @@ public struct ApplicationGraphProjector: Sendable {
     if let associatedLocations {
       collectorRuns.append(associatedLocations.run)
     }
+    if let processes {
+      collectorRuns.append(processes.run)
+    }
+    if let processResolutions {
+      collectorRuns.append(processResolutions.run)
+    }
     let graph = SystemGraph(
       metadata: FixtureMetadata(
         id: "live-applications-\(scanID.rawValue)",
@@ -143,8 +234,8 @@ public struct ApplicationGraphProjector: Sendable {
         name: "This Mac",
         summary: "A read-only application inventory observed on this Mac."
       ),
-      entities: applicationEntities + locationEntities,
-      relationships: relationships
+      entities: applicationEntities + processEntities + locationEntities,
+      relationships: processRelationships + relationships
     )
     return GraphSnapshot(
       graph: graph,
@@ -156,6 +247,33 @@ public struct ApplicationGraphProjector: Sendable {
         collectorRuns: collectorRuns
       )
     )
+  }
+
+  private func preferredProcessResolutions(
+    _ resolutions: [CollectedObservation<ProcessApplicationResolutionValue>],
+    processesByPID: [Int32: CollectedObservation<ProcessValue>],
+    limit: Int
+  ) -> [CollectedObservation<ProcessApplicationResolutionValue>] {
+    Dictionary(
+      grouping: resolutions.filter {
+        $0.value.state == .matched && $0.value.applicationPaths.count == 1
+      },
+      by: { $0.value.applicationPaths[0] }
+    )
+    .values
+    .flatMap { matches in
+      matches.sorted {
+        let left = processesByPID[$0.value.processID]?.value.residentMemoryBytes ?? 0
+        let right = processesByPID[$1.value.processID]?.value.residentMemoryBytes ?? 0
+        if left != right { return left > right }
+        return $0.value.processID < $1.value.processID
+      }.prefix(limit)
+    }
+    .sorted { $0.value.processID < $1.value.processID }
+  }
+
+  private func processEntityID(_ pid: Int32) -> EntityID {
+    EntityID("process:pid:\(pid)")
   }
 
   private func preferredPresentAssociations(

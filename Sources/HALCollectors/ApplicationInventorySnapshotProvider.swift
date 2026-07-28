@@ -7,6 +7,9 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let signatureCollector: ApplicationSignatureCollector
   public let provenanceCollector: ApplicationProvenanceCollector
   public let associatedLocationCollector: ApplicationAssociatedLocationCollector
+  public let processCollector: ProcessCollector
+  public let processResolver: ProcessApplicationResolver
+  public let maxProcessesPerApplication: Int
   public let projector: ApplicationGraphProjector
 
   public init(
@@ -14,12 +17,14 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     roots: [ApplicationSearchRoot],
     provenanceConfiguration: ApplicationProvenanceConfiguration,
     associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
+    processConfiguration: ProcessCollectorConfiguration,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
       FileSystemApplicationProvenanceInspector(),
     associatedLocationInspector: any AssociatedLocationInspecting =
       FileSystemAssociatedLocationInspector(),
+    processSampler: any ProcessSampling = PSProcessSampler(),
     clock: any HALClock = SystemClock()
   ) {
     self.scanID = scanID
@@ -39,6 +44,12 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       inspector: associatedLocationInspector,
       clock: clock
     )
+    processCollector = ProcessCollector(sampler: processSampler, clock: clock)
+    processResolver = ProcessApplicationResolver(
+      configuration: processConfiguration,
+      clock: clock
+    )
+    maxProcessesPerApplication = processConfiguration.maxProcessesPerApplication
     projector = ApplicationGraphProjector()
   }
 
@@ -47,12 +58,14 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     configuration: ApplicationCollectorConfiguration,
     provenanceConfiguration: ApplicationProvenanceConfiguration,
     associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
+    processConfiguration: ProcessCollectorConfiguration,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
       FileSystemApplicationProvenanceInspector(),
     associatedLocationInspector: any AssociatedLocationInspecting =
       FileSystemAssociatedLocationInspector(),
+    processSampler: any ProcessSampling = PSProcessSampler(),
     clock: any HALClock = SystemClock()
   ) throws {
     try self.init(
@@ -60,10 +73,12 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       roots: configuration.searchRoots(userHome: userHome),
       provenanceConfiguration: provenanceConfiguration,
       associatedLocationConfiguration: associatedLocationConfiguration,
+      processConfiguration: processConfiguration,
       userHome: userHome,
       signatureInspector: signatureInspector,
       provenanceInspector: provenanceInspector,
       associatedLocationInspector: associatedLocationInspector,
+      processSampler: processSampler,
       clock: clock
     )
   }
@@ -82,12 +97,21 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       scanID: scanID,
       applications: applications.observations
     )
+    let processes = processCollector.collect(scanID: scanID)
+    let processResolutions = processResolver.resolve(
+      scanID: scanID,
+      processes: processes,
+      applications: applications.observations
+    )
     return projector.snapshot(
       scanID: scanID,
       output: applications,
       signatures: signatures,
       provenance: provenance,
-      associatedLocations: associatedLocations
+      associatedLocations: associatedLocations,
+      processes: processes,
+      processResolutions: processResolutions,
+      maxProcessesPerApplication: maxProcessesPerApplication
     )
   }
 }

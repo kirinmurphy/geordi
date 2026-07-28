@@ -9,7 +9,10 @@ HAL's current real-data milestone persists one file:
 The file is a normalized, versioned `GraphSnapshot` containing observed
 application metadata, conventional associated-location paths, signing and
 provenance details, evidence-bearing application/location relationships,
-collector outcomes, and timestamps. No raw file contents are collected.
+point-in-time process identifiers, executable paths, parent identifiers,
+resident-memory values, application/process resolutions, collector outcomes,
+and timestamps. Command arguments, environment variables, and raw file
+contents are not collected.
 
 Two preferences are stored in the app's `UserDefaults` domain:
 
@@ -23,8 +26,8 @@ connectors are created by this milestone.
 
 First launch is synthetic and performs no machine collection. Choosing
 **Link to your Mac** runs the manifest-scoped application, signing, provenance,
-and associated-location collectors. HAL persists `linkedMac` only after a
-successful snapshot is available.
+associated-location, and point-in-time process collectors. HAL persists
+`linkedMac` only after a successful snapshot is available.
 
 ## Refresh
 

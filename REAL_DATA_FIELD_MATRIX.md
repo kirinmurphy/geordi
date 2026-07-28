@@ -48,6 +48,7 @@ More than one classification can apply to a field.
 | PID, PPID, UID, executable path, start time | Directly observable | `libproc` and `sysctl` where needed | Processes can disappear during collection; PID alone is not identity. |
 | Process name and current bundle association | Directly observable or deterministically derived | `libproc`, `NSRunningApplication`, executable-to-containing-bundle resolution | `NSWorkspace.runningApplications` does not cover every helper or non-GUI process. |
 | Current parent/child relationship | Directly observable | PPID in a process snapshot | Parent may have exited; PID reuse must be handled. |
+| Current application/process association | Deterministically derived | Exact main executable or executable containment inside an observed application bundle | Implemented for one point-in-time snapshot; unmatched, inaccessible, and ambiguous records are preserved. |
 | Historical launch ancestry | Requires historical collection | Process event collection or sufficiently frequent snapshots | Snapshots miss short-lived processes. |
 | CPU and memory now | Directly observable or deterministically derived | `proc_pid_rusage`, Mach host/task/process APIs | CPU requires a measurement interval; detailed records may be restricted. |
 | Arguments | Directly observable where accessible; requires consent | Process APIs with strict filtering | Sensitive and incomplete. Disabled by default under `PRIVACY.md`. |

@@ -118,9 +118,14 @@ struct ApplicationBundleCollectorTests {
       associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration(
         locations: []
       ),
+      processConfiguration: ProcessCollectorConfiguration(
+        maxProcessesPerApplication: 8,
+        strategies: []
+      ),
       signatureInspector: StubProviderSignatureInspector(),
       provenanceInspector: StubProviderProvenanceInspector(),
       associatedLocationInspector: StubAssociatedLocationInspector(),
+      processSampler: EmptyProcessSampler(),
       clock: FixedClock(timestamp)
     )
 
@@ -167,6 +172,10 @@ private struct StubAssociatedLocationInspector: AssociatedLocationInspecting {
   func inspectLocation(at url: URL) -> AssociatedLocationInspection {
     AssociatedLocationInspection(status: .absent)
   }
+}
+
+private struct EmptyProcessSampler: ProcessSampling {
+  func sample() throws -> [ProcessValue] { [] }
 }
 
 private struct StubProviderSignatureInspector: CodeSignatureInspecting {

@@ -103,3 +103,17 @@ rules must be schema-validated manifest resources. They cannot silently discard
 observations, evidence, unmatched records, permission failures, or uncertainty.
 For this read-only milestone, “actionable” means a clear next investigation or
 explanation, not a machine-changing control.
+
+## 2026-07-27: process snapshots use bounded `ps` fields
+
+The first point-in-time process adapter invokes `/bin/ps` with only PID, parent
+PID, resident-memory, and executable-name/path fields. It does not request
+command arguments or environment variables. The snapshot is foreground,
+read-only, and runs only during explicit link or refresh collection.
+
+Exact application main-executable matches are confirmed; executables contained
+inside an application bundle are strong derived matches. Unmatched,
+inaccessible, and ambiguous records remain normalized observations. The
+primary graph shows only uniquely matched processes and applies the
+manifest-defined per-application budget, ranked by observed resident memory and
+then PID for determinism.

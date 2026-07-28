@@ -38,7 +38,7 @@ These items were recorded from the first linked-Mac product test on
 
 #### Collector order under this policy
 
-1. [ ] Point-in-time processes and deterministic application resolution:
+1. [x] Point-in-time processes and deterministic application resolution:
    explain what is running now, helper/parent relationships, unmatched
    processes, memory, and observation limitations.
 2. [ ] Persistence declarations and process correlation:
@@ -247,9 +247,9 @@ These items were recorded from the first linked-Mac product test on
   - [x] Observe retained download origins with URL paths redacted to hostnames.
   - [ ] Add installer-package receipt correlation.
   - [ ] Add Homebrew provenance.
-- [ ] Add point-in-time process collection.
-- [ ] Add deterministic process-to-application resolution.
-- [ ] Preserve unmatched and inaccessible process records.
+- [x] Add point-in-time process collection.
+- [x] Add deterministic process-to-application resolution.
+- [x] Preserve unmatched and inaccessible process records.
 - [x] Add explicit manual refresh.
 - [ ] Add redacted diagnostic export.
 
