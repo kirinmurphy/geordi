@@ -427,7 +427,9 @@ final class AppModel {
         .application, .packageManager, .shellFramework, .package, .persistence,
       ])
     case .performance:
-      return fixture.neighborhood(around: "incident.build", depth: 2)
+      return isSynthetic
+        ? fixture.neighborhood(around: "incident.build", depth: 2)
+        : fixture.filtered(to: [.process])
     case .entity(let id):
       let neighborhood = fixture.neighborhood(around: id, depth: 2)
       guard

@@ -152,8 +152,9 @@ make verify
 
 ## Recommended next task
 
-Replace remaining live-mode synthetic storage and performance copy, then define
-the next bounded size-measurement contract before implementing any traversal.
+Define the next bounded size-measurement contract, including cancellation,
+filesystem-boundary rules, clone and hard-link semantics, and performance
+budgets, before implementing any traversal.
 The rebuildable-data manifest now drives linked-Mac metadata checks for Xcode,
 Homebrew, and npm roots. HAL preserves unavailable states, refuses symlink
 escapes, does not descend or calculate size, and enables no storage deletion.

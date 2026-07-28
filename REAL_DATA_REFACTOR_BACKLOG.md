@@ -193,6 +193,8 @@ These items were recorded from the first linked-Mac product test on
   classification, exclusions, and evidence rules.
 - [x] Wire rebuildable-data detectors into metadata-only linked-Mac collection
   without descendant enumeration, size calculation, or deletion.
+- [x] Replace synthetic storage, application, and incident claims in linked
+  atlas destinations with summaries of the observations actually collected.
 - [x] Keep nonconfigurable security invariants in code.
 
 ## Priority 1: synthetic/live schema parity
@@ -274,5 +276,6 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Replace remaining live-mode synthetic storage and performance copy, then define
-the next bounded size-measurement contract before implementing any traversal.
+Define the next bounded size-measurement contract, including cancellation,
+filesystem-boundary rules, clone and hard-link semantics, and performance
+budgets, before implementing any traversal.

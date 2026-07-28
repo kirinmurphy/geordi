@@ -654,11 +654,11 @@ private struct OverviewView: View {
           }
         }
 
-        if model.isSynthetic {
+        if !reclaimCandidates.isEmpty {
           inventorySection(
-            title: "Rebuildable Data",
+            title: model.isSynthetic ? "Rebuildable Data" : "Observed Rebuildable Roots",
             symbol: "arrow.3.trianglepath",
-            headerActionTitle: "Reclaim File Space",
+            headerActionTitle: model.isSynthetic ? "Reclaim File Space" : "Review Roots",
             headerAction: { model.navigate(to: .storage) }
           ) {
             ForEach(Array(reclaimCandidates.enumerated()), id: \.element.id) { index, file in
@@ -668,7 +668,10 @@ private struct OverviewView: View {
                 tint: .green,
                 title: file.name,
                 subtitle: file.summary,
-                trailing: detail("Synthetic size", in: file) ?? ""
+                trailing:
+                  model.isSynthetic
+                  ? detail("Synthetic size", in: file) ?? ""
+                  : detail("Size", in: file) ?? "Not collected"
               ) { model.focus(file) }
             }
           }
@@ -690,6 +693,11 @@ private struct OverviewView: View {
   }
 
   private var reclaimCandidates: [Entity] {
+    if !model.isSynthetic {
+      return model.fixture.entities.filter {
+        $0.type == .file && detail("Rebuildability", in: $0) != nil
+      }
+    }
     let ids = Set(
       model.fixture.relationships.filter { $0.target == "resource.storage" }.map(\.source))
     return model.fixture.entities.filter { ids.contains($0.id) && $0.type == .file }
@@ -1821,14 +1829,15 @@ private struct AtlasDetailView: View {
     switch model.destination {
     case .storage: "What could be safely removed?"
     case .applications: "What software is installed?"
-    case .performance: "What changed during the memory spike?"
+    case .performance:
+      model.isSynthetic ? "What changed during the memory spike?" : "What is running now?"
     case .entity(let id): model.fixture.entity(id)?.name ?? "Selected item"
     case .overview: "This Mac"
     }
   }
 
   private var summaryText: String {
-    switch model.destination {
+    return switch model.destination {
     case .storage:
       if model.isSynthetic {
         "24.4 GB is likely rebuildable or redownloadable. Profiles, configuration, and application data remain protected."
@@ -1836,9 +1845,17 @@ private struct AtlasDetailView: View {
         "HAL observed configured rebuildable or redownloadable roots using metadata only. Sizes were not collected, and no removal action is enabled."
       }
     case .applications:
-      "Explore familiar applications alongside Homebrew, Oh My Zsh, and an npm-installed TypeScript package."
+      if model.isSynthetic {
+        "Explore familiar applications alongside Homebrew, Oh My Zsh, and an npm-installed TypeScript package."
+      } else {
+        "HAL observed \(model.applicationScopeCounts.total) application bundles in the configured read-only search roots."
+      }
     case .performance:
-      "A Docker build, VS Code indexing, and restored Brave tabs overlapped; HAL does not claim timing alone proves causation."
+      if model.isSynthetic {
+        "A Docker build, VS Code indexing, and restored Brave tabs overlapped; HAL does not claim timing alone proves causation."
+      } else {
+        "HAL retained a bounded point-in-time process sample. It has not collected performance history or inferred a past incident."
+      }
     case .entity(let id):
       model.fixture.entity(id)?.summary ?? "Select a connected item to understand its role."
     case .overview:

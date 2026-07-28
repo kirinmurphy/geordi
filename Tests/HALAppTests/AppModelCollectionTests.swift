@@ -3,6 +3,7 @@ import HALCollectors
 import HALDataSource
 import HALDomain
 import Testing
+
 @testable import HALApp
 
 @Suite("Application collection state")
@@ -132,6 +133,46 @@ struct AppModelCollectionTests {
     #expect(model.applicationScopeCounts.total == 1)
     #expect(model.collectorCoverageCounts.total == 0)
     #expect(model.applicationEvidenceFactCount == 0)
+  }
+
+  @Test("Linked storage and performance views use collected entity types")
+  func linkedDestinationScopes() throws {
+    let date = Date(timeIntervalSince1970: 1_700_000_000)
+    let linked = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "linked", name: "This Mac", summary: "Linked"),
+        entities: [
+          Entity(id: "app", type: .application, name: "App", summary: "App"),
+          Entity(id: "process", type: .process, name: "Process", summary: "Process"),
+          Entity(
+            id: "cache",
+            type: .file,
+            name: "Cache",
+            summary: "Observed rebuildable root",
+            details: [Detail("Rebuildability", "Rebuildable")]
+          ),
+        ],
+        relationships: []
+      ),
+      scan: ScanContext(
+        id: "linked",
+        environment: .liveReadOnly,
+        startedAt: date,
+        completedAt: date
+      )
+    )
+    let store = try temporaryStore(containing: linked)
+    defer { try? FileManager.default.removeItem(at: store.root.deletingLastPathComponent()) }
+    let model = makeModel(
+      preferences: MemoryPreferences(mode: .linkedMac),
+      store: store
+    ) { linked }
+
+    model.navigate(to: .storage)
+    #expect(model.presentedGraph.entities.map(\.id) == ["cache"])
+
+    model.navigate(to: .performance)
+    #expect(model.presentedGraph.entities.map(\.id) == ["process"])
   }
 
   private func makeModel(
