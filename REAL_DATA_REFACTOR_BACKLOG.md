@@ -159,7 +159,7 @@ These items were recorded from the first linked-Mac product test on
   activity observations.
 - [x] Preserve permission-denied paths, unreadable metadata, absent candidates,
   and applications with no discovered associations in collector output.
-- [ ] Add bounded root enumeration to preserve unmatched locations and
+- [x] Add bounded root enumeration to preserve unmatched locations and
   shared/group-container ambiguity without turning the collector into a broad
   home-directory scan.
 - [x] Collect metadata only in the first pass. Do not read file contents or
@@ -169,7 +169,7 @@ These items were recorded from the first linked-Mac product test on
   and inspector used by synthetic profiles.
 - [x] Add deterministic tests for exact bundle-ID, weaker name, absent,
   permission-denied, unreadable, and unsafe-path states.
-- [ ] Add shared, unmatched, and group-container association fixtures when
+- [x] Add shared, unmatched, and group-container association fixtures when
   bounded root enumeration is implemented.
 
 ## Priority 0: composition and schema foundation
@@ -272,5 +272,6 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Add bounded associated-location root enumeration, then add shared and
-group-container ambiguity fixtures without starting broad storage traversal.
+Add authoritative team/group identifier observations before linking group
+containers, then wire the rebuildable-data detector manifest into bounded
+metadata-only collection.

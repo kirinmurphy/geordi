@@ -3,17 +3,20 @@ import HALDomain
 import HALManifestKit
 
 public struct ApplicationAssociatedLocationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
   public let locations: [AssociatedLocationConfiguration]
+  public let enumerationRoots: [AssociatedLocationEnumerationRoot]
 
   public init(
     schemaVersion: Int = Self.currentVersion,
-    locations: [AssociatedLocationConfiguration]
+    locations: [AssociatedLocationConfiguration],
+    enumerationRoots: [AssociatedLocationEnumerationRoot] = []
   ) {
     self.schemaVersion = schemaVersion
     self.locations = locations
+    self.enumerationRoots = enumerationRoots
   }
 
   public static func bundled() throws -> Self {
@@ -59,8 +62,17 @@ public struct ApplicationAssociatedLocationConfiguration: Codable, Hashable, Sen
       guard Set(configuration.locations.map(\.id)).count == configuration.locations.count else {
         throw ApplicationAssociatedLocationConfigurationError.duplicateLocationID
       }
+      guard
+        Set(configuration.enumerationRoots.map(\.id)).count
+          == configuration.enumerationRoots.count
+      else {
+        throw ApplicationAssociatedLocationConfigurationError.duplicateEnumerationRootID
+      }
       for location in configuration.locations {
         try location.validate()
+      }
+      for root in configuration.enumerationRoots {
+        try root.validate()
       }
       return configuration
     } catch let error as ApplicationAssociatedLocationConfigurationError {
@@ -68,6 +80,54 @@ public struct ApplicationAssociatedLocationConfiguration: Codable, Hashable, Sen
     } catch {
       throw ApplicationAssociatedLocationConfigurationError.invalid(String(describing: error))
     }
+  }
+}
+
+public struct AssociatedLocationEnumerationRoot: Codable, Hashable, Sendable {
+  public enum Matching: String, Codable, Hashable, Sendable {
+    case applicationIdentifiers
+    case groupIdentifierUnavailable
+  }
+
+  public let id: String
+  public let categoryLabel: String
+  public let path: String
+  public let matching: Matching
+  public let maxEntries: Int
+
+  public init(
+    id: String,
+    categoryLabel: String,
+    path: String,
+    matching: Matching,
+    maxEntries: Int
+  ) {
+    self.id = id
+    self.categoryLabel = categoryLabel
+    self.path = path
+    self.matching = matching
+    self.maxEntries = maxEntries
+  }
+
+  fileprivate func validate() throws {
+    guard
+      path.hasPrefix("$USER_HOME/"),
+      !path.contains(".."),
+      !path.contains("*"),
+      !path.contains("\0"),
+      maxEntries > 0
+    else {
+      throw ApplicationAssociatedLocationConfigurationError.invalidEnumerationRoot(id)
+    }
+  }
+
+  func resolvedURL(userHome: URL) throws -> URL {
+    let relative = String(path.dropFirst("$USER_HOME/".count))
+    let resolved = userHome.appending(path: relative).standardizedFileURL
+    guard resolved.path.hasPrefix(userHome.standardizedFileURL.path + "/") else {
+      throw ApplicationAssociatedLocationConfigurationError.invalidEnumerationRoot(id)
+    }
+    return resolved
   }
 }
 
@@ -97,6 +157,8 @@ public struct AssociatedLocationConfiguration: Codable, Hashable, Sendable {
       switch match {
       case .bundleIdentifier: "$BUNDLE_ID"
       case .applicationName: "$APP_NAME"
+      case .unmatched, .groupIdentifierUnavailable:
+        throw ApplicationAssociatedLocationConfigurationError.invalidPath(id)
       }
     guard pathTemplate.contains(requiredToken) else {
       throw ApplicationAssociatedLocationConfigurationError.missingMatchToken(id)
@@ -121,6 +183,8 @@ public struct AssociatedLocationConfiguration: Codable, Hashable, Sendable {
       component = application.bundleIdentifier
     case .applicationName:
       component = application.name
+    case .unmatched, .groupIdentifierUnavailable:
+      return nil
     }
     guard let component else { return nil }
     guard
@@ -150,7 +214,9 @@ public enum ApplicationAssociatedLocationConfigurationError: Error, Equatable, S
   case resourceUnavailable
   case unsupportedVersion(Int)
   case duplicateLocationID
+  case duplicateEnumerationRootID
   case invalidPath(String)
+  case invalidEnumerationRoot(String)
   case missingMatchToken(String)
   case unsafeMatchValue(String)
   case invalid(String)

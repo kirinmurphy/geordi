@@ -113,10 +113,13 @@ public enum AssociatedLocationStatus: String, Hashable, Codable, Sendable {
 public enum AssociatedLocationMatch: String, Hashable, Codable, Sendable {
   case bundleIdentifier
   case applicationName
+  case unmatched
+  case groupIdentifierUnavailable
 }
 
 public struct ApplicationAssociatedLocationValue: Hashable, Codable, Sendable {
-  public let applicationPath: String
+  public let applicationPath: String?
+  public let candidateApplicationPaths: [String]
   public let locationID: String
   public let locationPath: String
   public let categoryLabel: String
@@ -125,7 +128,8 @@ public struct ApplicationAssociatedLocationValue: Hashable, Codable, Sendable {
   public let isDirectory: Bool?
 
   public init(
-    applicationPath: String,
+    applicationPath: String?,
+    candidateApplicationPaths: [String] = [],
     locationID: String,
     locationPath: String,
     categoryLabel: String,
@@ -134,6 +138,7 @@ public struct ApplicationAssociatedLocationValue: Hashable, Codable, Sendable {
     isDirectory: Bool? = nil
   ) {
     self.applicationPath = applicationPath
+    self.candidateApplicationPaths = candidateApplicationPaths
     self.locationID = locationID
     self.locationPath = locationPath
     self.categoryLabel = categoryLabel

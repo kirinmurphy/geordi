@@ -76,7 +76,10 @@ public struct ApplicationGraphProjector: Sendable {
     ).values.sorted { $0.id.rawValue < $1.id.rawValue }
     let relationships = presentAssociations.compactMap { association -> Relationship? in
       let value = association.value
-      guard let applicationID = applicationIDsByPath[value.applicationPath] else {
+      guard
+        let applicationPath = value.applicationPath,
+        let applicationID = applicationIDsByPath[applicationPath]
+      else {
         return nil
       }
       let exact = value.match == .bundleIdentifier
@@ -401,10 +404,14 @@ public struct ApplicationGraphProjector: Sendable {
   private func preferredPresentAssociations(
     _ observations: [CollectedObservation<ApplicationAssociatedLocationValue>]
   ) -> [CollectedObservation<ApplicationAssociatedLocationValue>] {
-    let present = observations.filter { $0.value.status == .present }
+    let present = observations.filter {
+      $0.value.status == .present
+        && $0.value.applicationPath != nil
+        && ($0.value.match == .bundleIdentifier || $0.value.match == .applicationName)
+    }
     return Dictionary(
       grouping: present,
-      by: { "\($0.value.applicationPath)|\($0.value.locationPath)" }
+      by: { "\($0.value.applicationPath ?? "")|\($0.value.locationPath)" }
     )
     .values
     .compactMap { candidates in
@@ -414,7 +421,7 @@ public struct ApplicationGraphProjector: Sendable {
     }
     .sorted {
       if $0.value.applicationPath != $1.value.applicationPath {
-        return $0.value.applicationPath < $1.value.applicationPath
+        return ($0.value.applicationPath ?? "") < ($1.value.applicationPath ?? "")
       }
       return $0.value.locationPath < $1.value.locationPath
     }
@@ -424,6 +431,7 @@ public struct ApplicationGraphProjector: Sendable {
     switch match {
     case .bundleIdentifier: 2
     case .applicationName: 1
+    case .unmatched, .groupIdentifierUnavailable: 0
     }
   }
 

@@ -6,6 +6,20 @@ public protocol AssociatedLocationInspecting: Sendable {
   func inspectLocation(at url: URL) -> AssociatedLocationInspection
 }
 
+public protocol AssociatedLocationEnumerating: Sendable {
+  func immediateChildren(at root: URL, limit: Int) throws -> AssociatedLocationEnumeration
+}
+
+public struct AssociatedLocationEnumeration: Hashable, Sendable {
+  public let children: [URL]
+  public let wasTruncated: Bool
+
+  public init(children: [URL], wasTruncated: Bool) {
+    self.children = children
+    self.wasTruncated = wasTruncated
+  }
+}
+
 public struct AssociatedLocationInspection: Hashable, Sendable {
   public let status: AssociatedLocationStatus
   public let isDirectory: Bool?
@@ -39,24 +53,60 @@ public struct FileSystemAssociatedLocationInspector: AssociatedLocationInspectin
   }
 }
 
+public struct FileSystemAssociatedLocationEnumerator: AssociatedLocationEnumerating {
+  public init() {}
+
+  public func immediateChildren(
+    at root: URL,
+    limit: Int
+  ) throws -> AssociatedLocationEnumeration {
+    guard
+      let enumerator = FileManager.default.enumerator(
+        at: root,
+        includingPropertiesForKeys: nil,
+        options: []
+      )
+    else {
+      throw CocoaError(.fileReadUnknown)
+    }
+    var children: [URL] = []
+    var wasTruncated = false
+    for case let child as URL in enumerator {
+      enumerator.skipDescendants()
+      if children.count == limit {
+        wasTruncated = true
+        break
+      }
+      children.append(child)
+    }
+    return AssociatedLocationEnumeration(
+      children: children.sorted { $0.path < $1.path },
+      wasTruncated: wasTruncated
+    )
+  }
+}
+
 public struct ApplicationAssociatedLocationCollector: Sendable {
   public static let id: CollectorID = "application-associated-locations"
-  public static let version = 1
+  public static let version = 2
 
   private let configuration: ApplicationAssociatedLocationConfiguration
   private let userHome: URL
   private let inspector: any AssociatedLocationInspecting
+  private let enumerator: any AssociatedLocationEnumerating
   private let clock: any HALClock
 
   public init(
     configuration: ApplicationAssociatedLocationConfiguration,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     inspector: any AssociatedLocationInspecting = FileSystemAssociatedLocationInspector(),
+    enumerator: any AssociatedLocationEnumerating = FileSystemAssociatedLocationEnumerator(),
     clock: any HALClock = SystemClock()
   ) {
     self.configuration = configuration
     self.userHome = userHome.standardizedFileURL
     self.inspector = inspector
+    self.enumerator = enumerator
     self.clock = clock
   }
 
@@ -130,11 +180,24 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
         }
       }
     }
+    for root in configuration.enumerationRoots {
+      collectEnumeratedRoot(
+        root,
+        scanID: scanID,
+        applications: applications,
+        observedAt: startedAt,
+        observations: &observations,
+        issues: &issues
+      )
+    }
     observations.sort {
       if $0.value.applicationPath != $1.value.applicationPath {
-        return $0.value.applicationPath < $1.value.applicationPath
+        return ($0.value.applicationPath ?? "") < ($1.value.applicationPath ?? "")
       }
-      return $0.value.locationID < $1.value.locationID
+      if $0.value.locationID != $1.value.locationID {
+        return $0.value.locationID < $1.value.locationID
+      }
+      return $0.value.locationPath < $1.value.locationPath
     }
     return CollectorOutput(
       run: CollectorRun(
@@ -144,10 +207,188 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
         state: issues.isEmpty ? .complete : .partial,
         startedAt: startedAt,
         completedAt: clock.now(),
-        scope: configuration.locations.map(\.id),
+        scope: configuration.locations.map(\.id) + configuration.enumerationRoots.map(\.id),
         issues: issues
       ),
       observations: observations
     )
+  }
+
+  private func collectEnumeratedRoot(
+    _ root: AssociatedLocationEnumerationRoot,
+    scanID: ScanID,
+    applications: [CollectedObservation<ApplicationBundleValue>],
+    observedAt: Date,
+    observations: inout [CollectedObservation<ApplicationAssociatedLocationValue>],
+    issues: inout [CollectionIssue]
+  ) {
+    do {
+      guard root.maxEntries > 0 else {
+        throw ApplicationAssociatedLocationConfigurationError.invalidEnumerationRoot(root.id)
+      }
+      let rootURL = try root.resolvedURL(userHome: userHome)
+      guard isInsideUserHome(rootURL) else {
+        throw ApplicationAssociatedLocationConfigurationError.invalidEnumerationRoot(root.id)
+      }
+      let rootInspection = inspector.inspectLocation(at: rootURL)
+      guard rootInspection.status == .present, rootInspection.isDirectory == true else {
+        if rootInspection.status == .permissionDenied || rootInspection.status == .unreadable {
+          issues.append(rootIssue(root, status: rootInspection.status, scope: rootURL.path))
+        }
+        return
+      }
+      let enumeration = try enumerator.immediateChildren(
+        at: rootURL,
+        limit: min(root.maxEntries, 4096)
+      )
+      for child in enumeration.children {
+        guard isImmediateChild(child, of: rootURL) else {
+          issues.append(
+            CollectionIssue(
+              id: "associated-location-unsafe-child-\(root.id)",
+              severity: .error,
+              summary: "HAL refused an unsafe associated-location enumeration result.",
+              affectedScope: root.id
+            )
+          )
+          continue
+        }
+        observations.append(
+          enumeratedObservation(
+            child,
+            root: root,
+            scanID: scanID,
+            applications: applications,
+            observedAt: observedAt
+          )
+        )
+      }
+      if enumeration.wasTruncated {
+        issues.append(
+          CollectionIssue(
+            id: "associated-location-budget-\(root.id)",
+            severity: .warning,
+            summary: "HAL stopped associated-location enumeration at its configured budget.",
+            affectedScope: rootURL.path
+          )
+        )
+      }
+    } catch {
+      issues.append(
+        CollectionIssue(
+          id: "associated-location-enumeration-\(root.id)",
+          severity: .warning,
+          summary: "HAL could not enumerate a configured associated-location root.",
+          affectedScope: root.id
+        )
+      )
+    }
+  }
+
+  private func enumeratedObservation(
+    _ child: URL,
+    root: AssociatedLocationEnumerationRoot,
+    scanID: ScanID,
+    applications: [CollectedObservation<ApplicationBundleValue>],
+    observedAt: Date
+  ) -> CollectedObservation<ApplicationAssociatedLocationValue> {
+    let matches = applicationMatches(
+      child.lastPathComponent,
+      matching: root.matching,
+      applications: applications
+    )
+    let match: AssociatedLocationMatch
+    let applicationPath: String?
+    if root.matching == .groupIdentifierUnavailable {
+      match = .groupIdentifierUnavailable
+      applicationPath = nil
+    } else if !matches.bundleIdentifier.isEmpty {
+      if matches.bundleIdentifier.count == 1 {
+        match = .bundleIdentifier
+        applicationPath = matches.bundleIdentifier[0]
+      } else {
+        match = .unmatched
+        applicationPath = nil
+      }
+    } else if !matches.applicationName.isEmpty {
+      if matches.applicationName.count == 1 {
+        match = .applicationName
+        applicationPath = matches.applicationName[0]
+      } else {
+        match = .unmatched
+        applicationPath = nil
+      }
+    } else {
+      match = .unmatched
+      applicationPath = nil
+    }
+    let candidates = Array(
+      Set(matches.bundleIdentifier + matches.applicationName)
+    ).sorted()
+    let inspection = inspector.inspectLocation(at: child)
+    return CollectedObservation(
+      id: ObservationID("associated-location-enumerated:\(root.id):\(child.path)"),
+      scanID: scanID,
+      collectorID: Self.id,
+      schemaVersion: Self.version,
+      observedAt: observedAt,
+      subject: SubjectIdentity(
+        primary: IdentityClaim(kind: .canonicalPath, value: child.path)
+      ),
+      sensitivity: .privateMetadata,
+      sourceReference: child.path,
+      value: ApplicationAssociatedLocationValue(
+        applicationPath: applicationPath,
+        candidateApplicationPaths: candidates,
+        locationID: root.id,
+        locationPath: child.path,
+        categoryLabel: root.categoryLabel,
+        match: match,
+        status: inspection.status,
+        isDirectory: inspection.isDirectory
+      )
+    )
+  }
+
+  private func applicationMatches(
+    _ name: String,
+    matching: AssociatedLocationEnumerationRoot.Matching,
+    applications: [CollectedObservation<ApplicationBundleValue>]
+  ) -> (bundleIdentifier: [String], applicationName: [String]) {
+    guard matching == .applicationIdentifiers else { return ([], []) }
+    let bundleMatches = applications.compactMap {
+      $0.value.bundleIdentifier == name ? $0.value.path : nil
+    }
+    let nameMatches = applications.compactMap {
+      $0.value.name == name ? $0.value.path : nil
+    }
+    return (bundleMatches.sorted(), nameMatches.sorted())
+  }
+
+  private func rootIssue(
+    _ root: AssociatedLocationEnumerationRoot,
+    status: AssociatedLocationStatus,
+    scope: String
+  ) -> CollectionIssue {
+    CollectionIssue(
+      id: "associated-location-root-\(status.rawValue)-\(root.id)",
+      severity: .warning,
+      summary:
+        status == .permissionDenied
+        ? "HAL did not have permission to enumerate an associated-location root."
+        : "HAL could not inspect an associated-location root.",
+      affectedScope: scope
+    )
+  }
+
+  private func isInsideUserHome(_ url: URL) -> Bool {
+    let resolvedHome = userHome.resolvingSymlinksInPath().standardizedFileURL.path
+    let resolvedURL = url.resolvingSymlinksInPath().standardizedFileURL.path
+    return resolvedURL.hasPrefix(resolvedHome + "/")
+  }
+
+  private func isImmediateChild(_ child: URL, of root: URL) -> Bool {
+    child.standardizedFileURL.deletingLastPathComponent().path
+      == root.standardizedFileURL.path
   }
 }

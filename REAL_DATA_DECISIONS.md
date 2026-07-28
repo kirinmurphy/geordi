@@ -86,6 +86,14 @@ present locations become graph nodes.
 Group containers are deferred until HAL collects team/group identifiers.
 Guessing them from the application bundle identifier would overstate ownership.
 
+The version 2 associated-location manifest adds bounded immediate-child
+enumeration for selected user-Library roots. Every root has an explicit entry
+budget, enumeration skips descendants, and a budget stop is a partial collector
+outcome. Exact application identifiers may support the same conventional
+relationship as an exact candidate. Unmatched children are retained without a
+relationship. Group-container children are retained with an explicit
+group-identifier-unavailable basis and no ownership candidate.
+
 ## 2026-07-27: the primary atlas is relevance-bounded
 
 Collector completeness and graph prominence are separate concerns. HAL may

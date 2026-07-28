@@ -28,6 +28,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       FileSystemApplicationProvenanceInspector(),
     associatedLocationInspector: any AssociatedLocationInspecting =
       FileSystemAssociatedLocationInspector(),
+    associatedLocationEnumerator: any AssociatedLocationEnumerating =
+      FileSystemAssociatedLocationEnumerator(),
     processSampler: any ProcessSampling = PSProcessSampler(),
     maxUnmatchedProcesses: Int = 0,
     clock: any HALClock = SystemClock()
@@ -47,6 +49,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       configuration: associatedLocationConfiguration,
       userHome: userHome,
       inspector: associatedLocationInspector,
+      enumerator: associatedLocationEnumerator,
       clock: clock
     )
     processCollector = ProcessCollector(sampler: processSampler, clock: clock)
@@ -77,6 +80,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       FileSystemApplicationProvenanceInspector(),
     associatedLocationInspector: any AssociatedLocationInspecting =
       FileSystemAssociatedLocationInspector(),
+    associatedLocationEnumerator: any AssociatedLocationEnumerating =
+      FileSystemAssociatedLocationEnumerator(),
     processSampler: any ProcessSampling = PSProcessSampler(),
     clock: any HALClock = SystemClock()
   ) throws {
@@ -91,6 +96,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       signatureInspector: signatureInspector,
       provenanceInspector: provenanceInspector,
       associatedLocationInspector: associatedLocationInspector,
+      associatedLocationEnumerator: associatedLocationEnumerator,
       processSampler: processSampler,
       maxUnmatchedProcesses: processConfiguration.maxUnmatchedProcesses,
       clock: clock

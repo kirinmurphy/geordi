@@ -152,8 +152,9 @@ make verify
 
 ## Recommended next task
 
-Add bounded associated-location root enumeration, then add shared and
-group-container ambiguity fixtures without starting broad storage traversal.
+Add authoritative team/group identifier observations before linking group
+containers, then wire the rebuildable-data detector manifest into bounded
+metadata-only collection.
 The rebuildable-data manifest contract now defines classifications, bounded
 tool-managed roots, exclusions, and evidence rules while code-enforced path
 safety remains nonconfigurable; no storage collection or deletion was enabled.
