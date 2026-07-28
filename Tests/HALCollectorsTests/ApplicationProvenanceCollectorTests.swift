@@ -154,7 +154,7 @@ struct ApplicationProvenanceCollectorTests {
     let detail = try #require(
       snapshot.graph.entities.first?.details.first { $0.label == "Download origin" }
     )
-    #expect(detail.value == "Not retained")
+    #expect(detail.value == "Not observed")
     #expect(!detail.value.localizedCaseInsensitiveContains("web"))
     #expect(
       snapshot.scan.collectorRuns.map(\.collectorID) == [

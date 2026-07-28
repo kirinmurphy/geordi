@@ -58,17 +58,15 @@ struct InspectorView: View {
       Text(entity.summary).font(.title3)
       if !entity.details.isEmpty {
         Divider()
-        Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 10) {
-          ForEach(entity.details) { detail in
-            GridRow {
-              Text(detail.label)
-                .foregroundStyle(.secondary)
-                .gridColumnAlignment(.trailing)
-              Text(detail.value)
-                .fontWeight(.semibold)
-                .gridColumnAlignment(.leading)
-            }
+        if entity.type == .application {
+          applicationEvidenceSummary(entity)
+          DisclosureGroup("Technical details") {
+            detailGrid(entity.details)
+              .padding(.top, 10)
           }
+          .font(.subheadline.weight(.semibold))
+        } else {
+          detailGrid(entity.details)
         }
       }
       Divider()
@@ -93,6 +91,81 @@ struct InspectorView: View {
           selectedEntity: entity,
           isUpstream: false
         )
+      }
+    }
+  }
+
+  private func applicationEvidenceSummary(_ entity: Entity) -> some View {
+    let signature = entity.details.first { $0.label == "Signature" }
+    let team = entity.details.first { $0.label == "Team identifier" }
+    let provenance = entity.details.filter {
+      $0.label.localizedCaseInsensitiveContains("receipt")
+        || $0.label.localizedCaseInsensitiveContains("origin")
+    }
+    return VStack(alignment: .leading, spacing: 10) {
+      Text("Identity & provenance")
+        .font(.headline)
+      evidenceSummaryRow(
+        title: "Signing",
+        value: signature.map { signatureDetail in
+          team.map { "\(signatureDetail.value) · Team \($0.value)" } ?? signatureDetail.value
+        } ?? "Evidence unavailable",
+        systemImage: signature == nil ? "questionmark.seal" : "checkmark.seal"
+      )
+      evidenceSummaryRow(
+        title: "Provenance",
+        value: provenanceSummary(provenance),
+        systemImage: provenance.contains { $0.value != "Not observed" }
+          ? "shippingbox" : "questionmark.folder"
+      )
+    }
+    .padding(12)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+  }
+
+  private func evidenceSummaryRow(
+    title: String,
+    value: String,
+    systemImage: String
+  ) -> some View {
+    HStack(alignment: .top, spacing: 9) {
+      Image(systemName: systemImage)
+        .frame(width: 18)
+        .foregroundStyle(.secondary)
+      VStack(alignment: .leading, spacing: 2) {
+        Text(title)
+          .font(.caption.bold())
+          .foregroundStyle(.secondary)
+        Text(value)
+          .font(.callout.weight(.medium))
+      }
+    }
+  }
+
+  private func provenanceSummary(_ details: [Detail]) -> String {
+    guard !details.isEmpty else {
+      return "Evidence unavailable"
+    }
+    let observed = details.filter { $0.value != "Not observed" }
+    guard !observed.isEmpty else {
+      return "No retained receipt or download origin was observed"
+    }
+    return observed.map { "\($0.label): \($0.value)" }.joined(separator: " · ")
+  }
+
+  private func detailGrid(_ details: [Detail]) -> some View {
+    Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 10) {
+      ForEach(details) { detail in
+        GridRow {
+          Text(detail.label)
+            .foregroundStyle(.secondary)
+            .gridColumnAlignment(.trailing)
+          Text(detail.value)
+            .fontWeight(.semibold)
+            .gridColumnAlignment(.leading)
+            .textSelection(.enabled)
+        }
       }
     }
   }

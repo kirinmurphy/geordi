@@ -462,9 +462,9 @@ public struct ApplicationGraphProjector: Sendable {
     case .present:
       fact.detail ?? "Present"
     case .absent:
-      "Not retained"
+      "Not observed"
     case .unreadable:
-      "Unavailable"
+      "Unavailable — metadata could not be read"
     }
   }
 }
