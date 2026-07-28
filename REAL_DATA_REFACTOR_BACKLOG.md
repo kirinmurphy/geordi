@@ -12,24 +12,24 @@ These items were recorded from the first linked-Mac product test on
 
 ### Relational relevance and progressive disclosure
 
-- [ ] Treat the primary graph as a curated explanation of important current
+- [x] Treat the primary graph as a curated explanation of important current
   relationships, not a complete inventory visualization.
-- [ ] Add a schema-validated display-policy manifest with per-context node
+- [x] Add a schema-validated display-policy manifest with per-context node
   budgets, relationship priorities, confidence floors, and grouping rules.
   Presentation thresholds must not become Swift literals.
-- [ ] Prioritize relationships that answer:
+- [x] Prioritize relationships that answer:
   **What is active? Why is it active? What data is meaningfully associated?
   What changed or deserves attention?**
-- [ ] Keep observed facts even when they are omitted from the primary graph.
+- [x] Keep observed facts even when they are omitted from the primary graph.
   Filtering presentation must never discard collector output or evidence.
 - [ ] Put complete signing, provenance, entitlement, component, and path
   metadata behind an accessible **Technical details** disclosure.
-- [ ] Summarize repetitive relationships as groups such as “5 support
+- [x] Summarize repetitive relationships as groups such as “5 support
   locations” or “8 helper components,” expanding them only on request.
 - [ ] Surface low-confidence or unmatched records when they affect the
   explanation, but avoid scattering ordinary uncertain candidates across the
   default map.
-- [ ] Never rank an application as noteworthy without an observed signal.
+- [x] Never rank an application as noteworthy without an observed signal.
   Installation alone is not a warning, and a large component count is not a
   problem.
 - [ ] Keep “actionable” read-only for this milestone: provide a clear next
@@ -43,7 +43,7 @@ These items were recorded from the first linked-Mac product test on
    processes, memory, and observation limitations.
 2. [x] Persistence declarations and application correlation:
    explain why something starts automatically or remains active.
-3. [ ] Associated-location relevance:
+3. [x] Associated-location relevance:
    promote strong containers and meaningful support/configuration locations;
    group ordinary cache/log candidates and hide weak absent candidates.
 4. [ ] Resource sampling and incident qualification:
@@ -124,9 +124,9 @@ These items were recorded from the first linked-Mac product test on
 
 ### Evidence and navigation discoverability
 
-- [ ] Surface a compact signing and provenance summary on each selected
+- [x] Surface a compact signing and provenance summary on each selected
   application before the technical detail grid.
-- [ ] Explain unavailable provenance as an evidence state rather than silently
+- [x] Explain unavailable provenance as an evidence state rather than silently
   presenting repeated “Not retained” rows.
 - [ ] Show collector coverage and evidence counts in the application list or
   application header so users can tell that signing/provenance collection ran.
@@ -270,7 +270,7 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Improve the initial-link handoff and refresh feedback for test-drive clarity,
-then surface compact signing/provenance evidence on selected applications.
-Continue the relevance-bounded presentation policy before adding another
-collector.
+Add direct **Return to fictional Mac…** navigation beside linked-data status,
+then add model/UI tests for link and refresh state transitions. Continue
+relevance-policy coverage for low-confidence and unmatched explanatory records
+before adding another collector.

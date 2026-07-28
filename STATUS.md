@@ -152,12 +152,13 @@ make verify
 
 ## Recommended next task
 
-Implement the schema-validated relevance and grouping policy described in
-`REAL_DATA_REFACTOR_BACKLOG.md`. Processes, persistence declarations, and
-associated locations are now collected; the next priority is ensuring the
-default live atlas promotes only useful relationships, groups repetitive
-ordinary records, and keeps complete technical evidence accessible without
-overloading the grid.
+Add direct **Return to fictional Mac…** navigation beside the linked-data
+status, retaining the existing backup/delete/cancel confirmation. Then add
+model/UI coverage for initial-link progress, cancellation, success, unchanged
+and changed refreshes, and retained-data failure. The live application detail
+atlas now uses a schema-validated relevance policy, groups repetitive strong
+support locations, omits weak ordinary candidates, and keeps signing and
+provenance behind an accessible technical-details disclosure.
 
 ## Product evaluation checklist
 
@@ -221,14 +222,11 @@ Recorded outcomes use `[x]`; unchecked items still need evaluation.
   checklist rather than a full XCUITest runner.
 - HAL currently persists and exports only its compiled live snapshot; it has no
   historical database, notification layer, or machine cleanup actions.
-- Signing and provenance facts are projected into application details but have
-  no visible evidence summary, so successful collection can appear to do
-  nothing.
 - The return-to-fictional-data action is hidden behind the sidebar ellipsis and
   uses implementation-oriented unlink terminology.
 - Associated application support, cache, preference, log, saved-state, sandbox,
-  process, and persistence relationships are collected conservatively, but
-  their default presentation still needs relevance grouping and product
+  process, and persistence relationships are collected conservatively and
+  relevance-grouped for live application details, but still need product
   evaluation.
 
 ## Known risks
