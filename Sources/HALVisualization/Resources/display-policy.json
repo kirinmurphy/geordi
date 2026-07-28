@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "contexts": [
+    {
+      "id": "applicationDetail",
+      "nodeBudget": 12,
+      "relationships": [
+        {
+          "type": "launches",
+          "priority": 100,
+          "minimumConfidence": "possible"
+        },
+        {
+          "type": "persists through",
+          "priority": 90,
+          "minimumConfidence": "possible"
+        },
+        {
+          "type": "may belong to",
+          "priority": 50,
+          "minimumConfidence": "high",
+          "groupAfter": 3,
+          "groupLabel": "support locations"
+        }
+      ]
+    }
+  ]
+}

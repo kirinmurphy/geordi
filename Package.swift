@@ -49,7 +49,11 @@ let package = Package(
       dependencies: ["HALDomain", "HALManifestKit", "HALProfileSchema"],
       resources: [.process("Resources")]
     ),
-    .target(name: "HALVisualization", dependencies: ["HALDomain"]),
+    .target(
+      name: "HALVisualization",
+      dependencies: ["HALDomain", "HALManifestKit"],
+      resources: [.process("Resources")]
+    ),
     .executableTarget(
       name: "HALApp",
       dependencies: [

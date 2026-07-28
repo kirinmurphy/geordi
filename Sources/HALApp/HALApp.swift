@@ -84,6 +84,7 @@ final class AppModel {
   private let preferences: any DataSourcePreferenceStore
   private let userDataStore: HALUserDataStore?
   private let liveSnapshot: @Sendable () throws -> GraphSnapshot
+  private let displayPolicy: DisplayPolicy?
   private var collectionTask: Task<Void, Never>?
   private var collectionGeneration: UUID?
   var fixture: SystemGraph
@@ -122,6 +123,7 @@ final class AppModel {
     self.preferences = preferences
     self.userDataStore = userDataStore
     self.liveSnapshot = liveSnapshot
+    displayPolicy = try? DisplayPolicy.bundled()
     let initialMode = preferences.mode()
     dataSourceMode = initialMode
     welcomeDismissed = preferences.syntheticWelcomeDismissed()
@@ -298,17 +300,29 @@ final class AppModel {
   var presentedGraph: SystemGraph {
     switch destination {
     case .overview:
-      fixture.filtered(to: [.application, .resource, .incident])
+      return fixture.filtered(to: [.application, .resource, .incident])
     case .storage:
-      fixture.neighborhood(around: "resource.storage", depth: 2)
+      return fixture.neighborhood(around: "resource.storage", depth: 2)
     case .applications:
-      fixture.filtered(to: [
+      return fixture.filtered(to: [
         .application, .packageManager, .shellFramework, .package, .persistence,
       ])
     case .performance:
-      fixture.neighborhood(around: "incident.build", depth: 2)
+      return fixture.neighborhood(around: "incident.build", depth: 2)
     case .entity(let id):
-      fixture.neighborhood(around: id, depth: 2)
+      let neighborhood = fixture.neighborhood(around: id, depth: 2)
+      guard
+        !isSynthetic,
+        fixture.entity(id)?.type == .application,
+        let policy = displayPolicy?.context("applicationDetail")
+      else {
+        return neighborhood
+      }
+      return DisplayPolicyPresenter().present(
+        neighborhood,
+        centeredOn: id,
+        policy: policy
+      )
     }
   }
 
