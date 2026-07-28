@@ -85,6 +85,10 @@ let package = Package(
       name: "HALVisualizationTests",
       dependencies: ["HALDomain", "HALFixtures", "HALVisualization"]
     ),
+    .testTarget(
+      name: "HALAppTests",
+      dependencies: ["HALApp", "HALDataSource", "HALDomain"]
+    ),
   ],
   swiftLanguageModes: [.v6]
 )

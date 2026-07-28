@@ -98,9 +98,11 @@ These items were recorded from the first linked-Mac product test on
 - [x] Show an explicit completion acknowledgement even when refreshed data is
   unchanged, including “Checked just now,” duration, and collector coverage.
 - [x] Show whether a refresh changed the displayed snapshot.
-- [ ] Add model/UI tests for initial-link progress, cancellation, successful
-  handoff, unchanged refresh, changed refresh, and refresh failure with retained
-  data.
+- [x] Add model tests for initial-link progress, cancellation, successful
+  handoff, unchanged refresh, changed refresh, retry, and refresh failure with
+  retained data.
+- [ ] Add native UI automation for the same link and refresh state transitions
+  once the interaction runner extends beyond packaging verification.
 
 ### Useful application scope
 
@@ -270,6 +272,7 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Add model/UI tests for link and refresh state transitions, then continue
-relevance-policy coverage for low-confidence and unmatched explanatory records
-before adding another collector.
+Improve retryable initial-link failure diagnostics, then add application-scope
+and collector-coverage counts. Continue relevance-policy coverage for
+low-confidence and unmatched explanatory records before adding another
+collector.

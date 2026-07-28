@@ -152,13 +152,11 @@ make verify
 
 ## Recommended next task
 
-Add model/UI coverage for initial-link progress, cancellation, success,
-unchanged and changed refreshes, and retained-data failure. The linked-data
-footer now exposes **Return to fictional Mac…** directly while retaining the
-backup/delete/cancel confirmation. The live application detail atlas uses a
-schema-validated relevance policy, groups repetitive strong support locations,
-omits weak ordinary candidates, and keeps signing and provenance behind an
-accessible technical-details disclosure.
+Improve retryable, collector-aware initial-link failure diagnostics, then add
+application-scope and collector-coverage counts. Model coverage now verifies
+initial-link progress, cancellation, success, retry, unchanged and changed
+refreshes, and retained-data failure. Native UI automation remains deferred
+until the interaction runner extends beyond packaging verification.
 
 ## Product evaluation checklist
 

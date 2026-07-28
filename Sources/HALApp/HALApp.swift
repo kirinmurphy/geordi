@@ -60,12 +60,12 @@ final class HALApplicationDelegate: NSObject, NSApplicationDelegate {
 @MainActor
 @Observable
 final class AppModel {
-  enum CollectionActivity {
+  enum CollectionActivity: Equatable {
     case initialLink
     case refresh
   }
 
-  enum RefreshResult {
+  enum RefreshResult: Equatable {
     case changed
     case unchanged
   }
