@@ -36,6 +36,9 @@ Milestone 0 — repository and interactive concept.
 - Linked application inventory defaults to a manifest-classified User
   Installed scope, with filters for bundled software, system utilities,
   unclassified records, and all applications
+- Initial link completion leads to installed applications; subsequent
+  **Check this Mac again** runs keep the snapshot interactive and report
+  changed versus unchanged results with timing
 - Distinct warning treatment for recent performance and storage alerts
 - Relationship maps appear after selecting an inventory item rather than at
   launch
@@ -218,10 +221,6 @@ Recorded outcomes use `[x]`; unchecked items still need evaluation.
   historical database, notification layer, or machine cleanup actions.
 - Initial linking exposes the rest of the interface without explaining its
   collection stages or offering cancellation.
-- The post-link coverage panel presents refresh as the primary action, even
-  though refresh only reruns the same collectors and does not add the
-  unavailable storage, performance, persistence, or ownership capabilities.
-- A successful unchanged refresh has no salient completion acknowledgement.
 - Signing and provenance facts are projected into application details but have
   no visible evidence summary, so successful collection can appear to do
   nothing.

@@ -146,3 +146,14 @@ switches. “User Installed” is concise interface language for apps outside
 macOS system locations; HAL explicitly does not treat folder location as proof
 of who installed an app. Platform-signature evidence can refine this
 classification later without changing the filter contract.
+
+## 2026-07-28: refresh change detection compares normalized graphs
+
+Manual **Check this Mac again** collection reruns the same configured read-only
+collectors while leaving the last successful graph interactive. HAL reports
+whether the newly normalized graph differs from the displayed graph and records
+the check time and duration in the interface.
+
+Scan identifiers, collection timestamps, and collector-run timing do not by
+themselves count as a displayed change. This prevents every refresh from
+claiming an update merely because it produced a new scan envelope.

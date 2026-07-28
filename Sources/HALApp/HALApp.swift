@@ -60,6 +60,16 @@ final class HALApplicationDelegate: NSObject, NSApplicationDelegate {
 @MainActor
 @Observable
 final class AppModel {
+  enum CollectionActivity {
+    case initialLink
+    case refresh
+  }
+
+  enum RefreshResult {
+    case changed
+    case unchanged
+  }
+
   enum Destination: Hashable {
     case overview
     case storage
@@ -78,7 +88,12 @@ final class AppModel {
   var scanContext: ScanContext
   var dataSourceMode: DataSourceMode
   var isCollecting = false
+  var collectionActivity: CollectionActivity?
   var collectionError: String?
+  var linkCompletionPending = false
+  var lastRefreshResult: RefreshResult?
+  var lastRefreshCompletedAt: Date?
+  var lastRefreshDuration: TimeInterval?
   var welcomeDismissed: Bool
   var destination: Destination = .overview
   var selection: GraphSelection?
@@ -181,10 +196,18 @@ final class AppModel {
 
   func refreshLiveData(linkOnSuccess: Bool = false) {
     guard !isCollecting else { return }
+    let activity: CollectionActivity = linkOnSuccess ? .initialLink : .refresh
+    let collectionStartedAt = Date()
+    let previousGraph = fixture
     isCollecting = true
+    collectionActivity = activity
     collectionError = nil
     let collect = liveSnapshot
     Task {
+      defer {
+        isCollecting = false
+        collectionActivity = nil
+      }
       do {
         let snapshot = try await Task.detached { try collect() }.value
         try userDataStore?.saveSnapshot(snapshot)
@@ -193,6 +216,14 @@ final class AppModel {
         dataSourceMode = .linkedMac
         preferences.setMode(.linkedMac)
         navigate(to: .overview)
+        switch activity {
+        case .initialLink:
+          linkCompletionPending = true
+        case .refresh:
+          lastRefreshResult = snapshot.graph == previousGraph ? .unchanged : .changed
+          lastRefreshCompletedAt = Date()
+          lastRefreshDuration = Date().timeIntervalSince(collectionStartedAt)
+        }
       } catch {
         collectionError = "HAL could not read this Mac: \(error.localizedDescription)"
         if linkOnSuccess {
@@ -200,8 +231,12 @@ final class AppModel {
           preferences.setMode(.synthetic)
         }
       }
-      isCollecting = false
     }
+  }
+
+  func exploreLinkedApplications() {
+    linkCompletionPending = false
+    navigate(to: .applications)
   }
 
   func dismissWelcome() {
@@ -222,6 +257,10 @@ final class AppModel {
     dataSourceMode = .synthetic
     welcomeDismissed = false
     collectionError = nil
+    linkCompletionPending = false
+    lastRefreshResult = nil
+    lastRefreshCompletedAt = nil
+    lastRefreshDuration = nil
     let snapshot = syntheticProvider.snapshot()
     fixture = snapshot.graph
     scanContext = snapshot.scan

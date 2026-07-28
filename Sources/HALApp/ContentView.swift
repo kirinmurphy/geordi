@@ -232,13 +232,14 @@ struct ContentView: View {
             .disabled(model.isCollecting)
         } else {
           Menu {
-            Button("Refresh Now") { model.refreshLiveData() }
+            Button("Check this Mac again") { model.refreshLiveData() }
             Button("Unlink this Mac…", role: .destructive) {
               unlinkConfirmationPresented = true
             }
           } label: {
             Image(systemName: "ellipsis.circle")
           }
+          .disabled(model.isCollecting)
           .menuStyle(.borderlessButton)
           .frame(width: 24)
         }
@@ -830,10 +831,10 @@ private struct LiveCoverageNotice: View {
         .font(.title2)
         .foregroundStyle(.green)
       VStack(alignment: .leading, spacing: 5) {
-        Text("Read-only application inventory")
+        Text(model.linkCompletionPending ? "Your application atlas is ready" : "This Mac is linked")
           .font(.headline)
         Text(
-          "HAL observed installed application bundles and signing information. Storage cleanup, performance incidents, persistence, and file ownership are not collected yet, so no claims about them are shown."
+          "HAL read application bundles, signing and download provenance, conventional related locations, current processes, and startup declarations. It did not change applications or machine data. Storage totals and performance history are not collected yet."
         )
         .foregroundStyle(.secondary)
         ForEach(
@@ -844,13 +845,31 @@ private struct LiveCoverageNotice: View {
             .font(.caption)
             .foregroundStyle(issue.severity == .error ? .red : .orange)
         }
-        if model.isCollecting {
-          ProgressView("Refreshing this Mac…")
+        if model.collectionActivity == .refresh {
+          ProgressView("Checking the same read-only sources again…")
             .controlSize(.small)
+        } else if model.linkCompletionPending {
+          Button("Explore installed applications") {
+            model.exploreLinkedApplications()
+          }
+          .buttonStyle(.borderedProminent)
+          .controlSize(.small)
         } else {
-          Button("Refresh Now") { model.refreshLiveData() }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
+          if let result = model.lastRefreshResult,
+            let completedAt = model.lastRefreshCompletedAt
+          {
+            Text(refreshSummary(result: result, completedAt: completedAt))
+              .font(.caption.weight(.medium))
+              .foregroundStyle(.secondary)
+          }
+          HStack(spacing: 10) {
+            Button("Check this Mac again") { model.refreshLiveData() }
+              .buttonStyle(.bordered)
+              .controlSize(.small)
+            Text("Reruns the same enabled read-only collectors.")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
         }
       }
       Spacer()
@@ -860,6 +879,17 @@ private struct LiveCoverageNotice: View {
     .overlay {
       RoundedRectangle(cornerRadius: 16).stroke(Color.green.opacity(0.25))
     }
+  }
+
+  private func refreshSummary(
+    result: AppModel.RefreshResult,
+    completedAt: Date
+  ) -> String {
+    let changeSummary = result == .changed ? "Updates found." : "No displayed changes."
+    let duration =
+      model.lastRefreshDuration.map { String(format: "%.1f seconds", $0) } ?? "duration unavailable"
+    let checkedAt = completedAt.formatted(date: .omitted, time: .shortened)
+    return "Checked \(checkedAt) · \(changeSummary) · \(duration)"
   }
 }
 

@@ -84,20 +84,20 @@ These items were recorded from the first linked-Mac product test on
 
 ### Linked completion and refresh
 
-- [ ] Replace the green “Read-only application inventory” notification with a
+- [x] Replace the green “Read-only application inventory” notification with a
   completion/coverage panel that answers:
   what finished, what HAL learned, what remains unavailable, and what the user
   can explore next.
-- [ ] Remove **Refresh Now** as the primary post-link action. It is not the next
+- [x] Remove **Refresh Now** as the primary post-link action. It is not the next
   step in setup and currently suggests that missing capabilities will be
   collected.
-- [ ] Rename manual refresh to **Check this Mac again** and explain that it
+- [x] Rename manual refresh to **Check this Mac again** and explain that it
   reruns the same enabled read-only collectors.
-- [ ] Keep an existing linked snapshot interactive during manual refresh; use
+- [x] Keep an existing linked snapshot interactive during manual refresh; use
   inline progress rather than a blocking overlay.
-- [ ] Show an explicit completion acknowledgement even when refreshed data is
+- [x] Show an explicit completion acknowledgement even when refreshed data is
   unchanged, including “Checked just now,” duration, and collector coverage.
-- [ ] Show whether a refresh changed the displayed snapshot.
+- [x] Show whether a refresh changed the displayed snapshot.
 - [ ] Add model/UI tests for initial-link progress, cancellation, successful
   handoff, unchanged refresh, changed refresh, and refresh failure with retained
   data.
