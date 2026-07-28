@@ -195,6 +195,9 @@ These items were recorded from the first linked-Mac product test on
   without descendant enumeration, size calculation, or deletion.
 - [x] Replace synthetic storage, application, and incident claims in linked
   atlas destinations with summaries of the observations actually collected.
+- [x] Define a versioned bounded size-measurement contract covering entry,
+  depth, duration, and cancellation budgets; filesystem and symlink boundaries;
+  hard-link deduplication; and APFS clone disclosure.
 - [x] Keep nonconfigurable security invariants in code.
 
 ## Priority 1: synthetic/live schema parity
@@ -276,6 +279,6 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Define the next bounded size-measurement contract, including cancellation,
-filesystem-boundary rules, clone and hard-link semantics, and performance
-budgets, before implementing any traversal.
+Implement a cancellable bounded measurement engine behind the versioned policy,
+with deterministic limit, hard-link, filesystem-boundary, and partial-result
+tests before enabling it in live composition.

@@ -9,7 +9,15 @@ struct RebuildableDataConfigurationTests {
     let configuration = try RebuildableDataConfiguration.bundled()
     let home = URL(filePath: "/Users/example", directoryHint: .isDirectory)
 
-    #expect(configuration.schemaVersion == 1)
+    #expect(configuration.schemaVersion == 2)
+    #expect(configuration.measurementPolicy.maxEntriesPerLocation == 250_000)
+    #expect(configuration.measurementPolicy.maxDurationMilliseconds == 5_000)
+    #expect(configuration.measurementPolicy.stayOnFileSystem)
+    #expect(configuration.measurementPolicy.symbolicLinkPolicy == .doNotFollow)
+    #expect(
+      configuration.measurementPolicy.hardLinkPolicy == .countAllocatedBytesOncePerFileID
+    )
+    #expect(configuration.measurementPolicy.clonePolicy == .allocatedBytesMayOverlap)
     #expect(
       configuration.detectors.map(\.id) == [
         "xcode-derived-data", "homebrew-download-cache", "npm-download-cache",
@@ -27,7 +35,17 @@ struct RebuildableDataConfigurationTests {
     let unknownClassification = Data(
       """
       {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
+        "measurementPolicy": {
+          "maxEntriesPerLocation": 250000,
+          "maxDepth": 64,
+          "maxDurationMilliseconds": 5000,
+          "cancellationCheckIntervalEntries": 256,
+          "stayOnFileSystem": true,
+          "symbolicLinkPolicy": "doNotFollow",
+          "hardLinkPolicy": "countAllocatedBytesOncePerFileID",
+          "clonePolicy": "allocatedBytesMayOverlap"
+        },
         "classifications": [{
           "id": "cache",
           "label": "Cache",
@@ -67,7 +85,7 @@ struct RebuildableDataConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "classifications": [],
         "detectors": [],
         "allowDeletion": true
@@ -78,6 +96,52 @@ struct RebuildableDataConfigurationTests {
     #expect(throws: RebuildableDataConfigurationError.self) {
       try RebuildableDataConfiguration.decode(
         data,
+        schema: RebuildableDataConfiguration.declarativeSchemaData()
+      )
+    }
+  }
+
+  @Test("Measurement budgets and filesystem boundaries cannot be disabled")
+  func unsafeMeasurementPolicy() throws {
+    let configuration = RebuildableDataConfiguration(
+      measurementPolicy: RebuildableDataMeasurementPolicy(
+        maxEntriesPerLocation: 250_000,
+        maxDepth: 64,
+        maxDurationMilliseconds: 0,
+        cancellationCheckIntervalEntries: 256,
+        stayOnFileSystem: false,
+        symbolicLinkPolicy: .doNotFollow,
+        hardLinkPolicy: .countAllocatedBytesOncePerFileID,
+        clonePolicy: .allocatedBytesMayOverlap
+      ),
+      classifications: [
+        RebuildableDataClassification(
+          id: "cache",
+          label: "Cache",
+          rebuildability: .rebuildable
+        )
+      ],
+      detectors: [
+        RebuildableDataDetector(
+          id: "cache",
+          classificationID: "cache",
+          locations: [
+            RebuildableDataLocation(id: "cache", path: "$USER_HOME/Library/Caches/Test")
+          ],
+          excludedDescendantNames: [],
+          evidenceRule: RebuildableDataEvidenceRule(
+            id: "rule",
+            kind: .pathConvention,
+            confidence: .possible,
+            explanation: "Test"
+          )
+        )
+      ]
+    )
+
+    #expect(throws: RebuildableDataConfigurationError.self) {
+      try RebuildableDataConfiguration.decode(
+        JSONEncoder().encode(configuration),
         schema: RebuildableDataConfiguration.declarativeSchemaData()
       )
     }

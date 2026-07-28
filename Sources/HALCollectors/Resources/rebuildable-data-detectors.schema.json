@@ -1,12 +1,52 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/rebuildable-data-detectors-v1.json",
+  "$id": "https://hal.local/schemas/rebuildable-data-detectors-v2.json",
   "title": "HAL rebuildable-data detectors",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "classifications", "detectors"],
+  "required": ["schemaVersion", "measurementPolicy", "classifications", "detectors"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
+    "measurementPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxEntriesPerLocation",
+        "maxDepth",
+        "maxDurationMilliseconds",
+        "cancellationCheckIntervalEntries",
+        "stayOnFileSystem",
+        "symbolicLinkPolicy",
+        "hardLinkPolicy",
+        "clonePolicy"
+      ],
+      "properties": {
+        "maxEntriesPerLocation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "maxDurationMilliseconds": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000
+        },
+        "cancellationCheckIntervalEntries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "stayOnFileSystem": { "const": true },
+        "symbolicLinkPolicy": { "const": "doNotFollow" },
+        "hardLinkPolicy": { "const": "countAllocatedBytesOncePerFileID" },
+        "clonePolicy": { "const": "allocatedBytesMayOverlap" }
+      }
+    },
     "classifications": {
       "type": "array",
       "minItems": 1,

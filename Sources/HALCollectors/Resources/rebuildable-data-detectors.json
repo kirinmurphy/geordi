@@ -1,5 +1,15 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "measurementPolicy": {
+    "maxEntriesPerLocation": 250000,
+    "maxDepth": 64,
+    "maxDurationMilliseconds": 5000,
+    "cancellationCheckIntervalEntries": 256,
+    "stayOnFileSystem": true,
+    "symbolicLinkPolicy": "doNotFollow",
+    "hardLinkPolicy": "countAllocatedBytesOncePerFileID",
+    "clonePolicy": "allocatedBytesMayOverlap"
+  },
   "classifications": [
     {
       "id": "build-output",

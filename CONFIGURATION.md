@@ -164,6 +164,11 @@ It does not enumerate descendants, calculate sizes, read contents, or expose a
 removal action. Present symbolic links are retained as limited observations and
 are not projected as reclaim candidates.
 
+Version 2 adds a required `measurementPolicy` contract for a future bounded
+size collector. Its budgets and fixed filesystem safety semantics are described
+in `SIZE_MEASUREMENT_CONTRACT.md`. The policy is validated today but is not yet
+executed; the live collector still performs root metadata checks only.
+
 Persistence search roots are defined by
 `HALCollectors/Resources/persistence-roots.json` and its adjacent versioned
 schema. The default scope includes the user and local-domain LaunchAgent and

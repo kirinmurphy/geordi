@@ -3,18 +3,21 @@ import HALDomain
 import HALManifestKit
 
 public struct RebuildableDataConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
+  public let measurementPolicy: RebuildableDataMeasurementPolicy
   public let classifications: [RebuildableDataClassification]
   public let detectors: [RebuildableDataDetector]
 
   public init(
     schemaVersion: Int = Self.currentVersion,
+    measurementPolicy: RebuildableDataMeasurementPolicy = .safeDefault,
     classifications: [RebuildableDataClassification],
     detectors: [RebuildableDataDetector]
   ) {
     self.schemaVersion = schemaVersion
+    self.measurementPolicy = measurementPolicy
     self.classifications = classifications
     self.detectors = detectors
   }
@@ -56,6 +59,7 @@ public struct RebuildableDataConfiguration: Codable, Hashable, Sendable {
           configuration.schemaVersion
         )
       }
+      try configuration.measurementPolicy.validate()
       guard
         Set(configuration.classifications.map(\.id)).count
           == configuration.classifications.count
@@ -80,6 +84,72 @@ public struct RebuildableDataConfiguration: Codable, Hashable, Sendable {
       throw error
     } catch {
       throw RebuildableDataConfigurationError.invalid(String(describing: error))
+    }
+  }
+}
+
+public struct RebuildableDataMeasurementPolicy: Codable, Hashable, Sendable {
+  public enum SymbolicLinkPolicy: String, Codable, Hashable, Sendable {
+    case doNotFollow
+  }
+
+  public enum HardLinkPolicy: String, Codable, Hashable, Sendable {
+    case countAllocatedBytesOncePerFileID
+  }
+
+  public enum ClonePolicy: String, Codable, Hashable, Sendable {
+    case allocatedBytesMayOverlap
+  }
+
+  public static let safeDefault = Self(
+    maxEntriesPerLocation: 250_000,
+    maxDepth: 64,
+    maxDurationMilliseconds: 5_000,
+    cancellationCheckIntervalEntries: 256,
+    stayOnFileSystem: true,
+    symbolicLinkPolicy: .doNotFollow,
+    hardLinkPolicy: .countAllocatedBytesOncePerFileID,
+    clonePolicy: .allocatedBytesMayOverlap
+  )
+
+  public let maxEntriesPerLocation: Int
+  public let maxDepth: Int
+  public let maxDurationMilliseconds: Int
+  public let cancellationCheckIntervalEntries: Int
+  public let stayOnFileSystem: Bool
+  public let symbolicLinkPolicy: SymbolicLinkPolicy
+  public let hardLinkPolicy: HardLinkPolicy
+  public let clonePolicy: ClonePolicy
+
+  public init(
+    maxEntriesPerLocation: Int,
+    maxDepth: Int,
+    maxDurationMilliseconds: Int,
+    cancellationCheckIntervalEntries: Int,
+    stayOnFileSystem: Bool,
+    symbolicLinkPolicy: SymbolicLinkPolicy,
+    hardLinkPolicy: HardLinkPolicy,
+    clonePolicy: ClonePolicy
+  ) {
+    self.maxEntriesPerLocation = maxEntriesPerLocation
+    self.maxDepth = maxDepth
+    self.maxDurationMilliseconds = maxDurationMilliseconds
+    self.cancellationCheckIntervalEntries = cancellationCheckIntervalEntries
+    self.stayOnFileSystem = stayOnFileSystem
+    self.symbolicLinkPolicy = symbolicLinkPolicy
+    self.hardLinkPolicy = hardLinkPolicy
+    self.clonePolicy = clonePolicy
+  }
+
+  fileprivate func validate() throws {
+    guard
+      (1...1_000_000).contains(maxEntriesPerLocation),
+      (1...128).contains(maxDepth),
+      (100...60_000).contains(maxDurationMilliseconds),
+      (1...4_096).contains(cancellationCheckIntervalEntries),
+      stayOnFileSystem
+    else {
+      throw RebuildableDataConfigurationError.invalidMeasurementPolicy
     }
   }
 }
@@ -198,5 +268,6 @@ public enum RebuildableDataConfigurationError: Error, Equatable, Sendable {
   case unknownClassification(detector: String, classification: String)
   case invalidPath(String)
   case invalidExclusion(String)
+  case invalidMeasurementPolicy
   case invalid(String)
 }

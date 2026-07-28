@@ -152,9 +152,9 @@ make verify
 
 ## Recommended next task
 
-Define the next bounded size-measurement contract, including cancellation,
-filesystem-boundary rules, clone and hard-link semantics, and performance
-budgets, before implementing any traversal.
+Implement a cancellable bounded measurement engine behind the versioned policy,
+with deterministic limit, hard-link, filesystem-boundary, and partial-result
+tests before enabling it in live composition.
 The rebuildable-data manifest now drives linked-Mac metadata checks for Xcode,
 Homebrew, and npm roots. HAL preserves unavailable states, refuses symlink
 escapes, does not descend or calculate size, and enables no storage deletion.
