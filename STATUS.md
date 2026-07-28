@@ -152,12 +152,11 @@ make verify
 
 ## Recommended next task
 
-Surface consequential low-confidence or unmatched records without adding
-ordinary uncertainty to the default map, then incorporate platform-signature
-evidence into manifest-driven application classification. The linked inventory
-now reports visible, hidden-by-scope, and unclassified applications; its
-coverage panel reports completed and limited collectors plus retained
-application evidence counts.
+Incorporate platform-signature evidence into manifest-driven application
+classification, then add partial and unavailable schema fixtures. Process
+policy schema version 2 now bounds retained unresolved processes; inaccessible
+records rank first, unmatched records remain searchable, and coverage reports
+their counts without scattering disconnected nodes across the default atlas.
 
 ## Product evaluation checklist
 

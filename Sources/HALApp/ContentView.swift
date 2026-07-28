@@ -931,6 +931,17 @@ private struct LiveCoverageNotice: View {
         )
         .font(.caption.weight(.semibold))
         .foregroundStyle(coverage.limited > 0 ? .orange : .secondary)
+        let unresolved = model.unresolvedProcessCounts
+        if unresolved.unmatched > 0 || unresolved.inaccessible > 0 {
+          Label(
+            "\(unresolved.unmatched) unmatched processes retained for search"
+              + (unresolved.inaccessible > 0
+                ? " · \(unresolved.inaccessible) inaccessible" : ""),
+            systemImage: "questionmark.diamond"
+          )
+          .font(.caption)
+          .foregroundStyle(unresolved.inaccessible > 0 ? .orange : .secondary)
+        }
         ForEach(
           model.scanContext.collectorRuns.flatMap(\.issues),
           id: \.id

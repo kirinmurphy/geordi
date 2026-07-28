@@ -220,6 +220,24 @@ final class AppModel {
     }
   }
 
+  var unresolvedProcessCounts: (unmatched: Int, inaccessible: Int) {
+    fixture.entities.reduce(into: (unmatched: 0, inaccessible: 0)) { counts, entity in
+      guard
+        entity.type == .process,
+        let state = entity.details.first(where: {
+          $0.label == "Application resolution"
+        })?.value
+      else {
+        return
+      }
+      switch state {
+      case "Unmatched": counts.unmatched += 1
+      case "Inaccessible": counts.inaccessible += 1
+      default: break
+      }
+    }
+  }
+
   private static func emptyLinkedSnapshot() -> GraphSnapshot {
     let startedAt = Date()
     return GraphSnapshot(

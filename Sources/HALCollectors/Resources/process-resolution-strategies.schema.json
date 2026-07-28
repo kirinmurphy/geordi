@@ -1,17 +1,27 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/process-resolution-strategies/v1",
+  "$id": "https://hal.local/schemas/process-resolution-strategies/v2",
   "title": "HAL process resolution strategies",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "maxProcessesPerApplication", "strategies"],
+  "required": [
+    "schemaVersion",
+    "maxProcessesPerApplication",
+    "maxUnmatchedProcesses",
+    "strategies"
+  ],
   "properties": {
     "schemaVersion": {
-      "const": 1
+      "const": 2
     },
     "maxProcessesPerApplication": {
       "type": "integer",
       "minimum": 1,
+      "maximum": 50
+    },
+    "maxUnmatchedProcesses": {
+      "type": "integer",
+      "minimum": 0,
       "maximum": 50
     },
     "strategies": {

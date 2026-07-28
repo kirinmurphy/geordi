@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "maxProcessesPerApplication": 8,
+  "maxUnmatchedProcesses": 12,
   "strategies": [
     {
       "id": "exact-main-executable",

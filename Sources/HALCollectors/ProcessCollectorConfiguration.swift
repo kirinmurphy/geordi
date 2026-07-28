@@ -3,19 +3,22 @@ import HALDomain
 import HALManifestKit
 
 public struct ProcessCollectorConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
   public let maxProcessesPerApplication: Int
+  public let maxUnmatchedProcesses: Int
   public let strategies: [ProcessResolutionStrategy]
 
   public init(
     schemaVersion: Int = Self.currentVersion,
     maxProcessesPerApplication: Int,
+    maxUnmatchedProcesses: Int = 0,
     strategies: [ProcessResolutionStrategy]
   ) {
     self.schemaVersion = schemaVersion
     self.maxProcessesPerApplication = maxProcessesPerApplication
+    self.maxUnmatchedProcesses = maxUnmatchedProcesses
     self.strategies = strategies
   }
 

@@ -131,14 +131,18 @@ struct ProcessCollectorTests {
       output: applications,
       processes: processOutput,
       processResolutions: resolutions,
-      maxProcessesPerApplication: configuration.maxProcessesPerApplication
+      maxProcessesPerApplication: configuration.maxProcessesPerApplication,
+      maxUnmatchedProcesses: 1
     )
 
     try snapshot.graph.validate()
-    #expect(snapshot.graph.entities.filter { $0.type == .process }.count == 1)
+    #expect(snapshot.graph.entities.filter { $0.type == .process }.count == 2)
     #expect(snapshot.graph.relationships.count == 1)
     #expect(snapshot.graph.relationships.first?.target == "process:pid:101")
     #expect(snapshot.graph.relationships.first?.evidence.count == 2)
+    #expect(snapshot.graph.entity("process:pid:102")?.details.contains {
+      $0.label == "Application resolution" && $0.value == "Inaccessible"
+    } == true)
   }
 
   private func application() -> CollectedObservation<ApplicationBundleValue> {

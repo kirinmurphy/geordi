@@ -26,7 +26,7 @@ These items were recorded from the first linked-Mac product test on
   metadata behind an accessible **Technical details** disclosure.
 - [x] Summarize repetitive relationships as groups such as “5 support
   locations” or “8 helper components,” expanding them only on request.
-- [ ] Surface low-confidence or unmatched records when they affect the
+- [x] Surface low-confidence or unmatched records when they affect the
   explanation, but avoid scattering ordinary uncertain candidates across the
   default map.
 - [x] Never rank an application as noteworthy without an observed signal.
@@ -272,6 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Continue relevance-policy coverage for consequential low-confidence and
-unmatched explanatory records, then incorporate platform-signature evidence
-into manifest-driven application classification.
+Incorporate platform-signature evidence into manifest-driven application
+classification, then add partial and unavailable schema fixtures.

@@ -13,6 +13,7 @@ public struct ApplicationGraphProjector: Sendable {
     processes: CollectorOutput<ProcessValue>? = nil,
     processResolutions: CollectorOutput<ProcessApplicationResolutionValue>? = nil,
     maxProcessesPerApplication: Int = 8,
+    maxUnmatchedProcesses: Int = 0,
     persistence: CollectorOutput<PersistenceDeclarationValue>? = nil,
     persistenceResolutions: CollectorOutput<PersistenceApplicationResolutionValue>? = nil
   ) -> GraphSnapshot {
@@ -126,9 +127,18 @@ public struct ApplicationGraphProjector: Sendable {
       processesByPID: processesByPID,
       limit: maxProcessesPerApplication
     )
-    let processEntities = visibleProcessResolutions.compactMap { resolution -> Entity? in
+    let unresolvedProcessResolutions = preferredUnresolvedProcessResolutions(
+      processResolutions?.observations ?? [],
+      processesByPID: processesByPID,
+      limit: maxUnmatchedProcesses
+    )
+    let processEntities = (visibleProcessResolutions + unresolvedProcessResolutions)
+      .compactMap { resolution -> Entity? in
       guard let process = processesByPID[resolution.value.processID] else { return nil }
-      var details = [Detail("PID", "\(process.value.pid)")]
+      var details = [
+        Detail("PID", "\(process.value.pid)"),
+        Detail("Application resolution", resolution.value.state.rawValue.capitalized),
+      ]
       if let parentPID = process.value.parentPID {
         details.append(Detail("Parent PID", "\(parentPID)"))
       }
@@ -150,7 +160,7 @@ public struct ApplicationGraphProjector: Sendable {
         summary: "A process observed in the point-in-time snapshot.",
         details: details
       )
-    }
+      }
     let processRelationships = visibleProcessResolutions.compactMap {
       resolution -> Relationship? in
       guard
@@ -356,6 +366,28 @@ public struct ApplicationGraphProjector: Sendable {
       }.prefix(limit)
     }
     .sorted { $0.value.processID < $1.value.processID }
+  }
+
+  private func preferredUnresolvedProcessResolutions(
+    _ resolutions: [CollectedObservation<ProcessApplicationResolutionValue>],
+    processesByPID: [Int32: CollectedObservation<ProcessValue>],
+    limit: Int
+  ) -> [CollectedObservation<ProcessApplicationResolutionValue>] {
+    guard limit > 0 else { return [] }
+    return resolutions.filter {
+      $0.value.state == .unmatched || $0.value.state == .inaccessible
+    }
+    .sorted {
+      if $0.value.state != $1.value.state {
+        return $0.value.state == .inaccessible
+      }
+      let left = processesByPID[$0.value.processID]?.value.residentMemoryBytes ?? 0
+      let right = processesByPID[$1.value.processID]?.value.residentMemoryBytes ?? 0
+      if left != right { return left > right }
+      return $0.value.processID < $1.value.processID
+    }
+    .prefix(limit)
+    .map { $0 }
   }
 
   private func processEntityID(_ pid: Int32) -> EntityID {

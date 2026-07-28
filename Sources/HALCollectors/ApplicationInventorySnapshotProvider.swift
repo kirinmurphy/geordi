@@ -10,6 +10,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let processCollector: ProcessCollector
   public let processResolver: ProcessApplicationResolver
   public let maxProcessesPerApplication: Int
+  public let maxUnmatchedProcesses: Int
   public let persistenceCollector: PersistenceCollector
   public let persistenceResolver: PersistenceApplicationResolver
   public let projector: ApplicationGraphProjector
@@ -28,6 +29,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     associatedLocationInspector: any AssociatedLocationInspecting =
       FileSystemAssociatedLocationInspector(),
     processSampler: any ProcessSampling = PSProcessSampler(),
+    maxUnmatchedProcesses: Int = 0,
     clock: any HALClock = SystemClock()
   ) {
     self.scanID = scanID
@@ -53,6 +55,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       clock: clock
     )
     maxProcessesPerApplication = processConfiguration.maxProcessesPerApplication
+    self.maxUnmatchedProcesses = maxUnmatchedProcesses
     persistenceCollector = PersistenceCollector(
       roots: persistenceRoots,
       clock: clock
@@ -89,6 +92,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       provenanceInspector: provenanceInspector,
       associatedLocationInspector: associatedLocationInspector,
       processSampler: processSampler,
+      maxUnmatchedProcesses: processConfiguration.maxUnmatchedProcesses,
       clock: clock
     )
   }
@@ -128,6 +132,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       processes: processes,
       processResolutions: processResolutions,
       maxProcessesPerApplication: maxProcessesPerApplication,
+      maxUnmatchedProcesses: maxUnmatchedProcesses,
       persistence: persistence,
       persistenceResolutions: persistenceResolutions
     )

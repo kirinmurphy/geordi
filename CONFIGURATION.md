@@ -125,13 +125,14 @@ home are rejected. The manifest supplies resource instances and display
 categories; code supplies only generic resolution, metadata inspection, and
 evidence projection.
 
-Process-to-application strategies and the default per-application presentation
-budget are defined by
+Process-to-application strategies, the per-application presentation budget,
+and the bounded unmatched-process retention budget are defined by
 `HALCollectors/Resources/process-resolution-strategies.json` and its adjacent
 versioned schema. Exact main-executable matches take priority over application
-bundle containment. The budget limits default graph projection only; unmatched,
-inaccessible, ambiguous, and lower-ranked process observations remain in the
-normalized collector output.
+bundle containment. Version 2 adds `maxUnmatchedProcesses`; inaccessible
+records rank first, followed by unmatched records by observed memory. These
+records remain searchable and summarized in coverage without appearing as
+disconnected nodes in the default atlas.
 
 Persistence search roots are defined by
 `HALCollectors/Resources/persistence-roots.json` and its adjacent versioned
