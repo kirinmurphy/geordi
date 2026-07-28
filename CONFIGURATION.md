@@ -75,6 +75,10 @@ live system profiles. `HALProfileSchema/SystemProfileSchema.swift` is its
 generic Swift validation adapter, typed decoder, semantic graph-integrity
 validator, and domain projector. It does not maintain a second list of allowed
 fields. Tests keep schema enums in parity with their Swift domain projections.
+System-profile version 2 adds optional entity presentation metadata—symbol,
+color role, subtitle, and trailing-detail selection—so fixture-specific
+presentation remains in manifests rather than entity-identifier switches in
+Swift.
 
 The fixture validator runs as part of `make verify` and validates every
 committed synthetic profile manifest. An invalid or stale manifest is a build

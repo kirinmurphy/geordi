@@ -17,6 +17,12 @@
       ],
       "id" : "app.docker",
       "name" : "Docker Desktop",
+      "presentation" : {
+        "subtitle" : "Running · Linux VM and backend active",
+        "symbol" : "shippingbox.fill",
+        "tint" : "blue",
+        "trailingDetailLabel" : "Synthetic footprint"
+      },
       "summary" : "Runs containers through a Linux virtual machine on this fictional Mac.",
       "type" : "application"
     },
@@ -37,6 +43,12 @@
       ],
       "id" : "app.vscode",
       "name" : "Visual Studio Code",
+      "presentation" : {
+        "subtitle" : "Running · Extension host and TypeScript service active",
+        "symbol" : "chevron.left.forwardslash.chevron.right",
+        "tint" : "cyan",
+        "trailingDetailLabel" : "Synthetic footprint"
+      },
       "summary" : "A code editor with extensions and language services.",
       "type" : "application"
     },
@@ -57,6 +69,12 @@
       ],
       "id" : "app.cmux",
       "name" : "cmux",
+      "presentation" : {
+        "subtitle" : "Running · One zsh session represented",
+        "symbol" : "terminal.fill",
+        "tint" : "purple",
+        "trailingDetailLabel" : "Synthetic footprint"
+      },
       "summary" : "A native terminal with workspaces, panes, and an embedded browser.",
       "type" : "application"
     },
@@ -77,6 +95,12 @@
       ],
       "id" : "app.chatgpt",
       "name" : "ChatGPT",
+      "presentation" : {
+        "subtitle" : "Running · Starts automatically",
+        "symbol" : "bubble.left.and.bubble.right.fill",
+        "tint" : "mint",
+        "trailingDetailLabel" : "Synthetic footprint"
+      },
       "summary" : "The ChatGPT desktop application.",
       "type" : "application"
     },
@@ -97,6 +121,12 @@
       ],
       "id" : "app.brave",
       "name" : "Brave Browser",
+      "presentation" : {
+        "subtitle" : "Running · Renderer processes active",
+        "symbol" : "globe",
+        "tint" : "orange",
+        "trailingDetailLabel" : "Synthetic footprint"
+      },
       "summary" : "A web browser with separate renderer and GPU processes.",
       "type" : "application"
     },
@@ -1229,6 +1259,6 @@
       "type" : "contributes to"
     }
   ],
-  "schemaVersion" : 1,
+  "schemaVersion" : 2,
   "summary" : "A fictional developer Mac shaped around familiar installed software."
 }

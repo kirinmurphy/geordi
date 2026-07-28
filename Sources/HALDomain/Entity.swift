@@ -46,19 +46,52 @@ public struct Entity: Identifiable, Hashable, Codable, Sendable {
   public let name: String
   public let summary: String
   public let details: [Detail]
+  public let presentation: EntityPresentation?
 
   public init(
     id: EntityID,
     type: EntityType,
     name: String,
     summary: String,
-    details: [Detail] = []
+    details: [Detail] = [],
+    presentation: EntityPresentation? = nil
   ) {
     self.id = id
     self.type = type
     self.name = name
     self.summary = summary
     self.details = details
+    self.presentation = presentation
+  }
+}
+
+public enum EntityPresentationTint: String, CaseIterable, Codable, Sendable {
+  case accent
+  case blue
+  case cyan
+  case green
+  case mint
+  case orange
+  case purple
+  case red
+}
+
+public struct EntityPresentation: Hashable, Codable, Sendable {
+  public let symbol: String
+  public let tint: EntityPresentationTint
+  public let subtitle: String?
+  public let trailingDetailLabel: String?
+
+  public init(
+    symbol: String,
+    tint: EntityPresentationTint = .accent,
+    subtitle: String? = nil,
+    trailingDetailLabel: String? = nil
+  ) {
+    self.symbol = symbol
+    self.tint = tint
+    self.subtitle = subtitle
+    self.trailingDetailLabel = trailingDetailLabel
   }
 }
 

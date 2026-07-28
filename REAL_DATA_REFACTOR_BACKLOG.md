@@ -209,7 +209,7 @@ These items were recorded from the first linked-Mac product test on
   ambiguous, stale, and negative states.
 - [x] Add a deterministic fixture-generation/export format based on the same
   schema.
-- [ ] Remove entity-instance switches and hardcoded entity presentation behavior
+- [x] Remove entity-instance switches and hardcoded entity presentation behavior
   from Swift once equivalent manifest fields exist.
 
 ## Priority 2: data-source lifecycle
@@ -272,5 +272,5 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Remove remaining entity-instance presentation switches from Swift, then add a
-redacted diagnostic export for linked snapshots.
+Add a redacted diagnostic export for linked snapshots, then define
+rebuildable-data detector manifests before storage observation work.

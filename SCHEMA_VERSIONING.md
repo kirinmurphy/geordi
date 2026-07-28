@@ -63,9 +63,12 @@ document version to the next. A migration:
 - fails with a field path and actionable explanation when lossless conversion
   is impossible.
 
-HAL should add a migration registry only when version 2 is designed. Until
-then, version 1 is the sole accepted version and no speculative migration code
-is warranted.
+System-profile version 2 adds optional, schema-validated entity presentation
+metadata and moves all committed synthetic profiles to version 2. Version 1
+documents are rejected rather than silently reinterpreted. No persisted
+version-1 system-profile documents shipped as user data, so an automated
+migration registry is not warranted yet; any future persisted-format migration
+must follow the rules above.
 
 ## Persisted live data
 

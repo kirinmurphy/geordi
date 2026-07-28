@@ -40,7 +40,8 @@ struct SystemProfileSchemaTests {
     #expect(first == second)
     #expect(first.last == 0x0A)
     let decoded = try SystemProfileSchema.decode(first).graph()
-    #expect(decoded.metadata == graph.metadata)
+    #expect(decoded.metadata.version == SystemProfileSchema.currentVersion)
+    #expect(decoded.metadata.id == graph.metadata.id)
     #expect(decoded.entities.map(\.id) == ["a", "z"])
     #expect(decoded.relationships.map(\.id) == ["edge"])
 
@@ -58,7 +59,7 @@ struct SystemProfileSchemaTests {
     let data = Data(
       """
       {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "id": "profile",
         "name": "Profile",
         "summary": "Summary",
@@ -79,7 +80,7 @@ struct SystemProfileSchemaTests {
     let data = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 1,
         "id": "profile",
         "name": "Profile",
         "summary": "Summary",
@@ -119,6 +120,10 @@ struct SystemProfileSchemaTests {
       try schemaEnum("evidenceKind", in: definitions)
         == Set(EvidenceKind.allCases.map(\.rawValue))
     )
+    #expect(
+      try schemaEnum("presentationTint", in: definitions)
+        == Set(EntityPresentationTint.allCases.map(\.rawValue))
+    )
   }
 
   @Test("Schema enforces relationship endpoints and evidence")
@@ -126,7 +131,7 @@ struct SystemProfileSchemaTests {
     let data = Data(
       """
       {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "id": "profile",
         "name": "Profile",
         "summary": "Summary",

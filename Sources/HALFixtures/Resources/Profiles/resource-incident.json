@@ -202,6 +202,6 @@
       "type" : "occurred near"
     }
   ],
-  "schemaVersion" : 1,
+  "schemaVersion" : 2,
   "summary" : "A memory-pressure event with multiple contributors and nearby context."
 }

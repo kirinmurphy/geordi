@@ -152,11 +152,11 @@ make verify
 
 ## Recommended next task
 
-Remove remaining entity-instance presentation switches from Swift, then add a
-redacted diagnostic export for linked snapshots. `SystemProfileSchema` now
-owns canonical deterministic encoding, the fixture CLI uses that path, and
-full verification covers stable ordering, round-trip decoding, all seven
-cataloged profiles, application packaging, and the native smoke test.
+Add a redacted diagnostic export for linked snapshots, then define
+rebuildable-data detector manifests before storage observation work.
+System-profile version 2 moves entity-specific symbol, color, subtitle, and
+trailing-detail presentation into validated fixture manifests; all seven
+profiles migrated together and Swift no longer switches on application IDs.
 
 ## Product evaluation checklist
 

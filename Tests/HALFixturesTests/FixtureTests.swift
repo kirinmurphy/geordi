@@ -10,7 +10,7 @@ struct FixtureTests {
     #expect(FixtureCatalog.all.count >= 4)
     for fixture in FixtureCatalog.all {
       try fixture.validate()
-      #expect(fixture.metadata.version == 1)
+      #expect(fixture.metadata.version == 2)
     }
   }
 
@@ -63,6 +63,9 @@ struct FixtureTests {
       "tool.homebrew", "tool.ohmyzsh", "package.typescript",
     ]
     #expect(Set(graph.entities.map(\.id)).isSuperset(of: expected))
+    let applications = graph.entities.filter { $0.type == .application }
+    #expect(applications.allSatisfy { $0.presentation != nil })
+    #expect(graph.entity("app.docker")?.presentation?.symbol == "shippingbox.fill")
     #expect(
       graph.relationships.contains {
         $0.source == "process.docker" && $0.target == "process.vm"

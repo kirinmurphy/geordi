@@ -182,7 +182,7 @@ struct ContentView: View {
               model.focus(application)
             } label: {
               HStack {
-                Image(systemName: application.id == "app.photos" ? "photo" : "app")
+                Image(systemName: application.presentation?.symbol ?? "app")
                   .frame(width: 20)
                 VStack(alignment: .leading, spacing: 2) {
                   Text(application.name)
@@ -614,12 +614,13 @@ private struct OverviewView: View {
             ForEach(Array(applications.enumerated()), id: \.element.id) { index, application in
               if index > 0 { Divider() }
               InventoryRow(
-                symbol: applicationSymbol(application.id),
-                tint: applicationTint(application.id),
+                symbol: application.presentation?.symbol ?? "app",
+                tint: application.presentation.map { color(for: $0.tint) } ?? .accentColor,
                 title: application.name,
-                subtitle: applicationBehavior(application),
-                trailing: detail("Synthetic footprint", in: application)
-                  ?? detail("Current state", in: application) ?? ""
+                subtitle: application.presentation?.subtitle ?? application.summary,
+                trailing: application.presentation?.trailingDetailLabel.flatMap {
+                  detail($0, in: application)
+                } ?? detail("Current state", in: application) ?? ""
               ) { model.focus(application) }
             }
           }
@@ -670,36 +671,16 @@ private struct OverviewView: View {
     entity.details.first { $0.label == label }?.value
   }
 
-  private func applicationBehavior(_ application: Entity) -> String {
-    switch application.id {
-    case "app.docker": "Running · Linux VM and backend active"
-    case "app.vscode": "Running · Extension host and TypeScript service active"
-    case "app.cmux": "Running · One zsh session represented"
-    case "app.chatgpt": "Running · Starts automatically"
-    case "app.brave": "Running · Renderer processes active"
-    default: application.summary
-    }
-  }
-
-  private func applicationSymbol(_ id: EntityID) -> String {
-    switch id {
-    case "app.docker": "shippingbox.fill"
-    case "app.vscode": "chevron.left.forwardslash.chevron.right"
-    case "app.cmux": "terminal.fill"
-    case "app.chatgpt": "bubble.left.and.bubble.right.fill"
-    case "app.brave": "globe"
-    default: "app"
-    }
-  }
-
-  private func applicationTint(_ id: EntityID) -> Color {
-    switch id {
-    case "app.docker": .blue
-    case "app.vscode": .cyan
-    case "app.cmux": .purple
-    case "app.chatgpt": .mint
-    case "app.brave": .orange
-    default: .accentColor
+  private func color(for tint: EntityPresentationTint) -> Color {
+    switch tint {
+    case .accent: .accentColor
+    case .blue: .blue
+    case .cyan: .cyan
+    case .green: .green
+    case .mint: .mint
+    case .orange: .orange
+    case .purple: .purple
+    case .red: .red
     }
   }
 

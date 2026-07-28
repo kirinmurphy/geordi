@@ -172,6 +172,6 @@
       "type" : "reads and writes"
     }
   ],
-  "schemaVersion" : 1,
+  "schemaVersion" : 2,
   "summary" : "Two applications plausibly own a shared helper and folder; evidence is inconclusive."
 }

@@ -693,6 +693,6 @@
       "type" : "contributes to"
     }
   ],
-  "schemaVersion" : 1,
+  "schemaVersion" : 2,
   "summary" : "A coherent fictional Mac for exploring applications, storage, and performance."
 }

@@ -120,6 +120,6 @@
       "type" : "consumes"
     }
   ],
-  "schemaVersion" : 1,
+  "schemaVersion" : 2,
   "summary" : "A straightforward application with one process and ordinary activity."
 }

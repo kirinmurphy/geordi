@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public enum SystemProfileSchema {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public static func declarativeSchemaData() throws -> Data {
     guard
@@ -83,7 +83,7 @@ public struct SystemProfileDocument: Hashable, Codable, Sendable {
   }
 
   public init(graph: SystemGraph) {
-    schemaVersion = graph.metadata.version
+    schemaVersion = SystemProfileSchema.currentVersion
     id = graph.metadata.id
     name = graph.metadata.name
     summary = graph.metadata.summary
@@ -148,19 +148,22 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
   public let name: String
   public let summary: String
   public let details: [ProfileDetail]
+  public let presentation: EntityPresentation?
 
   public init(
     id: String,
     type: EntityType,
     name: String,
     summary: String,
-    details: [ProfileDetail] = []
+    details: [ProfileDetail] = [],
+    presentation: EntityPresentation? = nil
   ) {
     self.id = id
     self.type = type
     self.name = name
     self.summary = summary
     self.details = details
+    self.presentation = presentation
   }
 
   fileprivate init(entity: Entity) {
@@ -168,6 +171,7 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
     type = entity.type
     name = entity.name
     summary = entity.summary
+    presentation = entity.presentation
     details = entity.details.map { ProfileDetail(label: $0.label, value: $0.value) }.sorted {
       if $0.label != $1.label { return $0.label < $1.label }
       return $0.value < $1.value
@@ -180,7 +184,8 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
       type: type,
       name: name,
       summary: summary,
-      details: details.map { Detail($0.label, $0.value) }
+      details: details.map { Detail($0.label, $0.value) },
+      presentation: presentation
     )
   }
 }
