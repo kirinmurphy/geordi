@@ -29,3 +29,22 @@ public struct PersistenceDeclarationValue: Hashable, Codable, Sendable {
     self.keepAlive = keepAlive
   }
 }
+
+public struct PersistenceApplicationResolutionValue: Hashable, Codable, Sendable {
+  public let declarationPath: String
+  public let applicationPaths: [String]
+  public let state: ProcessResolutionState
+  public let confidence: Confidence?
+
+  public init(
+    declarationPath: String,
+    applicationPaths: [String] = [],
+    state: ProcessResolutionState,
+    confidence: Confidence? = nil
+  ) {
+    self.declarationPath = declarationPath
+    self.applicationPaths = applicationPaths
+    self.state = state
+    self.confidence = confidence
+  }
+}
