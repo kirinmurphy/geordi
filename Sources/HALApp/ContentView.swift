@@ -123,14 +123,14 @@ struct ContentView: View {
       model.resumeLinkedMacIfNeeded()
     }
     .confirmationDialog(
-      "Unlink this Mac?",
+      "Return to the fictional Mac?",
       isPresented: $unlinkConfirmationPresented,
       titleVisibility: .visible
     ) {
-      Button("Export Backup, then Unlink") {
+      Button("Export Backup, then Return") {
         exportAndUnlink()
       }
-      Button("Delete Compiled Data and Unlink", role: .destructive) {
+      Button("Delete Compiled Data and Return", role: .destructive) {
         unlinkWithoutBackup()
       }
       Button("Cancel", role: .cancel) {}
@@ -140,7 +140,7 @@ struct ContentView: View {
       )
     }
     .alert(
-      "Unable to Unlink",
+      "Unable to Return",
       isPresented: Binding(
         get: { unlinkError != nil },
         set: { if !$0 { unlinkError = nil } }
@@ -222,32 +222,35 @@ struct ContentView: View {
       }
 
       Divider()
-      HStack {
-        Image(systemName: model.isSynthetic ? "desktopcomputer" : "link")
-          .foregroundStyle(.secondary)
-        VStack(alignment: .leading, spacing: 2) {
-          Text(model.isSynthetic ? "Fictional profile" : "Linked to this Mac")
-            .font(.caption.weight(.semibold))
-          Text(model.isSynthetic ? "No machine access" : "Read-only application access")
-            .font(.caption2)
+      VStack(alignment: .leading, spacing: 10) {
+        HStack {
+          Image(systemName: model.isSynthetic ? "desktopcomputer" : "link")
             .foregroundStyle(.secondary)
+          VStack(alignment: .leading, spacing: 2) {
+            Text(model.isSynthetic ? "Fictional profile" : "Linked to this Mac")
+              .font(.caption.weight(.semibold))
+            Text(model.isSynthetic ? "No machine access" : "Read-only application access")
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+          }
+          Spacer()
+          if model.isSynthetic {
+            Button("Link") { model.linkToMac() }
+              .disabled(model.isCollecting)
+          }
         }
-        Spacer()
-        if model.isSynthetic {
-          Button("Link") { model.linkToMac() }
-            .disabled(model.isCollecting)
-        } else {
-          Menu {
-            Button("Check this Mac again") { model.refreshLiveData() }
-            Button("Unlink this Mac…", role: .destructive) {
+        if !model.isSynthetic {
+          HStack(spacing: 8) {
+            Button("Check again") { model.refreshLiveData() }
+            Button("Return to fictional Mac…") {
               unlinkConfirmationPresented = true
             }
-          } label: {
-            Image(systemName: "ellipsis.circle")
           }
+          .controlSize(.small)
+          .buttonStyle(.bordered)
           .disabled(model.isCollecting)
-          .menuStyle(.borderlessButton)
-          .frame(width: 24)
+          .accessibilityElement(children: .contain)
+          .accessibilityIdentifier("linkedDataActions")
         }
       }
       .padding(14)

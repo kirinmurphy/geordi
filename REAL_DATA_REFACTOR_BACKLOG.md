@@ -130,11 +130,11 @@ These items were recorded from the first linked-Mac product test on
   presenting repeated “Not retained” rows.
 - [ ] Show collector coverage and evidence counts in the application list or
   application header so users can tell that signing/provenance collection ran.
-- [ ] Add direct **Return to fictional Mac…** navigation beside the linked-data
+- [x] Add direct **Return to fictional Mac…** navigation beside the linked-data
   status. Do not hide the only return path inside an unlabeled ellipsis menu.
 - [ ] Keep the existing backup/delete/cancel confirmation after that action;
   returning to the fictional profile still unlinks the live data source.
-- [ ] Rename technical **Unlink this Mac** copy in user-facing navigation when
+- [x] Rename technical **Unlink this Mac** copy in user-facing navigation when
   the user’s goal is to return to the demo, while retaining “unlink” in the
   confirmation explanation.
 
@@ -270,7 +270,6 @@ These items were recorded from the first linked-Mac product test on
 
 ## Current next step
 
-Add direct **Return to fictional Mac…** navigation beside linked-data status,
-then add model/UI tests for link and refresh state transitions. Continue
+Add model/UI tests for link and refresh state transitions, then continue
 relevance-policy coverage for low-confidence and unmatched explanatory records
 before adding another collector.
