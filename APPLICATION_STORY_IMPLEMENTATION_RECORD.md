@@ -85,6 +85,15 @@ placing a summary above the same map, and creating a dedicated story surface.
 The dedicated story was selected because it directly tests whether HAL can
 explain an application without requiring users to decode the graph.
 
+### Homepage rows prioritize differences
+
+Entity summaries remain part of the atomic entity and detail/story views, but
+the homepage no longer repeats them beneath every entity name. Within a
+homepage section those summaries were nearly identical and made the inventory
+harder to scan. Rows now keep the distinguishing title, icon, and trailing
+fact; alert rows retain their explanatory subtitle because each alert message
+is materially different.
+
 ### Existing evidence only
 
 The story derives every claim from existing entity details, relationships,

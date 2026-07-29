@@ -674,7 +674,6 @@ private struct OverviewView: View {
                 symbol: application.presentation?.symbol ?? "app",
                 tint: application.presentation.map { color(for: $0.tint) } ?? .accentColor,
                 title: application.name,
-                subtitle: application.presentation?.subtitle ?? application.summary,
                 trailing: application.presentation?.trailingDetailLabel.flatMap {
                   detail($0, in: application)
                 } ?? model.applicationSourceLabel(application)
@@ -698,7 +697,6 @@ private struct OverviewView: View {
                 symbol: "shippingbox",
                 tint: EntityVisualStyle.color(for: software.type),
                 title: software.name,
-                subtitle: software.summary,
                 trailing: foundationTrailingDetail(software)
               ) { model.focus(software) }
             }
@@ -718,7 +716,6 @@ private struct OverviewView: View {
                 symbol: "terminal",
                 tint: EntityVisualStyle.color(for: software.type),
                 title: software.name,
-                subtitle: software.summary,
                 trailing: foundationTrailingDetail(software)
               ) { model.focus(software) }
             }
@@ -738,7 +735,6 @@ private struct OverviewView: View {
                 symbol: "cube.box",
                 tint: EntityVisualStyle.color(for: software.type),
                 title: software.name,
-                subtitle: software.summary,
                 trailing: foundationTrailingDetail(software)
               ) { model.focus(software) }
             }
@@ -768,7 +764,6 @@ private struct OverviewView: View {
                   symbol: "terminal",
                   tint: .secondary,
                   title: software.name,
-                  subtitle: detail("Discovered from", in: software) ?? software.summary,
                   trailing: detail("Package", in: software) ?? "Unclassified"
                 ) { model.focus(software) }
               }
@@ -792,7 +787,6 @@ private struct OverviewView: View {
                 symbol: "folder",
                 tint: .green,
                 title: file.name,
-                subtitle: managerSummary(for: file) ?? file.summary,
                 trailing:
                   model.isSynthetic
                   ? detail("Synthetic size", in: file) ?? ""
@@ -816,10 +810,6 @@ private struct OverviewView: View {
 
   private var applications: [Entity] {
     model.applications(in: model.selectedApplicationCategoryID)
-  }
-
-  private var allApplications: [Entity] {
-    model.applications(in: nil)
   }
 
   private var reclaimCandidates: [Entity] {
@@ -896,17 +886,6 @@ private struct OverviewView: View {
       return "\(packages) packages"
     }
     return ""
-  }
-
-  private func managerSummary(for file: Entity) -> String? {
-    guard
-      let relationship = model.fixture.relationships.first(where: {
-        $0.target == file.id && $0.type == .owns
-      }),
-      let manager = model.fixture.entity(relationship.source),
-      manager.type == .packageManager
-    else { return nil }
-    return "Managed by \(manager.name) · \(file.summary)"
   }
 
   private func detail(_ label: String, in entity: Entity) -> String? {
@@ -1392,7 +1371,7 @@ private struct InventoryRow: View {
   let symbol: String
   let tint: Color
   let title: String
-  let subtitle: String
+  var subtitle: String? = nil
   let trailing: String
   var applicationPath: String? = nil
   let action: () -> Void
@@ -1415,10 +1394,12 @@ private struct InventoryRow: View {
         VStack(alignment: .leading, spacing: 3) {
           Text(title)
             .font(.headline)
-          Text(subtitle)
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.leading)
+          if let subtitle {
+            Text(subtitle)
+              .font(.callout)
+              .foregroundStyle(.secondary)
+              .multilineTextAlignment(.leading)
+          }
         }
         Spacer()
         Text(trailing)
