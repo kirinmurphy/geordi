@@ -94,6 +94,9 @@ final class AppModel {
     case overview
     case storage
     case applications
+    case startup
+    case commandLine
+    case shellPath
     case filesystem
     case performance
     case entity(EntityID)
@@ -129,6 +132,7 @@ final class AppModel {
   var referencePresented = false
   var entityTypeReferencePresented: EntityType?
   var selectedApplicationCategoryID: String?
+  var selectedApplicationSourceID: String?
 
   init(
     configuration: AppConfiguration,
@@ -141,6 +145,7 @@ final class AppModel {
     self.configuration = configuration
     self.applicationClassifications = applicationClassifications
     selectedApplicationCategoryID = nil
+    selectedApplicationSourceID = nil
     self.syntheticProvider = syntheticProvider
     self.preferences = preferences
     self.userDataStore = userDataStore
@@ -189,19 +194,36 @@ final class AppModel {
 
   func applications(in categoryID: String?) -> [Entity] {
     let applications = fixture.entities.filter { $0.type == .application }
-    guard !isSynthetic, let categoryID, let applicationClassifications else {
+    guard !isSynthetic, let applicationClassifications else {
       return applications
     }
     return applications.filter { application in
       guard let path = application.details.first(where: { $0.label == "Path" })?.value else {
         return false
       }
-      return applicationClassifications.category(
-        forApplicationPath: path,
-        platformBinary: platformBinaryEvidence(for: application),
-        details: application.details
-      ).id == categoryID
+      let categoryMatches =
+        categoryID == nil
+        || applicationClassifications.category(
+          forApplicationPath: path,
+          platformBinary: platformBinaryEvidence(for: application),
+          details: application.details
+        ).id == categoryID
+      let sourceMatches =
+        selectedApplicationSourceID == nil
+        || applicationClassifications.source(
+          forApplicationPath: path,
+          platformBinary: platformBinaryEvidence(for: application),
+          details: application.details
+        )?.id == selectedApplicationSourceID
+      return categoryMatches && sourceMatches
     }
+  }
+
+  func showApplications(from sourceID: String) {
+    selectedApplicationCategoryID = nil
+    selectedApplicationSourceID =
+      selectedApplicationSourceID == sourceID ? nil : sourceID
+    destination = .overview
   }
 
   func applicationSourceLabel(_ application: Entity) -> String? {
@@ -210,11 +232,21 @@ final class AppModel {
       let path = application.details.first(where: { $0.label == "Path" })?.value,
       let applicationClassifications
     else { return nil }
-    return applicationClassifications.source(
-      forApplicationPath: path,
-      platformBinary: platformBinaryEvidence(for: application),
-      details: application.details
-    )?.label
+    guard
+      let source = applicationClassifications.source(
+        forApplicationPath: path,
+        platformBinary: platformBinaryEvidence(for: application),
+        details: application.details
+      )
+    else { return nil }
+    if source.id == "app-store",
+      let timing = application.details.first(where: { $0.label == "Installation timing" })?.value
+    {
+      return timing == "Present at setup"
+        ? "Present at setup · App Store managed"
+        : "\(timing) · App Store managed"
+    }
+    return source.label
   }
 
   var applicationScopeCounts: ApplicationScopeCounts {
@@ -465,7 +497,7 @@ final class AppModel {
 
   var presentedGraph: SystemGraph {
     switch destination {
-    case .overview, .filesystem:
+    case .overview, .filesystem, .shellPath:
       return fixture.filtered(to: [.application, .resource, .incident])
     case .storage:
       return isSynthetic
@@ -475,6 +507,10 @@ final class AppModel {
       return fixture.filtered(to: [
         .application, .packageManager, .shellFramework, .package, .persistence,
       ])
+    case .startup:
+      return fixture.filtered(to: [.application, .persistence, .process])
+    case .commandLine:
+      return fixture.filtered(to: [.packageManager, .shellFramework, .package, .process])
     case .performance:
       return isSynthetic
         ? fixture.neighborhood(around: "incident.build", depth: 2)
@@ -488,13 +524,11 @@ final class AppModel {
         around: id,
         depth: entity?.type == .packageManager ? 1 : 2
       )
-      guard
-        !isSynthetic,
-        entity?.type == .application,
-        let policy = displayPolicy?.context("applicationDetail")
-      else {
+      guard !isSynthetic else {
         return neighborhood
       }
+      let contextID = entity?.type == .application ? "applicationDetail" : "entityDetail"
+      guard let policy = displayPolicy?.context(contextID) else { return neighborhood }
       return DisplayPolicyPresenter().present(
         neighborhood,
         centeredOn: id,
@@ -508,6 +542,9 @@ final class AppModel {
     case .overview: ["Home"]
     case .storage: ["Home", "Storage"]
     case .applications: ["Home", "Installed software"]
+    case .startup: ["Home", "Startup activity"]
+    case .commandLine: ["Home", "Command-line environment"]
+    case .shellPath: ["Home", "Command-line environment", "PATH Visualizer"]
     case .filesystem: ["Home", "Filesystem Map"]
     case .performance: ["Home", "Performance"]
     case .entity(let id):
@@ -531,6 +568,8 @@ final class AppModel {
     case .storage:
       selection = isSynthetic ? GraphSelection(.entity("resource.storage")) : nil
     case .applications:
+      selection = nil
+    case .startup, .commandLine, .shellPath:
       selection = nil
     case .filesystem:
       selection = nil

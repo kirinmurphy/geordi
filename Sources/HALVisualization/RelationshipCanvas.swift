@@ -9,6 +9,7 @@ public struct RelationshipCanvas: View {
   @Binding public var selection: GraphSelection?
   @Binding public var focusedEntity: EntityID?
   private let configuration: LayoutConfiguration
+  private let isReadOnlyPreview: Bool
 
   @State private var scale = 1.0
   @State private var lastScale = 1.0
@@ -22,7 +23,8 @@ public struct RelationshipCanvas: View {
     visibleTypes: Set<EntityType>,
     selection: Binding<GraphSelection?>,
     focusedEntity: Binding<EntityID?>,
-    configuration: LayoutConfiguration
+    configuration: LayoutConfiguration,
+    isReadOnlyPreview: Bool = false
   ) {
     self.graph = graph
     self.layout = layout
@@ -30,28 +32,42 @@ public struct RelationshipCanvas: View {
     _selection = selection
     _focusedEntity = focusedEntity
     self.configuration = configuration
+    self.isReadOnlyPreview = isReadOnlyPreview
   }
 
   public var body: some View {
     GeometryReader { proxy in
       ZStack(alignment: .topLeading) {
-        Color(nsColor: .windowBackgroundColor)
-          .background(
-            ScrollWheelCapture { delta, zoomRequested in
-              if zoomRequested {
-                changeScale(by: delta.height * 0.01)
-              } else {
-                offset = CGSize(
-                  width: offset.width + delta.width,
-                  height: offset.height + delta.height
-                )
-                lastOffset = offset
+        Group {
+          if isReadOnlyPreview {
+            Color.clear
+          } else {
+            Color(nsColor: .windowBackgroundColor)
+          }
+        }
+        .background(
+          Group {
+            if !isReadOnlyPreview {
+              ScrollWheelCapture { delta, zoomRequested in
+                if zoomRequested {
+                  changeScale(by: delta.height * 0.01)
+                } else {
+                  offset = CGSize(
+                    width: offset.width + delta.width,
+                    height: offset.height + delta.height
+                  )
+                  lastOffset = offset
+                }
               }
-            })
+            }
+          })
         canvas
           .scaleEffect(scale, anchor: .topLeading)
           .offset(offset)
-          .gesture(panGesture.simultaneously(with: zoomGesture))
+          .gesture(
+            isReadOnlyPreview
+              ? nil : panGesture.simultaneously(with: zoomGesture)
+          )
           .onChange(of: focusedEntity) { _, entityID in
             guard let entityID, let point = layout.positions[entityID] else { return }
             scale = max(scale, 0.9)
@@ -62,8 +78,10 @@ public struct RelationshipCanvas: View {
             )
             lastOffset = offset
           }
-        controls
-        interactionLegend
+        if !isReadOnlyPreview {
+          controls
+          interactionLegend
+        }
       }
       .clipped()
       .onAppear {
@@ -74,6 +92,7 @@ public struct RelationshipCanvas: View {
       .onChange(of: proxy.size) { _, newSize in fitGraph(in: newSize) }
       .accessibilityElement(children: .contain)
       .accessibilityLabel("Relationship map")
+      .allowsHitTesting(!isReadOnlyPreview)
     }
   }
 

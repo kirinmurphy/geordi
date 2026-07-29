@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 5
+  public static let currentVersion = 6
 
   public let schemaVersion: Int
   public let allApplicationsLabel: String
@@ -105,12 +105,17 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
           continue
         }
       }
-      if category.pathPrefixes.contains(where: {
-        $0.matches(applicationURL, userHome: userHome)
-      }) || category.pathPrefixes.isEmpty {
-        guard category.detailRules.allSatisfy({ $0.matches(details) }) else {
-          continue
-        }
+      let pathMatches =
+        category.pathPrefixes.contains(where: {
+          $0.matches(applicationURL, userHome: userHome)
+        }) || category.pathPrefixes.isEmpty
+      let detailsMatch = category.detailRules.allSatisfy { $0.matches(details) }
+      let matches =
+        category.matchMode == .all
+        ? pathMatches && detailsMatch
+        : (category.pathPrefixes.isEmpty ? false : pathMatches)
+          || (category.detailRules.isEmpty ? false : detailsMatch)
+      if matches {
         return category
       }
     }
@@ -152,6 +157,10 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     case scope
     case source
   }
+  public enum MatchMode: String, Codable, Hashable, Sendable {
+    case all
+    case any
+  }
 
   public let id: String
   public let kind: Kind
@@ -162,6 +171,8 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
   public let platformBinaryWhenKnown: Bool?
   public let pathPrefixes: [ApplicationClassificationPathPrefix]
   public let detailRules: [ApplicationClassificationDetailRule]
+  public let showsInSoftwareSources: Bool
+  public let matchMode: MatchMode
 
   public init(
     id: String,
@@ -172,7 +183,9 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     isFallback: Bool,
     platformBinaryWhenKnown: Bool? = nil,
     pathPrefixes: [ApplicationClassificationPathPrefix],
-    detailRules: [ApplicationClassificationDetailRule] = []
+    detailRules: [ApplicationClassificationDetailRule] = [],
+    showsInSoftwareSources: Bool = false,
+    matchMode: MatchMode = .all
   ) {
     self.id = id
     self.kind = kind
@@ -183,6 +196,8 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     self.platformBinaryWhenKnown = platformBinaryWhenKnown
     self.pathPrefixes = pathPrefixes
     self.detailRules = detailRules
+    self.showsInSoftwareSources = showsInSoftwareSources
+    self.matchMode = matchMode
   }
 }
 

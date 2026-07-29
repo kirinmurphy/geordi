@@ -50,6 +50,8 @@ struct ContentView: View {
             )
           case .filesystem:
             FilesystemMapView(model: model)
+          case .shellPath:
+            ShellPathVisualizerView()
           case .entity(let id):
             if let entity = model.fixture.entity(id), entity.type == .application {
               ApplicationStoryView(model: model, application: entity)
@@ -645,7 +647,10 @@ private struct OverviewView: View {
                   "Software type",
                   selection: Binding(
                     get: { model.selectedApplicationCategoryID },
-                    set: { model.selectedApplicationCategoryID = $0 }
+                    set: {
+                      model.selectedApplicationCategoryID = $0
+                      model.selectedApplicationSourceID = nil
+                    }
                   )
                 ) {
                   Text(configuration.allApplicationsLabel).tag(String?.none)
@@ -684,52 +689,89 @@ private struct OverviewView: View {
           }
         }
 
-        if !packageManagers.isEmpty {
+        if !packageManagers.isEmpty || !softwareSourceCategories.isEmpty {
           inventorySection(
             title: "Software Sources",
             subtitle: "Package managers with their observed applications and packages",
             symbol: "shippingbox"
           ) {
             ForEach(Array(packageManagers.enumerated()), id: \.element.id) { index, manager in
-              if index > 0 { Divider() }
               let applications = managedItems(for: manager, type: .application)
               let packages = managedItems(for: manager, type: .package)
-              InventoryRow(
-                symbol: "shippingbox",
-                tint: EntityVisualStyle.color(for: .packageManager),
-                title: manager.name,
-                trailing: "\(applications.count + packages.count) managed"
-              ) { model.focus(manager) }
-              if !applications.isEmpty {
-                softwareKindHeader("Applications", symbol: "app.fill", tint: .blue)
-                ForEach(Array(applications.enumerated()), id: \.element.id) {
-                  childIndex, application in
-                  if childIndex > 0 { Divider().padding(.leading, 44) }
-                  InventoryRow(
-                    symbol: "app",
-                    tint: EntityVisualStyle.color(for: .application),
-                    title: application.name,
-                    trailing: "Application",
-                    applicationPath: detail("Path", in: application),
-                    compact: true
-                  ) { model.focus(application) }
-                  .padding(.leading, 12)
+              VStack(spacing: 0) {
+                InventoryRow(
+                  symbol: "shippingbox",
+                  tint: EntityVisualStyle.color(for: .packageManager),
+                  title: manager.name,
+                  trailing: "\(applications.count + packages.count) managed"
+                ) { model.focus(manager) }
+                .background(EntityVisualStyle.color(for: .packageManager).opacity(0.07))
+                if !applications.isEmpty {
+                  softwareKindHeader("Applications", symbol: "app.fill", tint: .blue)
+                  ForEach(applications) { application in
+                    InventoryRow(
+                      symbol: "app",
+                      tint: EntityVisualStyle.color(for: .application),
+                      title: application.name,
+                      trailing: "Application",
+                      applicationPath: detail("Path", in: application),
+                      compact: true
+                    ) { model.focus(application) }
+                    .padding(.leading, 22)
+                  }
+                }
+                if !packages.isEmpty {
+                  softwareKindHeader("Packages", symbol: "cube.box.fill", tint: .purple)
+                  ForEach(packages) { package in
+                    InventoryRow(
+                      symbol: "cube.box",
+                      tint: EntityVisualStyle.color(for: .package),
+                      title: package.name,
+                      trailing: "Package",
+                      compact: true
+                    ) { model.focus(package) }
+                    .padding(.leading, 22)
+                  }
                 }
               }
-              if !packages.isEmpty {
-                softwareKindHeader("Packages", symbol: "cube.box.fill", tint: .purple)
-                ForEach(Array(packages.enumerated()), id: \.element.id) { childIndex, package in
-                  if childIndex > 0 { Divider().padding(.leading, 44) }
-                  InventoryRow(
-                    symbol: "cube.box",
-                    tint: EntityVisualStyle.color(for: .package),
-                    title: package.name,
-                    trailing: "Package",
-                    compact: true
-                  ) { model.focus(package) }
-                  .padding(.leading, 12)
+              .overlay {
+                Rectangle()
+                  .stroke(Color.secondary.opacity(0.24), lineWidth: 1)
+              }
+              .padding(.vertical, 5)
+              if index < packageManagers.count - 1 {
+                Spacer().frame(height: 5)
+              }
+            }
+            ForEach(softwareSourceCategories) { source in
+              let sourceApplications = applications(from: source)
+              VStack(spacing: 0) {
+                InventoryRow(
+                  symbol: "apple.logo",
+                  tint: .blue,
+                  title: source.label,
+                  trailing: "\(sourceApplications.count) applications"
+                ) { model.showApplications(from: source.id) }
+                .background(.blue.opacity(0.07))
+                if !sourceApplications.isEmpty {
+                  softwareKindHeader("Applications", symbol: "app.fill", tint: .blue)
+                  ForEach(sourceApplications) { application in
+                    InventoryRow(
+                      symbol: "app",
+                      tint: EntityVisualStyle.color(for: .application),
+                      title: application.name,
+                      trailing: "Application",
+                      applicationPath: detail("Path", in: application),
+                      compact: true
+                    ) { model.focus(application) }
+                    .padding(.leading, 22)
+                  }
                 }
               }
+              .overlay {
+                Rectangle().stroke(Color.secondary.opacity(0.24), lineWidth: 1)
+              }
+              .padding(.vertical, 5)
             }
           }
         }
@@ -824,6 +866,34 @@ private struct OverviewView: View {
     model.applications(in: model.selectedApplicationCategoryID)
   }
 
+  private var softwareSourceCategories: [ApplicationClassificationCategory] {
+    guard !model.isSynthetic, let configuration = model.applicationClassifications else {
+      return []
+    }
+    return configuration.categories.filter {
+      $0.kind == .source && $0.showsInSoftwareSources
+    }
+  }
+
+  private func applications(
+    from source: ApplicationClassificationCategory
+  ) -> [Entity] {
+    guard let configuration = model.applicationClassifications else { return [] }
+    return model.fixture.entities.filter { application in
+      guard
+        application.type == .application,
+        let path = detail("Path", in: application)
+      else { return false }
+      return configuration.source(
+        forApplicationPath: path,
+        platformBinary: nil,
+        details: application.details
+      )?.id == source.id
+    }.sorted {
+      $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+    }
+  }
+
   private var reclaimCandidates: [Entity] {
     if !model.isSynthetic {
       return model.fixture.entities.filter {
@@ -881,11 +951,13 @@ private struct OverviewView: View {
       .font(.halSmall.bold())
       .foregroundStyle(tint)
       .textCase(.uppercase)
-      .padding(.horizontal, 10)
+      .padding(.horizontal, 16)
       .padding(.vertical, 6)
       .frame(maxWidth: .infinity, alignment: .leading)
-      .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
-      .padding(.top, 4)
+      .background(tint.opacity(0.14))
+      .overlay(alignment: .leading) {
+        Rectangle().fill(tint.opacity(0.75)).frame(width: 4)
+      }
   }
 
   private var commandLineSoftware: [Entity] {
@@ -1416,6 +1488,7 @@ private struct InventoryRow: View {
   var applicationPath: String? = nil
   var compact = false
   let action: () -> Void
+  @State private var isHovering = false
 
   var body: some View {
     Button(action: action) {
@@ -1450,10 +1523,24 @@ private struct InventoryRow: View {
           .font(.halSmall.bold())
           .foregroundStyle(.tertiary)
       }
+      .padding(.horizontal, 16)
       .padding(.vertical, compact ? 6 : 11)
+      .frame(maxWidth: .infinity)
+      .background(
+        isHovering
+          ? Color.accentColor.opacity(compact ? 0.14 : 0.11)
+          : (compact ? Color.secondary.opacity(0.025) : Color.clear)
+      )
+      .overlay(alignment: .bottom) {
+        Rectangle()
+          .fill(Color.secondary.opacity(isHovering ? 0.3 : 0.16))
+          .frame(height: 1)
+      }
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .padding(.horizontal, -16)
+    .onHover { isHovering = $0 }
   }
 }
 
@@ -2130,6 +2217,9 @@ struct AtlasDetailView: View {
     switch model.destination {
     case .storage: "What could be safely removed?"
     case .applications: "What software is installed?"
+    case .startup: "What starts automatically?"
+    case .commandLine: "How is the command-line environment assembled?"
+    case .shellPath: "How does the shell build PATH?"
     case .filesystem: "Where does observed software live?"
     case .performance:
       model.isSynthetic ? "What changed during the memory spike?" : "What is running now?"
@@ -2152,6 +2242,12 @@ struct AtlasDetailView: View {
       } else {
         "HAL observed \(model.applicationScopeCounts.total) application bundles in the configured read-only search roots."
       }
+    case .startup:
+      "Startup declarations are shown separately from running processes. A declaration means software may start automatically; it does not prove the software is running now."
+    case .commandLine:
+      "Package managers, packages, shell frameworks, and observed processes are connected by retained ownership and runtime evidence."
+    case .shellPath:
+      "Analyze explicitly pasted shell configuration as a deterministic sequence. Variables HAL cannot resolve remain visible instead of being guessed."
     case .filesystem:
       "A curated hierarchy of explanatory locations and observed paths; HAL has not indexed the whole disk."
     case .performance:

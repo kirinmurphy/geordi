@@ -48,14 +48,14 @@ struct ApplicationClassificationConfigurationTests {
         forApplicationPath: "/System/Applications/Calendar.app",
         platformBinary: false,
         userHome: home
-      ).id == "other"
+      ).id == "bundled-software"
     )
     #expect(
       configuration.category(
         forApplicationPath: "/Applications/Platform.app",
         platformBinary: true,
         userHome: home
-      ).id == "bundled-software"
+      ).id == "other"
     )
     #expect(
       configuration.category(
@@ -71,7 +71,7 @@ struct ApplicationClassificationConfigurationTests {
         platformBinary: true,
         details: [Detail("App Store receipt", "Present")],
         userHome: home
-      ).id == "bundled-software"
+      ).id == "other"
     )
     #expect(
       configuration.category(
@@ -104,9 +104,29 @@ struct ApplicationClassificationConfigurationTests {
         details: [
           Detail("Bundle identifier", "com.apple.Keynote"),
           Detail("App Store receipt", "Present"),
+          Detail("Installation timing", "Present at setup"),
         ],
         userHome: home
-      ).id == "apple-applications"
+      ).id == "bundled-software"
+    )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/Applications/Pages.app",
+        platformBinary: false,
+        details: [
+          Detail("App Store receipt", "Present"),
+          Detail("Installation timing", "Added after setup"),
+        ],
+        userHome: home
+      ).id == "user-installed"
+    )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/Applications/Unknown.app",
+        platformBinary: false,
+        details: [Detail("Installation timing", "Unknown")],
+        userHome: home
+      ).id == "installation-timing-unknown"
     )
   }
 
@@ -115,7 +135,7 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 5,
+        "schemaVersion": 6,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
@@ -128,6 +148,8 @@ struct ApplicationClassificationConfigurationTests {
           "platformBinaryWhenKnown": null,
           "pathPrefixes": [],
           "detailRules": [],
+          "showsInSoftwareSources": false,
+          "matchMode": "all",
           "color": "gray"
         }]
       }
@@ -148,7 +170,7 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 5,
+        "schemaVersion": 6,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{
@@ -160,7 +182,9 @@ struct ApplicationClassificationConfigurationTests {
           "isFallback": false,
           "platformBinaryWhenKnown": false,
           "pathPrefixes": [{ "path": "/Applications", "scope": "system" }],
-          "detailRules": []
+          "detailRules": [],
+          "showsInSoftwareSources": false,
+          "matchMode": "all"
         }]
       }
       """.utf8

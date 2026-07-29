@@ -7,6 +7,31 @@ These items should improve questions users can answer. They are not
 authorization to add broad history, arbitrary command execution, or unbounded
 filesystem scanning.
 
+## Active completion milestone — product refinement
+
+- [x] Strengthen manager, section, and nested-row hierarchy across Software
+  Sources and other hierarchical lists.
+- [x] Reuse the relationship explorer renderer for the read-only application
+  preview, with the whole preview opening the full explorer.
+- [x] Keep the full relationship-map action inside the evidence card; move
+  filesystem and path actions to the page context where they belong.
+- [x] Make the global path action look like underlined path text with one
+  unambiguous menu affordance.
+- [x] Derive **Bundled** versus **User installed** from bounded setup-time
+  evidence, including “Present at setup · App Store managed,” while preserving
+  an honest unknown state.
+- [x] Represent App Store-managed applications as a Software Source alongside
+  package managers, without conflating applications and packages.
+- [x] Give every “What do you want to understand?” choice a destination that
+  explains that question instead of sending several choices to the same page.
+- [x] Keep high-fan-out relationship maps readable by grouping or summarizing
+  large repeated branches without hiding the full evidence.
+- [x] Apply a glossary-aware tooltip treatment to domain language, beginning
+  with **bundle installer**, and inventory the remaining domain-specific terms.
+- [x] Implement the deterministic first slice of the shell/PATH visualizer
+  described in `SHELL_PATH_VISUALIZER_PLAN.md`, with explicit uncertainty and
+  no implicit collection of shell-file contents.
+
 ## Priority 1 — Explain shell frameworks installed outside package managers
 
 Implementation status: completed in the current development boundary; linked

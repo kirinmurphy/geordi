@@ -1,5 +1,9 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "setupEvidence": {
+    "path": "/var/db/.AppleSetupDone",
+    "toleranceSeconds": 300
+  },
   "roots": [
     {
       "id": "system-applications",

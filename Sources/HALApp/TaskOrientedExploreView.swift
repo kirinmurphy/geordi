@@ -42,7 +42,7 @@ struct TaskOrientedExploreView: View {
           explanation: "Trace startup declarations to the software they may activate.",
           symbol: "power"
         ) {
-          model.navigate(to: .applications)
+          model.navigate(to: .startup)
         }
         questionCard(
           "Explore reclaimable data",
@@ -56,7 +56,15 @@ struct TaskOrientedExploreView: View {
           explanation: "Find runtimes, packages, ownership, aliases, and unclassified commands.",
           symbol: "terminal"
         ) {
-          model.navigate(to: .applications)
+          model.navigate(to: .commandLine)
+        }
+        questionCard(
+          "Visualize shell PATH",
+          explanation:
+            "Paste a shell profile and trace source, prepend, append, and replacement operations.",
+          symbol: "point.3.connected.trianglepath.dotted"
+        ) {
+          model.navigate(to: .shellPath)
         }
         questionCard(
           "Understand where software lives",
@@ -89,10 +97,9 @@ struct TaskOrientedExploreView: View {
         Text(title)
           .font(.halRowTitle)
           .multilineTextAlignment(.leading)
-        Text(explanation)
+        GlossaryAwareText(explanation, context: "overview")
           .font(.halSecondary)
           .foregroundStyle(.secondary)
-          .multilineTextAlignment(.leading)
         Spacer(minLength: 0)
         Label("Explore", systemImage: "arrow.right")
           .font(.halSmall.bold())

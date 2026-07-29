@@ -14,6 +14,15 @@ struct ExplorationConfigurationTests {
     #expect(glossary.term(matchingExactAlias: "Bundle identifier")?.id == "bundle-identifier")
     #expect(glossary.term(matchingExactAlias: "Application bundles")?.id == "application-bundle")
     #expect(glossary.term(matchingExactAlias: "process id") == nil)
+    #expect(
+      glossary.tokens(
+        in: "A bundle installer can add an application bundle.",
+        context: "overview"
+      ).contains {
+        if case .term(_, let term) = $0 { return term.id == "bundle-installer" }
+        return false
+      }
+    )
 
     let invalid = """
       {"schemaVersion":1,"hoverDelayMilliseconds":700,"terms":[],"extra":true}

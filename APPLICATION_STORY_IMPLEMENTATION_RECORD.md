@@ -140,6 +140,35 @@ validated manifest. Swift implements generic presentation and navigation.
 - Record a go, revise, or stop decision. Evaluation sessions require real
   participants and are not claimed by implementation completion.
 
+## July 29 product-refinement boundary
+
+The application story now embeds the exact relationship-canvas renderer in a
+read-only preview. Its entire surface opens the full explorer, while the
+relationship-map action stays inside the evidence card and filesystem/path
+actions sit in page context.
+
+The story header cross-checks the point-in-time process graph with
+`NSWorkspace` bundle identity for the live status badge. This keeps an
+observably running application from appearing offline when process resolution
+is incomplete; it does not rewrite retained graph evidence.
+
+Application grouping now treats installation source and installation timing as
+separate facts. A versioned application-search manifest declares the bounded
+Mac setup marker and tolerance. Bundle creation relative to that marker yields
+**Present at setup**, **Added after setup**, or **Unknown**. Classification can
+therefore show **Bundled Software** independently from **App Store managed**,
+including “Present at setup · App Store managed.”
+
+The App Store is also exposed as a manifest-selected Software Source with
+clickable application children. Package-manager applications and packages
+remain distinct owned entity types.
+
+The completed refinement boundary passed strict formatting, 140 tests across
+27 suites, all seven synthetic-profile validations, Debug build, native bundle
+packaging, and UI bundle smoke validation. The verified build was installed at
+`~/Applications/HAL.app` and launched; automated window inspection remained
+unavailable because System Events does not have Accessibility access.
+
 ## Commits
 
 - `9c23038` — Application Story, task-oriented home, guided fictional proof,

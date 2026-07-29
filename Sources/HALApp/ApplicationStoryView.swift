@@ -102,20 +102,33 @@ struct ApplicationStoryView: View {
   }
 
   private var statusBadge: some View {
+    let status: ApplicationStoryModel.Status =
+      story.status == .offline && isRunningInWorkspace ? .running : story.status
     let color: Color =
-      switch story.status {
+      switch status {
       case .running: .green
       case .offline: .gray
       case .warnings: .orange
       case .unhealthy: .red
       }
-    return Text(story.status.label)
+    return Text(status.label)
       .font(.halSmall.bold())
       .foregroundStyle(.white)
       .padding(.horizontal, 9)
       .padding(.vertical, 4)
       .background(color, in: Capsule())
-      .accessibilityLabel("Application status: \(story.status.label)")
+      .accessibilityLabel("Application status: \(status.label)")
+  }
+
+  private var isRunningInWorkspace: Bool {
+    guard
+      let bundleIdentifier = application.details.first(where: {
+        $0.label == "Bundle identifier"
+      })?.value
+    else { return false }
+    return NSWorkspace.shared.runningApplications.contains {
+      $0.bundleIdentifier == bundleIdentifier && !$0.isTerminated
+    }
   }
 
   private func evidenceExplanation(_ relationship: Relationship) -> String {
@@ -147,6 +160,16 @@ struct ApplicationStoryView: View {
           .padding(12)
           .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
         }
+      }
+      if let path = application.details.first(where: { $0.label == "Path" })?.value {
+        HStack(alignment: .firstTextBaseline) {
+          Text("Application path")
+            .foregroundStyle(.secondary)
+          Spacer()
+          PathActionMenu(path: path)
+        }
+        .padding(12)
+        .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
       }
     }
   }
@@ -212,45 +235,46 @@ struct ApplicationStoryView: View {
 
   private var exploreSection: some View {
     VStack(alignment: .leading, spacing: 12) {
-      sectionTitle("Explore the evidence", symbol: "safari")
-      Text(
-        "The story is the summary. Open the preview for the full node explorer and inspector."
-      )
-      .foregroundStyle(.secondary)
-      Button {
-        showsRelationshipMap = true
-      } label: {
-        VStack(alignment: .leading, spacing: 4) {
-          ApplicationRelationshipPreview(
-            graph: model.presentedGraph,
-            layout: model.layout,
-            applicationID: application.id
-          )
-          HStack {
-            Spacer()
-            Label("Open full relationship map", systemImage: "arrow.up.right")
-              .font(.halSmall.weight(.semibold))
-          }
-        }
-        .contentShape(Rectangle())
-      }
-      .buttonStyle(.plain)
-      .help("Open the full relationship map")
-      .accessibilityLabel("Open the full relationship map for \(application.name)")
-      HStack {
+      VStack(alignment: .leading, spacing: 12) {
+        sectionTitle("Explore the evidence", symbol: "safari")
+        GlossaryAwareText(
+          "The story is the summary. Open the preview for the full node explorer and inspector.",
+          context: "evidence"
+        )
+        .foregroundStyle(.secondary)
         Button {
-          model.navigate(to: .filesystem)
+          showsRelationshipMap = true
         } label: {
-          Label("Open Filesystem Map", systemImage: "folder.badge.gearshape")
+          VStack(alignment: .leading, spacing: 4) {
+            ApplicationRelationshipPreview(
+              graph: model.presentedGraph,
+              layout: model.layout,
+              applicationID: application.id,
+              configuration: model.configuration.layout
+            )
+            HStack {
+              Spacer()
+              Label("Open full relationship map", systemImage: "arrow.up.right")
+                .font(.halSmall.weight(.semibold))
+            }
+          }
+          .contentShape(Rectangle())
         }
-        .buttonStyle(.bordered)
-        if let path = application.details.first(where: { $0.value.hasPrefix("/") })?.value {
-          PathActionMenu(path: path)
-        }
+        .buttonStyle(.plain)
+        .help("Open the full relationship map")
+        .accessibilityLabel("Open the full relationship map for \(application.name)")
       }
+      .padding(18)
+      .background(.blue.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
+
+      Button {
+        model.navigate(to: .filesystem)
+      } label: {
+        Label("Open Filesystem Map", systemImage: "folder.badge.gearshape")
+      }
+      .buttonStyle(.bordered)
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(18)
-    .background(.blue.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
   }
 
   private func sectionTitle(_ title: String, symbol: String) -> some View {

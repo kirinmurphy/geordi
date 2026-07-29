@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "maximumLines": 500,
+  "startupFiles": [
+    { "id": "zprofile", "label": "Zsh login profile", "path": "~/.zprofile", "order": 100 },
+    { "id": "zshrc", "label": "Zsh interactive profile", "path": "~/.zshrc", "order": 200 },
+    { "id": "bash-profile", "label": "Bash login profile", "path": "~/.bash_profile", "order": 300 },
+    { "id": "bashrc", "label": "Bash interactive profile", "path": "~/.bashrc", "order": 400 }
+  ]
+}

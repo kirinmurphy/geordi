@@ -1176,6 +1176,22 @@ public struct ApplicationGraphProjector: Sendable {
     if let executableName = value.executableName {
       details.append(Detail("Executable", executableName))
     }
+    if let bundleCreatedAt = value.bundleCreatedAt, let setupCompletedAt = value.setupCompletedAt {
+      let tolerance = TimeInterval(value.setupToleranceSeconds ?? 0)
+      let timing =
+        bundleCreatedAt <= setupCompletedAt.addingTimeInterval(tolerance)
+        ? "Present at setup" : "Added after setup"
+      details.append(Detail("Installation timing", timing))
+      details.append(
+        Detail(
+          "Timing evidence",
+          timing == "Present at setup"
+            ? "Bundle existed when Mac setup completed"
+            : "Bundle was created after Mac setup completed"
+        ))
+    } else {
+      details.append(Detail("Installation timing", "Unknown"))
+    }
     if let signature {
       details.append(Detail("Signature", signature.status.rawValue.capitalized))
       if let signingIdentifier = signature.signingIdentifier {

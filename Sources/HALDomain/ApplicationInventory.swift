@@ -7,6 +7,9 @@ public struct ApplicationBundleValue: Hashable, Codable, Sendable {
   public let version: String?
   public let buildVersion: String?
   public let executableName: String?
+  public let bundleCreatedAt: Date?
+  public let setupCompletedAt: Date?
+  public let setupToleranceSeconds: Int?
 
   public init(
     path: String,
@@ -14,7 +17,10 @@ public struct ApplicationBundleValue: Hashable, Codable, Sendable {
     bundleIdentifier: String? = nil,
     version: String? = nil,
     buildVersion: String? = nil,
-    executableName: String? = nil
+    executableName: String? = nil,
+    bundleCreatedAt: Date? = nil,
+    setupCompletedAt: Date? = nil,
+    setupToleranceSeconds: Int? = nil
   ) {
     self.path = path
     self.name = name
@@ -22,6 +28,9 @@ public struct ApplicationBundleValue: Hashable, Codable, Sendable {
     self.version = version
     self.buildVersion = buildVersion
     self.executableName = executableName
+    self.bundleCreatedAt = bundleCreatedAt
+    self.setupCompletedAt = setupCompletedAt
+    self.setupToleranceSeconds = setupToleranceSeconds
   }
 }
 

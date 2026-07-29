@@ -10,7 +10,7 @@ struct ApplicationCollectorConfigurationTests {
     let userHome = URL(filePath: "/Users/example", directoryHint: .isDirectory)
     let roots = try configuration.searchRoots(userHome: userHome)
 
-    #expect(configuration.schemaVersion == 1)
+    #expect(configuration.schemaVersion == 2)
     #expect(
       roots.map(\.url.path) == [
         "/Applications",

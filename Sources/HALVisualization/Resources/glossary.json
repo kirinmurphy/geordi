@@ -17,6 +17,11 @@
     {"id":"observed-evidence","displayTerm":"Observed","description":"A fact HAL directly read from an allowed source.","aliases":["OBSERVED FACT"],"contexts":["evidence"]},
     {"id":"derived-evidence","displayTerm":"Derived","description":"A value computed deterministically from observed facts.","aliases":[],"contexts":["evidence"]},
     {"id":"inferred-evidence","displayTerm":"Inferred","description":"A reasoned relationship that retains uncertainty and supporting evidence.","aliases":["HAL INFERENCE"],"contexts":["evidence"]},
-    {"id":"user-decided","displayTerm":"User-decided","description":"A choice made explicitly by the user rather than observed by HAL.","aliases":[],"contexts":["evidence"]}
+    {"id":"user-decided","displayTerm":"User-decided","description":"A choice made explicitly by the user rather than observed by HAL.","aliases":[],"contexts":["evidence"]},
+    {"id":"bundle-installer","displayTerm":"Bundle installer","description":"An installer that delivers a macOS application bundle rather than only a command-line package.","explanation":"The application and the package or receipt that installed it remain distinct records in HAL.","aliases":["bundle installers"],"contexts":["all"]},
+    {"id":"app-store-receipt","displayTerm":"App Store receipt","description":"A receipt inside an application bundle indicating that the Mac App Store manages that copy.","aliases":[],"contexts":["all"]},
+    {"id":"path","displayTerm":"PATH","description":"The ordered list of directories a shell searches when resolving a command name.","aliases":[],"contexts":["overview","shell"]},
+    {"id":"shell-profile","displayTerm":"Shell profile","description":"A shell startup file that can set variables, source other files, and change PATH.","aliases":["shell profiles","shell configuration"],"contexts":["overview","shell"]},
+    {"id":"cask","displayTerm":"Cask","description":"Homebrew's packaging model for macOS applications and other non-formula artifacts.","aliases":["Casks","Homebrew cask"],"contexts":["all"]}
   ]
 }

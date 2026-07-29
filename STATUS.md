@@ -9,6 +9,11 @@ observed user behavior.
 
 Future Phase 6, Observation History, is deliberately parked.
 
+The July 29 product-refinement backlog is implemented: hierarchical Software
+Sources, setup-time application grouping, shared relationship previews,
+question-specific exploration routes, high-fan-out grouping, glossary-aware
+prose, and the deterministic paste-only shell/PATH visualizer.
+
 ## Current milestone
 
 Run at least three Application Story evaluation sessions and make a go, revise,
@@ -109,12 +114,22 @@ persistence infrastructure.
   activity, source, startup behavior, associations, uncertainty, and next steps
 - A replayable, keyboard-accessible fictional walkthrough driven by a validated
   presentation manifest
+- Expanded Software Sources with separately clickable managers, application
+  and package strips, nested managed items, and an App Store application source
+- Bundled versus User-installed classification derived from bounded bundle
+  creation and Mac setup-marker evidence, with an explicit unknown category
+- Read-only application mini-maps rendered by the same canvas as the full node
+  explorer
+- Manifest-driven relationship grouping for dense, high-fan-out entity maps
+- Glossary-aware prose rendering plus a domain-language audit
+- A schema-backed, deterministic shell/PATH analyzer and paste-only visualizer
+  that does not implicitly read shell configuration
 
 ## Implementation state
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 134 deterministic tests plus fixture and bundle validation
+- Test harness: 140 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 3 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks

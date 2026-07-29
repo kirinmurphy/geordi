@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "allApplicationsLabel": "All Applications",
   "defaultCategoryID": "user-installed",
   "categories": [
@@ -15,47 +15,31 @@
         { "path": "/System/Applications/Utilities", "scope": "system" },
         { "path": "/System/Library/CoreServices", "scope": "system" }
       ],
-      "detailRules": []
+      "detailRules": [],
+      "showsInSoftwareSources": false,
+      "matchMode": "all"
     },
     {
       "id": "bundled-software",
       "kind": "scope",
       "label": "Bundled Software",
-      "summary": "Applications included in macOS system locations.",
+      "summary": "Applications in macOS system locations or observed on this Mac at setup.",
       "priority": 290,
-      "isFallback": false,
-      "platformBinaryWhenKnown": true,
-      "pathPrefixes": [
-        { "path": "/System/Applications", "scope": "system" },
-        { "path": "/Applications", "scope": "system" }
-      ],
-      "detailRules": []
-    },
-    {
-      "id": "apple-applications",
-      "kind": "scope",
-      "label": "Apple Applications",
-      "summary": "Apple applications managed through the App Store; current evidence does not establish whether they were preloaded or later installed.",
-      "priority": 350,
       "isFallback": false,
       "platformBinaryWhenKnown": null,
       "pathPrefixes": [
-        { "path": "/Applications", "scope": "system" }
+        { "path": "/System/Applications", "scope": "system" }
       ],
       "detailRules": [
         {
-          "label": "Bundle identifier",
-          "equals": null,
-          "startsWith": "com.apple.",
-          "excludes": []
-        },
-        {
-          "label": "App Store receipt",
-          "equals": "Present",
+          "label": "Installation timing",
+          "equals": "Present at setup",
           "startsWith": null,
           "excludes": []
         }
-      ]
+      ],
+      "showsInSoftwareSources": false,
+      "matchMode": "any"
     },
     {
       "id": "homebrew-cask",
@@ -71,7 +55,9 @@
         "equals": null,
         "startsWith": "Homebrew cask ",
         "excludes": []
-      }]
+      }],
+      "showsInSoftwareSources": false,
+      "matchMode": "all"
     },
     {
       "id": "app-store",
@@ -87,7 +73,9 @@
         "equals": "Present",
         "startsWith": null,
         "excludes": []
-      }]
+      }],
+      "showsInSoftwareSources": true,
+      "matchMode": "all"
     },
     {
       "id": "downloaded",
@@ -103,7 +91,27 @@
         "equals": null,
         "startsWith": null,
         "excludes": ["Not observed", "Unavailable — metadata could not be read"]
-      }]
+      }],
+      "showsInSoftwareSources": false,
+      "matchMode": "all"
+    },
+    {
+      "id": "installation-timing-unknown",
+      "kind": "scope",
+      "label": "Installation Timing Unknown",
+      "summary": "Applications for which setup-time filesystem evidence was unavailable.",
+      "priority": 200,
+      "isFallback": false,
+      "platformBinaryWhenKnown": null,
+      "pathPrefixes": [],
+      "detailRules": [{
+        "label": "Installation timing",
+        "equals": "Unknown",
+        "startsWith": null,
+        "excludes": []
+      }],
+      "showsInSoftwareSources": false,
+      "matchMode": "all"
     },
     {
       "id": "user-installed",
@@ -117,7 +125,9 @@
         { "path": "/Applications", "scope": "system" },
         { "path": "$USER_HOME/Applications", "scope": "user" }
       ],
-      "detailRules": []
+      "detailRules": [],
+      "showsInSoftwareSources": false,
+      "matchMode": "all"
     },
     {
       "id": "other",
@@ -128,7 +138,9 @@
       "isFallback": true,
       "platformBinaryWhenKnown": null,
       "pathPrefixes": [],
-      "detailRules": []
+      "detailRules": [],
+      "showsInSoftwareSources": false,
+      "matchMode": "all"
     }
   ]
 }

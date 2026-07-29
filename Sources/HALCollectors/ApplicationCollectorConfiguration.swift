@@ -2,17 +2,21 @@ import Foundation
 import HALManifestKit
 
 public struct ApplicationCollectorConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
   public let roots: [ApplicationSearchRootConfiguration]
+  public let setupEvidence: ApplicationSetupEvidenceConfiguration
 
   public init(
     schemaVersion: Int = Self.currentVersion,
-    roots: [ApplicationSearchRootConfiguration]
+    roots: [ApplicationSearchRootConfiguration],
+    setupEvidence: ApplicationSetupEvidenceConfiguration = .init(
+      path: "/var/db/.AppleSetupDone", toleranceSeconds: 300)
   ) {
     self.schemaVersion = schemaVersion
     self.roots = roots
+    self.setupEvidence = setupEvidence
   }
 
   public static func bundled() throws -> Self {
@@ -58,6 +62,12 @@ public struct ApplicationCollectorConfiguration: Codable, Hashable, Sendable {
       guard Set(configuration.roots.map(\.id)).count == configuration.roots.count else {
         throw ApplicationCollectorConfigurationError.duplicateRootID
       }
+      guard
+        configuration.setupEvidence.path.hasPrefix("/"),
+        !configuration.setupEvidence.path.split(separator: "/").contains("..")
+      else {
+        throw ApplicationCollectorConfigurationError.invalidPath("setup-evidence")
+      }
       return configuration
     } catch let error as ApplicationCollectorConfigurationError {
       throw error
@@ -76,6 +86,18 @@ public struct ApplicationCollectorConfiguration: Codable, Hashable, Sendable {
       )
     }
   }
+}
+
+public struct ApplicationSetupEvidenceConfiguration: Codable, Hashable, Sendable {
+  public let path: String
+  public let toleranceSeconds: Int
+
+  public init(path: String, toleranceSeconds: Int) {
+    self.path = path
+    self.toleranceSeconds = toleranceSeconds
+  }
+
+  public var url: URL { URL(filePath: path).standardizedFileURL }
 }
 
 public struct ApplicationSearchRootConfiguration: Codable, Hashable, Sendable {

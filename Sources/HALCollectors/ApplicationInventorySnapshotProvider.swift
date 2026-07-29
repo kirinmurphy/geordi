@@ -24,6 +24,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public init(
     scanID: ScanID,
     roots: [ApplicationSearchRoot],
+    setupEvidence: ApplicationSetupEvidenceConfiguration? = nil,
     provenanceConfiguration: ApplicationProvenanceConfiguration,
     associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration,
     rebuildableDataConfiguration: RebuildableDataConfiguration? = nil,
@@ -49,7 +50,12 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     clock: any HALClock = SystemClock()
   ) {
     self.scanID = scanID
-    collector = ApplicationBundleCollector(roots: roots, clock: clock)
+    collector = ApplicationBundleCollector(
+      roots: roots,
+      setupMarkerURL: setupEvidence?.url,
+      setupTolerance: TimeInterval(setupEvidence?.toleranceSeconds ?? 300),
+      clock: clock
+    )
     signatureCollector = ApplicationSignatureCollector(
       inspector: signatureInspector,
       clock: clock
@@ -133,6 +139,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     try self.init(
       scanID: scanID,
       roots: configuration.searchRoots(userHome: userHome),
+      setupEvidence: configuration.setupEvidence,
       provenanceConfiguration: provenanceConfiguration,
       associatedLocationConfiguration: associatedLocationConfiguration,
       rebuildableDataConfiguration: rebuildableDataConfiguration,

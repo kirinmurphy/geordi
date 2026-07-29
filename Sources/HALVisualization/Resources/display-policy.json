@@ -8,12 +8,16 @@
         {
           "type": "launches",
           "priority": 100,
-          "minimumConfidence": "possible"
+          "minimumConfidence": "possible",
+          "groupAfter": 6,
+          "groupLabel": "running components"
         },
         {
           "type": "persists through",
           "priority": 90,
-          "minimumConfidence": "possible"
+          "minimumConfidence": "possible",
+          "groupAfter": 6,
+          "groupLabel": "startup declarations"
         },
         {
           "type": "may belong to",
@@ -22,6 +26,22 @@
           "groupAfter": 3,
           "groupLabel": "support locations"
         }
+      ]
+    },
+    {
+      "id": "entityDetail",
+      "nodeBudget": 16,
+      "relationships": [
+        { "type": "owns", "priority": 100, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "owned items" },
+        { "type": "provides", "priority": 95, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "provided items" },
+        { "type": "launches", "priority": 90, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "launched items" },
+        { "type": "persists through", "priority": 85, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "startup declarations" },
+        { "type": "reads and writes", "priority": 80, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "filesystem locations" },
+        { "type": "consumes", "priority": 70, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "resources" },
+        { "type": "contributes to", "priority": 65, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "effects" },
+        { "type": "occurred near", "priority": 60, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "nearby events" },
+        { "type": "may belong to", "priority": 55, "minimumConfidence": "high", "groupAfter": 6, "groupLabel": "associated items" },
+        { "type": "shares", "priority": 50, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "shared items" }
       ]
     }
   ]

@@ -135,15 +135,13 @@ struct PathActionMenu: View {
         }
       }
     } label: {
-      HStack(spacing: 5) {
-        Text(path)
-          .lineLimit(2)
-          .truncationMode(.middle)
-          .textSelection(.enabled)
-        Image(systemName: "chevron.down")
-          .font(.halSmall)
-      }
+      Text(path)
+        .underline()
+        .lineLimit(2)
+        .truncationMode(.middle)
+        .textSelection(.enabled)
     }
+    .menuIndicator(.hidden)
     .menuStyle(.borderlessButton)
     .accessibilityLabel("Path \(path)")
     .accessibilityHint("Shows options to copy, reveal, or open this path")

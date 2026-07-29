@@ -62,6 +62,22 @@ exists.
 
 Implementation details: `APPLICATION_STORY_IMPLEMENTATION_RECORD.md`
 
+## July 29 product-refinement milestone
+
+Completed:
+
+- expanded, visually hierarchical Software Sources with App Store-managed
+  application children;
+- setup-time Bundled/User-installed/Unknown application classification;
+- exact relationship-canvas reuse for the application preview;
+- question-specific startup, command-line, and shell/PATH exploration;
+- manifest-driven high-fan-out relationship grouping;
+- glossary-aware prose and domain-term audit; and
+- a deterministic, paste-only shell/PATH visualization slice.
+
+Observation History remains parked and no shell-file contents are collected
+implicitly.
+
 ## Intentionally not completed
 
 Completion of a prototype phase does not claim product-market validation or

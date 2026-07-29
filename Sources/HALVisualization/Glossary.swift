@@ -48,6 +48,52 @@ public struct Glossary: Codable, Sendable {
       $0.displayTerm.lowercased() == key || $0.aliases.map { $0.lowercased() }.contains(key)
     }
   }
+
+  public func tokens(in text: String, context: String) -> [GlossaryToken] {
+    let candidates =
+      terms
+      .filter { $0.contexts.contains(context) || $0.contexts.contains("all") }
+      .flatMap { term in ([term.displayTerm] + term.aliases).map { ($0, term) } }
+      .sorted { $0.0.count > $1.0.count }
+    var output: [GlossaryToken] = []
+    var cursor = text.startIndex
+    while cursor < text.endIndex {
+      let remainder = text[cursor...]
+      let match = candidates.compactMap { alias, term -> (Range<String.Index>, GlossaryTerm)? in
+        guard
+          let range = remainder.range(
+            of: alias,
+            options: [.caseInsensitive, .diacriticInsensitive]
+          ),
+          isWordBoundary(range.lowerBound, in: text),
+          isWordBoundary(range.upperBound, in: text)
+        else { return nil }
+        return (range, term)
+      }.min { $0.0.lowerBound < $1.0.lowerBound }
+      guard let match else {
+        output.append(.text(String(remainder)))
+        break
+      }
+      if cursor < match.0.lowerBound {
+        output.append(.text(String(text[cursor..<match.0.lowerBound])))
+      }
+      output.append(.term(String(text[match.0]), match.1))
+      cursor = match.0.upperBound
+    }
+    return output
+  }
+
+  private func isWordBoundary(_ index: String.Index, in text: String) -> Bool {
+    guard index > text.startIndex && index < text.endIndex else { return true }
+    let before = text[text.index(before: index)]
+    let after = text[index]
+    return !before.isLetter && !before.isNumber || !after.isLetter && !after.isNumber
+  }
+}
+
+public enum GlossaryToken: Hashable, Sendable {
+  case text(String)
+  case term(String, GlossaryTerm)
 }
 
 public struct GlossaryTerm: Codable, Identifiable, Hashable, Sendable {

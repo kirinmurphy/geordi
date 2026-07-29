@@ -16,13 +16,19 @@ public struct ApplicationBundleCollector: Sendable {
   public static let version = 1
 
   public let roots: [ApplicationSearchRoot]
+  private let setupMarkerURL: URL?
+  private let setupTolerance: TimeInterval
   private let clock: any HALClock
 
   public init(
     roots: [ApplicationSearchRoot],
+    setupMarkerURL: URL? = nil,
+    setupTolerance: TimeInterval = 300,
     clock: any HALClock = SystemClock()
   ) {
     self.roots = roots
+    self.setupMarkerURL = setupMarkerURL
+    self.setupTolerance = setupTolerance
     self.clock = clock
   }
 
@@ -30,12 +36,14 @@ public struct ApplicationBundleCollector: Sendable {
     let startedAt = clock.now()
     var observations: [CollectedObservation<ApplicationBundleValue>] = []
     var issues: [CollectionIssue] = []
+    let setupCompletedAt = setupMarkerURL.flatMap { creationDate(at: $0) }
 
     for root in roots {
       collect(
         root: root,
         scanID: scanID,
         observedAt: startedAt,
+        setupCompletedAt: setupCompletedAt,
         observations: &observations,
         issues: &issues
       )
@@ -62,6 +70,7 @@ public struct ApplicationBundleCollector: Sendable {
     root: ApplicationSearchRoot,
     scanID: ScanID,
     observedAt: Date,
+    setupCompletedAt: Date?,
     observations: inout [CollectedObservation<ApplicationBundleValue>],
     issues: inout [CollectionIssue]
   ) {
@@ -127,7 +136,7 @@ public struct ApplicationBundleCollector: Sendable {
         continue
       }
       enumerator.skipDescendants()
-      guard let value = applicationValue(at: url) else {
+      guard let value = applicationValue(at: url, setupCompletedAt: setupCompletedAt) else {
         issues.append(
           CollectionIssue(
             id: "invalid-bundle-\(url.path)",
@@ -155,7 +164,7 @@ public struct ApplicationBundleCollector: Sendable {
     issues.append(contentsOf: enumerationIssues)
   }
 
-  private func applicationValue(at url: URL) -> ApplicationBundleValue? {
+  private func applicationValue(at url: URL, setupCompletedAt: Date?) -> ApplicationBundleValue? {
     guard let bundle = Bundle(url: url) else { return nil }
     let name =
       bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
@@ -167,8 +176,15 @@ public struct ApplicationBundleCollector: Sendable {
       bundleIdentifier: bundle.bundleIdentifier,
       version: bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
       buildVersion: bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String,
-      executableName: bundle.object(forInfoDictionaryKey: "CFBundleExecutable") as? String
+      executableName: bundle.object(forInfoDictionaryKey: "CFBundleExecutable") as? String,
+      bundleCreatedAt: creationDate(at: url),
+      setupCompletedAt: setupCompletedAt,
+      setupToleranceSeconds: Int(setupTolerance)
     )
+  }
+
+  private func creationDate(at url: URL) -> Date? {
+    try? url.resourceValues(forKeys: [.creationDateKey]).creationDate
   }
 
   private func subject(for value: ApplicationBundleValue) -> SubjectIdentity {
