@@ -97,6 +97,17 @@ struct ApplicationClassificationConfigurationTests {
         userHome: home
       )?.id == "homebrew-cask"
     )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/Applications/Keynote.app",
+        platformBinary: false,
+        details: [
+          Detail("Bundle identifier", "com.apple.Keynote"),
+          Detail("App Store receipt", "Present"),
+        ],
+        userHome: home
+      ).id == "apple-applications"
+    )
   }
 
   @Test("Classification schema rejects unknown fields")

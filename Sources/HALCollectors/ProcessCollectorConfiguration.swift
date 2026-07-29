@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ProcessCollectorConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 2
+  public static let currentVersion = 3
 
   public let schemaVersion: Int
   public let maxProcessesPerApplication: Int
@@ -78,6 +78,7 @@ public struct ProcessResolutionStrategy: Codable, Hashable, Sendable {
   public enum Kind: String, Codable, Hashable, Sendable {
     case exactMainExecutable
     case containedInApplicationBundle
+    case relocatedBundleName
   }
 
   public let id: String

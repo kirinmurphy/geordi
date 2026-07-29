@@ -7,13 +7,14 @@ struct ProcessCollectorConfigurationTests {
   @Test("Bundled resolution strategies are declarative and ordered by priority")
   func bundledConfiguration() throws {
     let configuration = try ProcessCollectorConfiguration.bundled()
-    #expect(configuration.schemaVersion == 2)
+    #expect(configuration.schemaVersion == 3)
     #expect(configuration.maxProcessesPerApplication == 8)
     #expect(configuration.maxUnmatchedProcesses == 12)
     #expect(
       configuration.strategies.map(\.kind) == [
         .exactMainExecutable,
         .containedInApplicationBundle,
+        .relocatedBundleName,
       ])
     #expect(configuration.strategies[0].priority > configuration.strategies[1].priority)
   }
@@ -23,7 +24,7 @@ struct ProcessCollectorConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "maxProcessesPerApplication": 8,
         "maxUnmatchedProcesses": 12,
         "strategies": [{

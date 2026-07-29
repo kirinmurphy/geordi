@@ -75,6 +75,27 @@ struct ProcessCollectorTests {
     #expect(output.run.issues.count == 1)
   }
 
+  @Test("Resolver can associate a relocated application payload by bundle name")
+  func relocatedBundleResolution() throws {
+    let configuration = try ProcessCollectorConfiguration.bundled()
+    let processes = ProcessCollector(
+      sampler: RelocatedProcessSampler(),
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+    let output = ProcessApplicationResolver(
+      configuration: configuration,
+      clock: FixedClock(timestamp)
+    ).resolve(
+      scanID: "scan",
+      processes: processes,
+      applications: [application()]
+    )
+
+    #expect(output.observations[0].value.state == .matched)
+    #expect(output.observations[0].value.strategyID == "relocated-bundle-name")
+    #expect(output.observations[0].value.confidence == .probable)
+  }
+
   @Test("Native sampler returns a bounded point-in-time record set")
   func nativeSampler() throws {
     let values = try PSProcessSampler().sample()
@@ -261,6 +282,22 @@ private struct StubProcessSampler: ProcessSampling {
 private struct FailingProcessSampler: ProcessSampling {
   func sample() throws -> [ProcessValue] {
     throw ProcessCollectorError.samplerFailed("Test")
+  }
+}
+
+private struct RelocatedProcessSampler: ProcessSampling {
+  func sample() throws -> [ProcessValue] {
+    [
+      ProcessValue(
+        pid: 200,
+        parentPID: 1,
+        name: "Example",
+        executablePath:
+          "/Users/example/.example/release/Example.app/Contents/MacOS/Example",
+        residentMemoryBytes: 10_000,
+        accessibility: .accessible
+      )
+    ]
   }
 }
 

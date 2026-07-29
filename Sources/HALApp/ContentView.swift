@@ -686,19 +686,57 @@ private struct OverviewView: View {
 
         if !packageManagers.isEmpty {
           inventorySection(
-            title: "Package Managers",
-            subtitle: "Installers that own observed packages and applications",
+            title: "Software Sources",
+            subtitle: "Package managers with their observed applications and packages",
             symbol: "shippingbox"
           ) {
-            ForEach(Array(packageManagers.enumerated()), id: \.element.id) {
-              index, software in
+            ForEach(Array(packageManagers.enumerated()), id: \.element.id) { index, manager in
               if index > 0 { Divider() }
-              InventoryRow(
-                symbol: "shippingbox",
-                tint: EntityVisualStyle.color(for: software.type),
-                title: software.name,
-                trailing: foundationTrailingDetail(software)
-              ) { model.focus(software) }
+              let applications = managedItems(for: manager, type: .application)
+              let packages = managedItems(for: manager, type: .package)
+              DisclosureGroup {
+                Button("Open \(manager.name) details") { model.focus(manager) }
+                  .buttonStyle(.borderless)
+                  .padding(.vertical, 6)
+                if !applications.isEmpty {
+                  Text("APPLICATIONS")
+                    .font(.caption.bold())
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 6)
+                  ForEach(applications) { application in
+                    InventoryRow(
+                      symbol: "app",
+                      tint: EntityVisualStyle.color(for: .application),
+                      title: application.name,
+                      trailing: "Application",
+                      applicationPath: detail("Path", in: application)
+                    ) { model.focus(application) }
+                    .padding(.leading, 18)
+                  }
+                }
+                if !packages.isEmpty {
+                  Text("PACKAGES")
+                    .font(.caption.bold())
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 6)
+                  ForEach(packages) { package in
+                    InventoryRow(
+                      symbol: "cube.box",
+                      tint: EntityVisualStyle.color(for: .package),
+                      title: package.name,
+                      trailing: "Package"
+                    ) { model.focus(package) }
+                    .padding(.leading, 18)
+                  }
+                }
+              } label: {
+                Label(
+                  "\(manager.name) · \(applications.count + packages.count)",
+                  systemImage: "shippingbox"
+                )
+                .font(.headline)
+                .padding(.vertical, 11)
+              }
             }
           }
         }
@@ -714,25 +752,6 @@ private struct OverviewView: View {
               if index > 0 { Divider() }
               InventoryRow(
                 symbol: "terminal",
-                tint: EntityVisualStyle.color(for: software.type),
-                title: software.name,
-                trailing: foundationTrailingDetail(software)
-              ) { model.focus(software) }
-            }
-          }
-        }
-
-        if !installedPackages.isEmpty {
-          inventorySection(
-            title: "Installed Packages",
-            subtitle: "Packages observed inside configured package-manager roots",
-            symbol: "cube.box"
-          ) {
-            ForEach(Array(installedPackages.enumerated()), id: \.element.id) {
-              index, software in
-              if index > 0 { Divider() }
-              InventoryRow(
-                symbol: "cube.box",
                 tint: EntityVisualStyle.color(for: software.type),
                 title: software.name,
                 trailing: foundationTrailingDetail(software)
@@ -839,10 +858,26 @@ private struct OverviewView: View {
     }
   }
 
-  private var installedPackages: [Entity] {
-    model.fixture.entities.filter {
-      $0.type == .package && !$0.id.rawValue.hasPrefix("runtime-availability:")
-        && !$0.id.rawValue.hasPrefix("command-line-software:")
+  private func managedItems(for manager: Entity, type: EntityType) -> [Entity] {
+    var ownedIDs = Set(
+      model.fixture.relationships.filter {
+        $0.source == manager.id && $0.type == .owns
+      }.map(\.target)
+    )
+    if type == .application {
+      let packageIDs = Set(
+        model.fixture.entities.filter {
+          ownedIDs.contains($0.id) && $0.type == .package
+        }.map(\.id)
+      )
+      ownedIDs.formUnion(
+        model.fixture.relationships.filter {
+          packageIDs.contains($0.source) && $0.type == .owns
+        }.map(\.target)
+      )
+    }
+    return model.fixture.entities.filter {
+      ownedIDs.contains($0.id) && $0.type == type
     }.sorted {
       $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
     }

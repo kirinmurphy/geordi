@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "maxProcessesPerApplication": 8,
   "maxUnmatchedProcesses": 12,
   "strategies": [
@@ -14,6 +14,12 @@
       "kind": "containedInApplicationBundle",
       "confidence": "high",
       "priority": 80
+    },
+    {
+      "id": "relocated-bundle-name",
+      "kind": "relocatedBundleName",
+      "confidence": "probable",
+      "priority": 40
     }
   ]
 }

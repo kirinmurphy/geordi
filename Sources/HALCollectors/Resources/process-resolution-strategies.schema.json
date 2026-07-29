@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/process-resolution-strategies/v2",
+  "$id": "https://hal.local/schemas/process-resolution-strategies/v3",
   "title": "HAL process resolution strategies",
   "type": "object",
   "additionalProperties": false,
@@ -12,7 +12,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": 2
+      "const": 3
     },
     "maxProcessesPerApplication": {
       "type": "integer",
@@ -37,7 +37,7 @@
             "minLength": 1
           },
           "kind": {
-            "enum": ["exactMainExecutable", "containedInApplicationBundle"]
+            "enum": ["exactMainExecutable", "containedInApplicationBundle", "relocatedBundleName"]
           },
           "confidence": {
             "enum": ["possible", "probable", "high", "confirmed", "ambiguous"]

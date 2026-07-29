@@ -32,6 +32,32 @@
       "detailRules": []
     },
     {
+      "id": "apple-applications",
+      "kind": "scope",
+      "label": "Apple Applications",
+      "summary": "Apple applications managed through the App Store; current evidence does not establish whether they were preloaded or later installed.",
+      "priority": 350,
+      "isFallback": false,
+      "platformBinaryWhenKnown": null,
+      "pathPrefixes": [
+        { "path": "/Applications", "scope": "system" }
+      ],
+      "detailRules": [
+        {
+          "label": "Bundle identifier",
+          "equals": null,
+          "startsWith": "com.apple.",
+          "excludes": []
+        },
+        {
+          "label": "App Store receipt",
+          "equals": "Present",
+          "startsWith": null,
+          "excludes": []
+        }
+      ]
+    },
+    {
       "id": "homebrew-cask",
       "kind": "source",
       "label": "Homebrew Casks",

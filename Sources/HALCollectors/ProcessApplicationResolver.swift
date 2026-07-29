@@ -101,6 +101,12 @@ public struct ProcessApplicationResolver: Sendable {
       return executablePath.hasPrefix(
         URL(fileURLWithPath: application.path).standardizedFileURL.path + "/"
       )
+    case .relocatedBundleName:
+      let bundleName = URL(fileURLWithPath: application.path)
+        .deletingPathExtension().lastPathComponent
+      let executableURL = URL(fileURLWithPath: executablePath).standardizedFileURL
+      guard executableURL.lastPathComponent == bundleName else { return false }
+      return executableURL.pathComponents.contains("\(bundleName).app")
     }
   }
 }
