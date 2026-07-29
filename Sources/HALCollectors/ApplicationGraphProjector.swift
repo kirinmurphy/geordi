@@ -20,7 +20,8 @@ public struct ApplicationGraphProjector: Sendable {
     homebrew: CollectorOutput<HomebrewInventoryValue>? = nil,
     runtimes: CollectorOutput<RuntimeValue>? = nil,
     packageEcosystems: CollectorOutput<PackageEcosystemInventoryValue>? = nil,
-    commandLineSoftware: CollectorOutput<CommandLineSoftwareValue>? = nil
+    commandLineSoftware: CollectorOutput<CommandLineSoftwareValue>? = nil,
+    shellFrameworks: CollectorOutput<ShellFrameworkValue>? = nil
   ) -> GraphSnapshot {
     let signaturesByPath = Dictionary(
       uniqueKeysWithValues: (signatures?.observations ?? []).map {
@@ -744,6 +745,36 @@ public struct ApplicationGraphProjector: Sendable {
         ]
       )
     }
+    let shellFrameworkEntities = (shellFrameworks?.observations ?? []).compactMap {
+      observation -> Entity? in
+      let value = observation.value
+      guard value.installationStatus != .absent else { return nil }
+      var frameworkDetails = [
+        Detail("Installation", value.installationStatus.rawValue.capitalized),
+        Detail("Location", value.rootPath),
+        Detail("Shell configuration", value.configurationStatus.rawValue.capitalized),
+        Detail("Configuration path", value.configurationPath),
+        Detail(
+          "Installation explanation",
+          value.installationStatus == .observed
+            ? "Expected framework and Git metadata were observed. This is consistent with a Git/bootstrap installation; HAL did not witness the original install command."
+            : "The framework location was incomplete, unreadable, or did not match all declared identity markers."
+        ),
+      ]
+      if let repositoryHost = value.repositoryHost {
+        frameworkDetails.append(Detail("Repository provider", repositoryHost))
+      }
+      return Entity(
+        id: shellFrameworkEntityID(value.frameworkID),
+        type: .shellFramework,
+        name: value.label,
+        summary:
+          value.installationStatus == .observed
+          ? "A Git-backed shell framework observed through bounded local metadata."
+          : "A possible shell framework installation that HAL could not fully establish.",
+        details: frameworkDetails
+      )
+    }
     let completedAt = [
       output.run.completedAt,
       signatures?.run.completedAt,
@@ -758,6 +789,7 @@ public struct ApplicationGraphProjector: Sendable {
       runtimes?.run.completedAt,
       packageEcosystems?.run.completedAt,
       commandLineSoftware?.run.completedAt,
+      shellFrameworks?.run.completedAt,
     ]
     .compactMap { $0 }
     .max()
@@ -776,6 +808,7 @@ public struct ApplicationGraphProjector: Sendable {
         runtimes?.run.startedAt,
         packageEcosystems?.run.startedAt,
         commandLineSoftware?.run.startedAt,
+        shellFrameworks?.run.startedAt,
       ].compactMap { $0 }.min() ?? output.run.startedAt
     var collectorRuns = [output.run]
     if let signatures {
@@ -814,6 +847,9 @@ public struct ApplicationGraphProjector: Sendable {
     if let commandLineSoftware {
       collectorRuns.append(commandLineSoftware.run)
     }
+    if let shellFrameworks {
+      collectorRuns.append(shellFrameworks.run)
+    }
     let concreteManagerIDs = Set(
       (homebrewManagerEntities + ecosystemManagerEntities).map(\.id)
     )
@@ -831,7 +867,8 @@ public struct ApplicationGraphProjector: Sendable {
           !concreteManagerIDs.contains($0.id)
         }
         + homebrewManagerEntities + homebrewPackageEntities + homebrewCaskEntities + runtimeEntities
-        + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities,
+        + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities
+        + shellFrameworkEntities,
       relationships:
         processRelationships + persistenceRelationships + relationships
         + rebuildableManagerRelationships + homebrewPackageRelationships
@@ -981,6 +1018,10 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func homebrewCaskEntityID(prefix: String, token: String) -> EntityID {
     EntityID("cask:homebrew:\(prefix):\(token)")
+  }
+
+  private func shellFrameworkEntityID(_ id: String) -> EntityID {
+    EntityID("shell-framework:\(id)")
   }
 
   private func preferredPresentAssociations(

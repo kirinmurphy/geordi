@@ -18,6 +18,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let runtimeCollector: RuntimeCollector?
   public let packageEcosystemCollector: PackageEcosystemCollector?
   public let commandLineSoftwareCollector: CommandLineSoftwareCollector?
+  public let shellFrameworkCollector: ShellFrameworkCollector?
   public let projector: ApplicationGraphProjector
 
   public init(
@@ -32,6 +33,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     runtimeConfiguration: RuntimeCollectorConfiguration? = nil,
     packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
     commandLineSoftwareConfiguration: CommandLineSoftwareConfiguration? = nil,
+    shellFrameworkConfiguration: ShellFrameworkConfiguration? = nil,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -96,6 +98,9 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     commandLineSoftwareCollector = commandLineSoftwareConfiguration.map {
       CommandLineSoftwareCollector(configuration: $0, userHome: userHome, clock: clock)
     }
+    shellFrameworkCollector = shellFrameworkConfiguration.map {
+      ShellFrameworkCollector(configuration: $0, userHome: userHome, clock: clock)
+    }
     projector = ApplicationGraphProjector()
   }
 
@@ -111,6 +116,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     runtimeConfiguration: RuntimeCollectorConfiguration? = nil,
     packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
     commandLineSoftwareConfiguration: CommandLineSoftwareConfiguration? = nil,
+    shellFrameworkConfiguration: ShellFrameworkConfiguration? = nil,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -136,6 +142,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       runtimeConfiguration: runtimeConfiguration,
       packageEcosystemConfiguration: packageEcosystemConfiguration,
       commandLineSoftwareConfiguration: commandLineSoftwareConfiguration,
+      shellFrameworkConfiguration: shellFrameworkConfiguration,
       userHome: userHome,
       signatureInspector: signatureInspector,
       provenanceInspector: provenanceInspector,
@@ -180,6 +187,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     let runtimes = runtimeCollector?.collect(scanID: scanID)
     let packageEcosystems = packageEcosystemCollector?.collect(scanID: scanID)
     let commandLineSoftware = commandLineSoftwareCollector?.collect(scanID: scanID)
+    let shellFrameworks = shellFrameworkCollector?.collect(scanID: scanID)
     return projector.snapshot(
       scanID: scanID,
       output: applications,
@@ -196,7 +204,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       homebrew: homebrew,
       runtimes: runtimes,
       packageEcosystems: packageEcosystems,
-      commandLineSoftware: commandLineSoftware
+      commandLineSoftware: commandLineSoftware,
+      shellFrameworks: shellFrameworks
     )
   }
 }

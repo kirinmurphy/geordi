@@ -176,3 +176,24 @@ LaunchDaemon directories, but excludes Apple’s `/System/Library` declarations
 from the application-focused atlas. The collector reads only immediate plist
 files and retains labels, declared executable paths, `RunAtLoad`, and
 `KeepAlive`; full argument arrays are never normalized.
+
+Homebrew prefixes, Cellar locations, and Caskroom locations are defined by
+`HALCollectors/Resources/homebrew-installations.json`. Version 2 keeps
+formulae and casks distinct, reads bounded local Caskroom install receipts,
+and correlates declared application artifacts by name or bundle identifier.
+The manifest cannot enable a Homebrew subprocess, update, install, or
+uninstall.
+
+Reviewed terminal identities and capabilities are defined by
+`HALVisualization/Resources/terminal-adapters.json`. Version 2 declares exact
+bundle identifiers, required URL schemes, and one of a closed set of Swift
+launch strategies. The manifest cannot supply commands or executable paths.
+
+Shell-framework identities are defined by
+`HALCollectors/Resources/shell-frameworks.json`. Each definition has a
+user-home-scoped root, expected relative identity markers, one specific shell
+configuration path, reference tokens, and sanitized repository identities.
+Swift enforces user-home containment, symlink boundaries, and metadata-size
+budgets. The collector retains only status, declared framework identity,
+paths already selected by the manifest, and a matching repository host; it
+does not retain Git credentials or shell configuration contents.

@@ -114,7 +114,7 @@ persistence infrastructure.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 120 deterministic tests plus fixture and bundle validation
+- Test harness: 133 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 3 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -134,7 +134,9 @@ persistence infrastructure.
   processes are resolved through manifest-selected exact-executable and bundle
   containment strategies with a relevance budget; matched user/local launchd
   declarations add evidence-bearing startup relationships without retaining
-  arguments; and the provider is selected only after explicit linking
+  arguments; a versioned, user-home-scoped shell-framework collector retains
+  only bounded identity, sanitized repository-host, and declared configuration
+  reference states; and the provider is selected only after explicit linking
 - Data-source lifecycle: first launch is synthetic; linking, cached live
   startup, manual refresh, timestamp/freshness presentation, atomic snapshot
   backup, guarded unlink/reset, and return to the fictional profile are
@@ -148,8 +150,9 @@ machine collection until the user explicitly links the Mac. Linked mode reads
 manifest-scoped application bundle metadata, static code-signing facts, App
 Store receipt presence, redacted download-origin hosts, and conventional
 associated-location metadata, Homebrew/package/runtime/command-line metadata,
-point-in-time processes, and selected persistence declarations, then persists
-and refreshes the normalized snapshot. Installer-package provenance,
+point-in-time processes, selected persistence declarations, and bounded
+shell-framework identity/configuration-reference states, then persists and
+refreshes the normalized snapshot. Installer-package provenance,
 persistence approval/loaded state, process history, SQLite, and distribution
 remain unimplemented. Their sequencing is conditional on product validation.
 

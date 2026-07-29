@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "frameworks": [
+    {
+      "id": "oh-my-zsh",
+      "label": "Oh My Zsh",
+      "rootPath": "$USER_HOME/.oh-my-zsh",
+      "configurationPath": "$USER_HOME/.zshrc",
+      "requiredRelativePaths": ["oh-my-zsh.sh", "plugins", "themes", ".git/config"],
+      "configurationReferenceTokens": [
+        "$ZSH/oh-my-zsh.sh",
+        ".oh-my-zsh/oh-my-zsh.sh"
+      ],
+      "repositoryHosts": ["github.com"],
+      "repositoryPathSuffixes": ["ohmyzsh/ohmyzsh", "robbyrussell/oh-my-zsh"]
+    }
+  ]
+}

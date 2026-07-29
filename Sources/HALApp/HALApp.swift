@@ -33,6 +33,7 @@ struct HALApp: App {
           let packageEcosystemConfiguration = try PackageEcosystemConfiguration.bundled()
           let commandLineSoftwareConfiguration =
             try CommandLineSoftwareConfiguration.bundled()
+          let shellFrameworkConfiguration = try ShellFrameworkConfiguration.bundled()
           return try ApplicationInventorySnapshotProvider(
             scanID: ScanID("live-\(UUID().uuidString)"),
             configuration: collectorConfiguration,
@@ -44,7 +45,8 @@ struct HALApp: App {
             homebrewConfiguration: homebrewConfiguration,
             runtimeConfiguration: runtimeConfiguration,
             packageEcosystemConfiguration: packageEcosystemConfiguration,
-            commandLineSoftwareConfiguration: commandLineSoftwareConfiguration
+            commandLineSoftwareConfiguration: commandLineSoftwareConfiguration,
+            shellFrameworkConfiguration: shellFrameworkConfiguration
           ).snapshot()
         }
       )

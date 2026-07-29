@@ -53,6 +53,20 @@ is an explicit user decision. The standard application chooser requires a
 second explicit **Open Once** or **Open and Remember** decision for an
 unreviewed application.
 
+### Shell frameworks use bounded identity evidence
+
+Linked collection now evaluates versioned shell-framework definitions. The
+first definition recognizes Oh My Zsh only when its declared root and expected
+framework/Git markers are present. Git inspection is limited to a small local
+metadata file and retains only a matching provider host. `.zshrc` inspection
+is limited by a fixed byte budget and records only active, inactive, absent, or
+unreadable state; contents and credentials are never normalized.
+
+The Application Story describes the result as consistent with a Git/bootstrap
+installation and explicitly says HAL did not witness the original install
+command. General shell history was rejected because it would add sensitive,
+unbounded evidence without improving the truth of this current-state claim.
+
 ### Narrative before graph
 
 Options considered were keeping the map as the application landing page,
@@ -95,6 +109,9 @@ validated manifest. Swift implements generic presentation and navigation.
   declared capability, installed/running availability, activation ranking,
   saved preference state, unsupported candidates, and safe file/directory
   target selection.
+- Shell-framework tests cover schema validation, unknown keys, unsafe paths,
+  observed, absent, inactive, unreadable, ambiguous, and symlink-escape states,
+  redacted Git identity, and the non-historical user-facing explanation.
 
 ## Remaining work
 
