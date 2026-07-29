@@ -22,6 +22,21 @@ Specification: `NEXT_PRODUCT_VALIDATION_PLAN.md`
 
 ## Decisions
 
+### Homebrew cask ownership is independent provenance
+
+HAL now inventories configured Homebrew Caskroom roots without running
+Homebrew, reads only bounded local install receipts, and projects formulae and
+casks as separate package concepts. A declared `.app` artifact is correlated
+to the bounded application inventory by its artifact name or bundle identifier;
+ambiguous matches are not projected. The Application Story prefers the
+resulting **Installed with Homebrew cask** explanation while download-origin
+metadata remains an independent optional filesystem observation.
+
+The alternatives were continuing to rely on resolved bundle containment or
+invoking Homebrew for JSON. Containment does not cover every cask installation
+shape, and a subprocess was unnecessary because the installed receipt provides
+the required bounded evidence.
+
 ### Narrative before graph
 
 Options considered were keeping the map as the application landing page,
@@ -57,6 +72,9 @@ validated manifest. Swift implements generic presentation and navigation.
   packaging, and bundle smoke validation.
 - The verified development build was installed at `~/Applications/HAL.app` and
   launched for manual evaluation.
+- Homebrew-focused tests cover schema versioning, unknown keys, unsafe paths,
+  formula inventory, Caskroom artifacts, bundle identity, and the independent
+  Application Story ownership projection.
 
 ## Remaining work
 

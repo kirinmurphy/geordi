@@ -15,7 +15,11 @@ struct ApplicationStoryModelTests {
           type: .application,
           name: "Example",
           summary: "An example application.",
-          details: [Detail("Current state", "Running"), Detail("Signature", "Valid")]
+          details: [
+            Detail("Current state", "Running"),
+            Detail("Signature", "Valid"),
+            Detail("Installed with", "Homebrew cask example"),
+          ]
         ),
         Entity(id: "process", type: .process, name: "Example process", summary: "Running"),
         Entity(id: "startup", type: .persistence, name: "Example helper", summary: "Startup"),
@@ -36,7 +40,7 @@ struct ApplicationStoryModelTests {
     #expect(story.startupItems.map(\.entity.id) == ["startup"])
     #expect(story.associatedItems.map(\.entity.id) == ["cache"])
     #expect(story.owners.map(\.entity.id) == ["manager"])
-    #expect(story.sourceSummary == "Managed by Example Manager")
+    #expect(story.sourceSummary == "Homebrew cask example")
     #expect(story.currentState == "Running")
     #expect(story.unknowns.isEmpty)
   }

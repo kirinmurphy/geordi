@@ -67,11 +67,11 @@ struct ApplicationStoryModel: Equatable {
   }
 
   var sourceSummary: String {
-    if let owner = owners.first {
-      return "Managed by \(owner.entity.name)"
-    }
     if let installed = application.details.first(where: { $0.label == "Installed with" }) {
       return installed.value
+    }
+    if let owner = owners.first {
+      return "Managed by \(owner.entity.name)"
     }
     if let provenance = provenance.first {
       return "\(provenance.label): \(provenance.value)"

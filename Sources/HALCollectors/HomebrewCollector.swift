@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct HomebrewInstallationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
   public let installations: [HomebrewInstallation]
@@ -60,6 +60,8 @@ public struct HomebrewInstallationConfiguration: Codable, Hashable, Sendable {
           $0.prefix.hasPrefix("/") && !$0.prefix.contains("..")
             && !$0.cellarRelativePath.hasPrefix("/")
             && !$0.cellarRelativePath.split(separator: "/").contains("..")
+            && !$0.caskroomRelativePath.hasPrefix("/")
+            && !$0.caskroomRelativePath.split(separator: "/").contains("..")
         })
       else {
         throw HomebrewCollectorError.invalidPath
@@ -77,17 +79,24 @@ public struct HomebrewInstallation: Codable, Hashable, Sendable, Identifiable {
   public let id: String
   public let prefix: String
   public let cellarRelativePath: String
+  public let caskroomRelativePath: String
 
-  public init(id: String, prefix: String, cellarRelativePath: String) {
+  public init(
+    id: String,
+    prefix: String,
+    cellarRelativePath: String,
+    caskroomRelativePath: String = "Caskroom"
+  ) {
     self.id = id
     self.prefix = prefix
     self.cellarRelativePath = cellarRelativePath
+    self.caskroomRelativePath = caskroomRelativePath
   }
 }
 
 public struct HomebrewCollector: Sendable {
   public static let id: CollectorID = "homebrew-packages"
-  public static let version = 1
+  public static let version = 2
 
   private let configuration: HomebrewInstallationConfiguration
   private let clock: any HALClock
@@ -108,23 +117,36 @@ public struct HomebrewCollector: Sendable {
     for installation in configuration.installations {
       let prefix = URL(filePath: installation.prefix).standardizedFileURL
       let cellar = prefix.appending(path: installation.cellarRelativePath).standardizedFileURL
+      let caskroom = prefix.appending(path: installation.caskroomRelativePath).standardizedFileURL
       var isDirectory: ObjCBool = false
-      guard FileManager.default.fileExists(atPath: cellar.path, isDirectory: &isDirectory) else {
+      let cellarExists = FileManager.default.fileExists(
+        atPath: cellar.path,
+        isDirectory: &isDirectory
+      )
+      let cellarIsDirectory = cellarExists && isDirectory.boolValue
+      isDirectory = false
+      let caskroomExists = FileManager.default.fileExists(
+        atPath: caskroom.path,
+        isDirectory: &isDirectory
+      )
+      let caskroomIsDirectory = caskroomExists && isDirectory.boolValue
+      guard cellarExists || caskroomExists else {
         continue
       }
-      guard isDirectory.boolValue else {
+      guard (!cellarExists || cellarIsDirectory) && (!caskroomExists || caskroomIsDirectory) else {
         issues.append(
           CollectionIssue(
-            id: "invalid-homebrew-cellar-\(installation.id)",
+            id: "invalid-homebrew-root-\(installation.id)",
             severity: .warning,
-            summary: "A configured Homebrew Cellar was not a directory.",
-            affectedScope: cellar.path
+            summary: "A configured Homebrew inventory location was not a directory.",
+            affectedScope: prefix.path
           )
         )
         continue
       }
       do {
-        let packages = try packages(in: cellar)
+        let packages = cellarIsDirectory ? try packages(in: cellar) : []
+        let casks = caskroomIsDirectory ? try casks(in: caskroom) : []
         observations.append(
           CollectedObservation(
             id: ObservationID("homebrew:\(prefix.path)"),
@@ -139,7 +161,9 @@ public struct HomebrewCollector: Sendable {
             value: HomebrewInventoryValue(
               prefix: prefix.path,
               cellarPath: cellar.path,
-              packages: packages
+              caskroomPath: caskroom.path,
+              packages: packages,
+              casks: casks
             )
           )
         )
@@ -148,8 +172,8 @@ public struct HomebrewCollector: Sendable {
           CollectionIssue(
             id: "unreadable-homebrew-cellar-\(installation.id)",
             severity: .warning,
-            summary: "HAL could not read an installed Homebrew package inventory.",
-            affectedScope: cellar.path
+            summary: "HAL could not read an installed Homebrew inventory.",
+            affectedScope: prefix.path
           )
         )
       }
@@ -190,6 +214,65 @@ public struct HomebrewCollector: Sendable {
       guard !versions.isEmpty else { return nil }
       return HomebrewPackageValue(name: packageURL.lastPathComponent, versions: versions)
     }.sorted { $0.name < $1.name }
+  }
+
+  private func casks(in caskroom: URL) throws -> [HomebrewCaskValue] {
+    let caskURLs = try FileManager.default.contentsOfDirectory(
+      at: caskroom,
+      includingPropertiesForKeys: [.isDirectoryKey],
+      options: [.skipsHiddenFiles]
+    )
+    return try caskURLs.compactMap { caskURL in
+      guard try caskURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+        return nil
+      }
+      let versions = try FileManager.default.contentsOfDirectory(
+        at: caskURL,
+        includingPropertiesForKeys: [.isDirectoryKey],
+        options: [.skipsHiddenFiles]
+      ).filter {
+        (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+      }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+      guard !versions.isEmpty else { return nil }
+
+      let receiptURL = caskURL.appending(path: ".metadata/INSTALL_RECEIPT.json")
+      let artifactNames = try installedApplicationNames(from: receiptURL)
+      var artifacts: [HomebrewCaskArtifactValue] = []
+      for name in artifactNames {
+        let identifiers = versions.compactMap { version -> String? in
+          Bundle(url: version.appending(path: name))?.bundleIdentifier
+        }
+        artifacts.append(
+          HomebrewCaskArtifactValue(
+            applicationName: name,
+            bundleIdentifier: identifiers.sorted().first
+          )
+        )
+      }
+      return HomebrewCaskValue(
+        token: caskURL.lastPathComponent,
+        versions: versions.map(\.lastPathComponent),
+        artifacts: artifacts.sorted { $0.applicationName < $1.applicationName }
+      )
+    }.sorted { $0.token < $1.token }
+  }
+
+  private func installedApplicationNames(from receiptURL: URL) throws -> [String] {
+    guard FileManager.default.fileExists(atPath: receiptURL.path) else { return [] }
+    let data = try Data(contentsOf: receiptURL, options: [.mappedIfSafe])
+    guard data.count <= 1_048_576,
+      let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let artifacts = root["uninstall_artifacts"] as? [[String: Any]]
+    else { return [] }
+    return Array(
+      Set(
+        artifacts.flatMap { artifact in
+          (artifact["app"] as? [String] ?? []).filter {
+            $0.hasSuffix(".app") && !$0.contains("/") && !$0.contains("..")
+          }
+        }
+      )
+    ).sorted()
   }
 }
 

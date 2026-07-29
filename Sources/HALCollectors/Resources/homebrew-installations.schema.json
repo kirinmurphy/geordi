@@ -1,23 +1,24 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/homebrew-installations/v1",
+  "$id": "https://hal.local/schemas/homebrew-installations/v2",
   "title": "HAL Homebrew installations",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "installations"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
     "installations": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "prefix", "cellarRelativePath"],
+        "required": ["id", "prefix", "cellarRelativePath", "caskroomRelativePath"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
           "prefix": { "type": "string", "minLength": 1 },
-          "cellarRelativePath": { "type": "string", "minLength": 1 }
+          "cellarRelativePath": { "type": "string", "minLength": 1 },
+          "caskroomRelativePath": { "type": "string", "minLength": 1 }
         }
       }
     }

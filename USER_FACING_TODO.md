@@ -52,6 +52,9 @@ Acceptance criteria:
 
 ## Priority 1 — Make Homebrew cask provenance reliable
 
+Implementation status: completed in the current development boundary; linked
+Mac product validation remains.
+
 Observed example: Warp installed with Homebrew cask.
 
 Current gap:

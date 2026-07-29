@@ -1,15 +1,17 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "installations": [
     {
       "id": "apple-silicon-default",
       "prefix": "/opt/homebrew",
-      "cellarRelativePath": "Cellar"
+      "cellarRelativePath": "Cellar",
+      "caskroomRelativePath": "Caskroom"
     },
     {
       "id": "intel-default",
       "prefix": "/usr/local",
-      "cellarRelativePath": "Cellar"
+      "cellarRelativePath": "Cellar",
+      "caskroomRelativePath": "Caskroom"
     }
   ]
 }

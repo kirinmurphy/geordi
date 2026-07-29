@@ -32,18 +32,47 @@ public struct ApplicationGraphProjector: Sendable {
         ($0.value.applicationPath, $0.value)
       }
     )
+    let caskMatches:
+      [String: (inventory: CollectedObservation<HomebrewInventoryValue>, cask: HomebrewCaskValue)] =
+        Dictionary(
+          uniqueKeysWithValues: output.observations.compactMap { application in
+            let candidates = (homebrew?.observations ?? []).flatMap { inventory in
+              inventory.value.casks.flatMap { cask in
+                cask.artifacts.compactMap {
+                  artifact
+                    -> (CollectedObservation<HomebrewInventoryValue>, HomebrewCaskValue)? in
+                  let bundleMatches =
+                    application.value.bundleIdentifier != nil
+                    && artifact.bundleIdentifier == application.value.bundleIdentifier
+                  let nameMatches =
+                    artifact.applicationName
+                    == URL(fileURLWithPath: application.value.path).lastPathComponent
+                  return bundleMatches || nameMatches ? (inventory, cask) : nil
+                }
+              }
+            }
+            guard candidates.count == 1, let match = candidates.first else { return nil }
+            return (application.value.path, match)
+          }
+        )
     let applicationEntities = output.observations.map { observation in
       let value = observation.value
+      var applicationDetails = details(
+        for: value,
+        signature: signaturesByPath[value.path],
+        provenance: provenanceByPath[value.path]
+      )
+      if let match = caskMatches[value.path] {
+        applicationDetails.append(
+          Detail("Installed with", "Homebrew cask \(match.cask.token)")
+        )
+      }
       return Entity(
         id: entityID(for: observation),
         type: .application,
         name: value.name,
         summary: "An application bundle observed on this Mac.",
-        details: details(
-          for: value,
-          signature: signaturesByPath[value.path],
-          provenance: provenanceByPath[value.path]
-        )
+        details: applicationDetails
       )
     }
     let applicationIDsByPath = Dictionary(
@@ -468,7 +497,9 @@ public struct ApplicationGraphProjector: Sendable {
             details: [
               Detail("Prefix", observation.value.prefix),
               Detail("Cellar", observation.value.cellarPath),
+              Detail("Caskroom", observation.value.caskroomPath),
               Detail("Installed formulae", "\(observation.value.packages.count)"),
+              Detail("Installed casks", "\(observation.value.casks.count)"),
             ]
           )
         ]
@@ -515,34 +546,77 @@ public struct ApplicationGraphProjector: Sendable {
         )
       }
     }
-    let homebrewApplicationRelationships: [Relationship] =
-      (homebrew?.observations.count == 1)
-      ? applicationEntities.compactMap { application in
-        guard
-          application.details.contains(where: {
-            $0.label == "Homebrew cask" && $0.value == "Present"
-          }),
-          let observation = homebrew?.observations.first
-        else { return nil }
+    let homebrewCaskEntities = (homebrew?.observations ?? []).flatMap { observation in
+      observation.value.casks.map { cask in
+        Entity(
+          id: homebrewCaskEntityID(prefix: observation.value.prefix, token: cask.token),
+          type: .package,
+          name: cask.token,
+          summary: "A cask installed in the observed Homebrew Caskroom.",
+          details: [
+            Detail("Package manager", "Homebrew"),
+            Detail("Package kind", "Cask"),
+            Detail("Installed versions", cask.versions.joined(separator: ", ")),
+            Detail(
+              "Declared applications", cask.artifacts.map(\.applicationName).joined(separator: ", ")
+            ),
+            Detail("Caskroom", observation.value.caskroomPath),
+          ]
+        )
+      }
+    }
+    let homebrewCaskRelationships = (homebrew?.observations ?? []).flatMap { observation in
+      observation.value.casks.map { cask in
         return Relationship(
-          id: RelationshipID("homebrew-application:\(application.id.rawValue)"),
+          id: RelationshipID("homebrew-cask:\(observation.value.prefix):\(cask.token)"),
           source: homebrewManagerEntityID(observation.value.prefix),
-          target: application.id,
+          target: homebrewCaskEntityID(prefix: observation.value.prefix, token: cask.token),
           type: .owns,
           confidence: .confirmed,
-          explanation: "The application bundle resolves into Homebrew's configured Caskroom.",
+          explanation: "Homebrew's Caskroom contains this installed cask.",
           evidence: [
             Evidence(
-              id: "homebrew-cask:\(application.id.rawValue)",
-              kind: .derived,
-              summary: "The resolved application path is inside a configured Homebrew Caskroom.",
-              source: "Homebrew provenance adapter",
-              ruleID: "resolved-caskroom-path",
-              ruleVersion: ApplicationProvenanceCollector.version
+              id: "\(observation.id.rawValue):cask:\(cask.token)",
+              kind: .observed,
+              summary: "A versioned cask directory was present in the Homebrew Caskroom.",
+              source: "Read-only Homebrew Caskroom inventory",
+              observationID: observation.id,
+              observedAt: observation.observedAt
             )
           ]
         )
-      } : []
+      }
+    }
+    let homebrewApplicationRelationships = output.observations.compactMap {
+      application
+        -> Relationship? in
+      guard let match = caskMatches[application.value.path] else { return nil }
+      return Relationship(
+        id: RelationshipID("homebrew-cask-application:\(entityID(for: application).rawValue)"),
+        source: homebrewCaskEntityID(
+          prefix: match.inventory.value.prefix,
+          token: match.cask.token
+        ),
+        target: entityID(for: application),
+        type: .owns,
+        confidence: .confirmed,
+        explanation:
+          "The cask's installed receipt declares this application artifact and its observed bundle identity matches.",
+        evidence: [
+          Evidence(
+            id: "\(match.inventory.id.rawValue):cask-application:\(application.id.rawValue)",
+            kind: .derived,
+            summary:
+              "The declared application artifact matched the observed application name or bundle identifier.",
+            source: "Read-only Homebrew Caskroom receipt and application inventory",
+            observationID: match.inventory.id,
+            observedAt: match.inventory.observedAt,
+            ruleID: "declared-cask-application-artifact",
+            ruleVersion: HomebrewCollector.version
+          )
+        ]
+      )
+    }
     let ecosystemManagerEntities = (packageEcosystems?.observations ?? []).map { observation in
       Entity(
         id: packageManagerEntityID(observation.value.managerID),
@@ -756,12 +830,12 @@ public struct ApplicationGraphProjector: Sendable {
         + rebuildableManagerEntities.values.filter {
           !concreteManagerIDs.contains($0.id)
         }
-        + homebrewManagerEntities + homebrewPackageEntities + runtimeEntities
+        + homebrewManagerEntities + homebrewPackageEntities + homebrewCaskEntities + runtimeEntities
         + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities,
       relationships:
         processRelationships + persistenceRelationships + relationships
         + rebuildableManagerRelationships + homebrewPackageRelationships
-        + homebrewApplicationRelationships
+        + homebrewCaskRelationships + homebrewApplicationRelationships
         + ecosystemRelationships + runtimeInstallationRelationships
         + commandLineRelationships
     )
@@ -903,6 +977,10 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func homebrewPackageEntityID(prefix: String, name: String) -> EntityID {
     EntityID("package:homebrew:\(prefix):\(name)")
+  }
+
+  private func homebrewCaskEntityID(prefix: String, token: String) -> EntityID {
+    EntityID("cask:homebrew:\(prefix):\(token)")
   }
 
   private func preferredPresentAssociations(
