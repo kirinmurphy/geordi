@@ -67,4 +67,5 @@ validated manifest. Swift implements generic presentation and navigation.
 
 ## Commits
 
-- Pending verified implementation commit.
+- `9c23038` — Application Story, task-oriented home, guided fictional proof,
+  tests, documentation, and evaluation materials.
