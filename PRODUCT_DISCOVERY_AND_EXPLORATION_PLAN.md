@@ -1,6 +1,6 @@
 # HAL Product Discovery and Exploration Plan
 
-Status: Draft for product clarification  
+Status: Completed phases 1–5; retained as the authoritative historical specification
 Scope: Homepage organization, actionable paths, glossary, map usability,
 collection health, command-line software, and filesystem exploration  
 Implementation rule: Preserve HAL's manifest-driven composition, central schema,
@@ -590,50 +590,9 @@ decode warning.
 
 ### 9.5 Deferred local observation history and parser feedback
 
-This is a future phase, not part of the current five-phase implementation.
-
-HAL should maintain a local, append-oriented history of noteworthy observation
-runs:
-
-- run identifier and timestamps;
-- collector and collector version;
-- complete/partial/failed state;
-- stable issue reason codes and counts;
-- structural fingerprints safe for parser development;
-- noteworthy additions, removals, and changed classifications;
-- acknowledgment/resolution state;
-- whether a later collector version handled the structure successfully.
-
-The user-facing surface should be **Observation History**, not “telemetry.”
-“Telemetry” describes the engineering purpose but can imply automatic remote
-collection.
-
-Default privacy behavior:
-
-- store history locally;
-- do not upload automatically;
-- do not retain arbitrary file contents, command arguments, user names, or raw
-  paths for parser feedback;
-- keep any unredacted local diagnostic detail separately scoped and
-  intentionally short-lived;
-- require explicit user action to export or share redacted feedback;
-- show the exact export payload before sharing when practical.
-
-Parser feedback workflow:
-
-1. A collector emits a stable issue reason and privacy-safe structural
-   fingerprint.
-2. HAL aggregates repeats within and across runs.
-3. The footer shows only a subtle count when no user action exists.
-4. Observation History records when the issue first appeared, repeated, or
-   disappeared.
-5. Redacted export packages the structural evidence needed to reproduce it.
-6. Developers convert the shape into a synthetic fixture and regression test.
-7. A later collector version can mark the historical issue as understood.
-
-Avoid building a general-purpose logging database prematurely. Start with a
-versioned, bounded run-history store only after retention, migration, redaction,
-and size limits are designed and tested.
+This future phase is deliberately separated from this completed specification.
+Its scope, privacy constraints, entry requirements, and acceptance criteria now
+live in `FUTURE_PHASE_6_OBSERVATION_HISTORY.md`.
 
 ## 10. Filesystem map
 
@@ -841,26 +800,11 @@ Acceptance criteria:
 - Not-enumerated and empty states are never conflated.
 - No unbounded filesystem traversal occurs.
 
-### Future Phase 6 — Local observation history and parser feedback
+### Future Phase 6 — separated and parked
 
-This phase is deliberately excluded from the current overnight implementation.
-
-1. Specify a versioned run-history schema and retention policy.
-2. Define privacy-safe issue fingerprints for each collector family.
-3. Persist bounded local run summaries.
-4. Add the Observation History interface.
-5. Show additions, removals, changed classifications, recurring parser gaps,
-   and issues resolved by later collector versions.
-6. Add explicit redacted feedback export with preview.
-7. Add migration, retention, corruption-recovery, and redaction tests.
-
-Acceptance criteria:
-
-- No diagnostic history leaves the Mac without explicit user action.
-- Non-actionable issues remain subtle in current status.
-- Repeated instances are aggregated rather than presented as notification spam.
-- Developers can reproduce a parser shape without receiving private contents.
-- History storage is bounded, versioned, migratable, and recoverable.
+Phase 6 was not implemented. See
+`FUTURE_PHASE_6_OBSERVATION_HISTORY.md`. The current next phase is
+`NEXT_PRODUCT_VALIDATION_PLAN.md`.
 
 ## 12. Engineering guidelines
 

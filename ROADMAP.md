@@ -3,6 +3,36 @@
 Every milestone must produce a useful, runnable artifact. Work should be safe to
 pause after any milestone.
 
+## Current roadmap state
+
+- Completed implementation records: `COMPLETED_PHASES.md`
+- Recommended next phase: `NEXT_PRODUCT_VALIDATION_PLAN.md`
+- Parked and conditional work: `FUTURE_PHASE_PLANS.md`
+
+The next investment is user-facing product proof, not automatic progression to
+the next plumbing-heavy milestone. Milestone 0 and the current read-only
+application-atlas prototype are implemented, but the central product thesis
+still needs evaluation with representative users.
+
+| Milestone | Implementation state | Product-validation state |
+| --- | --- | --- |
+| 0 — Interactive concept | Complete | Needs current-build evaluation |
+| 1 — Real application atlas | Prototype implemented | Needs explanation-quality evaluation |
+| 2 — Reclaim | Investigation UI only | Measurement and actions deferred |
+| 3 — Persistence and changes | Point-in-time startup view only | History deferred |
+| 4 — Incidents | Synthetic demonstration only | Telemetry deferred |
+| 5 — Installation footprints | Early associations only | Observation plans deferred |
+| 6 — Advanced observation | Not started | Entry requirements unmet |
+
+## Immediate phase — Application Story and Guided Proof
+
+Use existing observations to prove that HAL can explain one application more
+clearly than existing tools. Build task-oriented entry points, a narrative
+Application Story, and a guided fictional walkthrough. Do not add history,
+measurement, telemetry, cleanup, or privileged collection in this phase.
+
+Detailed plan: `NEXT_PRODUCT_VALIDATION_PLAN.md`
+
 ## Milestone 0: repository and interactive concept
 
 ### Outcome

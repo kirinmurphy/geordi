@@ -1,6 +1,6 @@
 # Product Discovery and Exploration Implementation Record
 
-Status: active implementation record  
+Status: completed implementation record
 Specification: `PRODUCT_DISCOVERY_AND_EXPLORATION_PLAN.md`
 
 ## Completed work
@@ -77,7 +77,9 @@ action-oriented language. Persistent local issue history was not introduced.
 
 ## Remaining work
 
-- Record final commit identifiers below after stable commits are created.
+- No work remains within the completed phases 1–5 boundary.
+- Product validation continues in `NEXT_PRODUCT_VALIDATION_PLAN.md`.
+- Deferred phases are tracked in `FUTURE_PHASE_PLANS.md`.
 
 ## Commits
 

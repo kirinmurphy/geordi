@@ -5,7 +5,14 @@ code-defined fixtures with schema-validated profiles and adding explicit real
 Mac linking. Architectural rationale lives in `REAL_DATA_ASSESSMENT.md`;
 field availability lives in `REAL_DATA_FIELD_MATRIX.md`.
 
-## Test-drive stabilization: current priority
+Status: implementation history and deferred engineering backlog. It is no
+longer the source of truth for the immediate product priority.
+
+Current user-facing work: `NEXT_PRODUCT_VALIDATION_PLAN.md`
+Completed implementation index: `COMPLETED_PHASES.md`
+Deferred work: `FUTURE_PHASE_PLANS.md`
+
+## Historical test-drive stabilization
 
 These items were recorded from the first linked-Mac product test on
 2026-07-27. Complete them before expanding collection breadth.
@@ -277,8 +284,9 @@ These items were recorded from the first linked-Mac product test on
 - [ ] Add resource time series and incidents only after sampling overhead and
   retention semantics are tested.
 
-## Current next step
+## Deferred next engineering step
 
-Implement a cancellable bounded measurement engine behind the versioned policy,
-with deterministic limit, hard-link, filesystem-boundary, and partial-result
-tests before enabling it in live composition.
+Do not begin the bounded measurement engine yet. Complete the Application Story
+and Guided Proof product-validation phase first. Reconsider measurement only if
+evaluation shows that observed size is necessary to prove the reclaimable-data
+experience.

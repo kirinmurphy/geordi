@@ -2,13 +2,16 @@
 
 ## Current phase
 
-Phase 0 contextual-atlas revision implemented on July 26, 2026 after the first
-product evaluation failed. The revised build is installed and awaiting a
-second product evaluation.
+Product discovery and exploration phases 1–5 are implemented and verified.
+The next recommended phase is **Application Story and Guided Proof**, a
+user-facing product-validation sprint using existing data.
+
+Future Phase 6, Observation History, is deliberately parked.
 
 ## Current milestone
 
-Milestone 0 — repository and interactive concept.
+Validate the application-explanation thesis before adding more collection,
+history, measurement, or persistence infrastructure.
 
 ## What exists
 
@@ -92,21 +95,29 @@ Milestone 0 — repository and interactive concept.
 - The reference retains persistence as a first-class concept and explicitly
   explains evidence-bearing relationships between observations and findings
 - Strict formatting, graph validation, unit tests, and application-bundle validation
+- Concise linked-success card with persisted dismissal and compact Collection
+  Health status
+- Reusable Copy Path, Reveal in Finder, and manifest-driven terminal actions
+- Manifest-driven inspector organization and contextual glossary
+- Searchable and aggregated command-line inventory with package ownership and
+  copy-only removal guidance
+- A separate sparse Filesystem Map with deterministic hierarchy, breadcrumbs,
+  observed-entity associations, and explicit not-enumerated/unavailable states
 
 ## Implementation state
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 73 deterministic tests plus fixture and bundle validation
-- Profile schema: canonical declarative Draft 2020-12 version 1 JSON Schema,
+- Test harness: 117 deterministic tests plus fixture and bundle validation
+- Profile schema: canonical declarative Draft 2020-12 version 3 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
-- Manifest migration: all six synthetic profiles are schema-backed and selected
+- Manifest migration: all seven synthetic profiles are schema-backed and selected
   through a separately schema-validated profile catalog
 - Real-data preparation: typed observations, scan and collector outcomes,
   capability and freshness states, versioned finding evidence, and an injected
   graph-snapshot provider boundary
-- SQLite schema: not created
+- SQLite/history schema: intentionally not created
 - Real collectors: bounded read-only application-bundle inventory implemented
   with static code-signing validation behind an explicit live snapshot provider;
   search roots and provenance adapters are selected through validated
@@ -122,18 +133,19 @@ Milestone 0 — repository and interactive concept.
   startup, manual refresh, timestamp/freshness presentation, atomic snapshot
   backup, guarded unlink/reset, and return to the fictional profile are
   implemented
-- Visualization: stable semantic Phase 0 canvas created
+- Visualization: stable relationship canvas plus a separate sparse Filesystem
+  Map prototype
 - Signing and distribution: not configured
 
 The app launches with the deterministic synthetic provider and performs no
 machine collection until the user explicitly links the Mac. Linked mode reads
 manifest-scoped application bundle metadata, static code-signing facts, App
 Store receipt presence, redacted download-origin hosts, and conventional
-associated-location metadata, then persists and refreshes the normalized
-snapshot. Installer-package and Homebrew provenance, group-container
-association, persistence approval/loaded state, process history, SQLite, and
-distribution remain unimplemented. Their sequencing is documented in
-`REAL_DATA_ASSESSMENT.md`.
+associated-location metadata, Homebrew/package/runtime/command-line metadata,
+point-in-time processes, and selected persistence declarations, then persists
+and refreshes the normalized snapshot. Installer-package provenance,
+persistence approval/loaded state, process history, SQLite, and distribution
+remain unimplemented. Their sequencing is conditional on product validation.
 
 ## How to run
 
@@ -152,12 +164,16 @@ make verify
 
 ## Recommended next task
 
-Implement a cancellable bounded measurement engine behind the versioned policy,
-with deterministic limit, hard-link, filesystem-boundary, and partial-result
-tests before enabling it in live composition.
-The rebuildable-data manifest now drives linked-Mac metadata checks for Xcode,
-Homebrew, and npm roots. HAL preserves unavailable states, refuses symlink
-escapes, does not descend or calculate size, and enables no storage deletion.
+Implement `NEXT_PRODUCT_VALIDATION_PLAN.md`:
+
+1. task-oriented homepage entry points;
+2. an Application Story page that explains identity, activity, origin,
+   startup, associated locations, uncertainty, and next actions;
+3. an optional guided fictional walkthrough; and
+4. a repeatable evaluation with at least three representative sessions.
+
+Do not start Observation History, recursive measurement, telemetry, cleanup, or
+privileged collection yet.
 
 ## Product evaluation checklist
 
@@ -179,7 +195,11 @@ escapes, does not descend or calculate size, and enables no storage deletion.
 
 ## Linked-Mac test-drive checklist
 
-Recorded outcomes use `[x]`; unchecked items still need evaluation.
+Historical findings from the first linked-Mac test drive use `[x]`; a checked
+negative statement records the problem that was observed, not its current
+implementation status. Completed fixes are summarized in
+`COMPLETED_PHASES.md`. Unchecked lifecycle checks remain useful regression
+evaluation.
 
 - [x] First launch stayed on the fictional profile until **Link to your Mac**
   was selected.
@@ -238,5 +258,13 @@ Recorded outcomes use `[x]`; unchecked items still need evaluation.
 
 ## Product-owner involvement needed next
 
-Evaluate the contextual-atlas revision. No permission, privacy, signing, or
-destructive decisions are requested.
+Evaluate the Application Story information hierarchy and then test the
+implemented journey. No permission, privacy, signing, history, or destructive
+decision is required.
+
+## Documentation map
+
+- Completed phases: `COMPLETED_PHASES.md`
+- Current product phase: `NEXT_PRODUCT_VALIDATION_PLAN.md`
+- Future and parked phases: `FUTURE_PHASE_PLANS.md`
+- Parked Observation History: `FUTURE_PHASE_6_OBSERVATION_HISTORY.md`

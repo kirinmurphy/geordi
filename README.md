@@ -102,28 +102,31 @@ identifiers, and free-form values. This is intentionally different from the
 explicit unredacted backup offered during unlink.
 
 Open `Package.swift` in Xcode and select the `HALApp` scheme for Xcode builds
-and debugging. The prototype never reads system inventory, requests
-permissions, mutates the machine, or connects to a remote service.
+and debugging. First launch remains synthetic and non-collecting. Linking is
+explicit and enables bounded local read-only observation; HAL does not mutate
+the machine or connect to a remote service.
 
 ## Documentation
 
 Read these before implementation:
 
 1. [Product vision](VISION.md)
-2. [Complete feature catalog](FEATURES.md)
-3. [Incremental roadmap](ROADMAP.md)
-4. [Engineering operating agreement](ENGINEERING.md)
-5. [Current status and next task](STATUS.md)
-6. [Phase 0 implementation brief](PHASE_0.md)
-7. [Development environment](DEVELOPMENT.md)
-8. [Testing strategy](TESTING.md)
-9. [Configuration model](CONFIGURATION.md)
-10. [Architecture](ARCHITECTURE.md)
-11. [Technology decision](TECHNOLOGY.md)
-12. [Privacy requirements](PRIVACY.md)
-13. [Security and safety requirements](SECURITY.md)
-14. [V1 detail](V1.md)
-15. [V2 feasibility](V2.md)
+2. [Current status](STATUS.md)
+3. [Next product-validation phase](NEXT_PRODUCT_VALIDATION_PLAN.md)
+4. [Completed phases](COMPLETED_PHASES.md)
+5. [Future and parked phases](FUTURE_PHASE_PLANS.md)
+6. [Incremental roadmap](ROADMAP.md)
+7. [Complete feature catalog](FEATURES.md)
+8. [Engineering operating agreement](ENGINEERING.md)
+9. [Development environment](DEVELOPMENT.md)
+10. [Testing strategy](TESTING.md)
+11. [Configuration model](CONFIGURATION.md)
+12. [Architecture](ARCHITECTURE.md)
+13. [Technology decision](TECHNOLOGY.md)
+14. [Privacy requirements](PRIVACY.md)
+15. [Security and safety requirements](SECURITY.md)
+16. [V1 detail](V1.md)
+17. [V2 feasibility](V2.md)
 
 ## Product domains
 
@@ -179,9 +182,11 @@ Treat the scripts as behavioral input, not the production architecture.
 
 A new implementation task should:
 
-1. Read every Markdown file in this directory.
+1. Read `STATUS.md`, `NEXT_PRODUCT_VALIDATION_PLAN.md`, `AGENTS.md`, and the
+   directly relevant architecture and safety documents.
 2. Follow `ENGINEERING.md`.
-3. Begin with Milestone 0 in `ROADMAP.md` unless `STATUS.md` says otherwise.
+3. Treat `COMPLETED_PHASES.md` as history and `FUTURE_PHASE_PLANS.md` as
+   conditional work, not automatic authorization.
 4. Keep product-level questions separate from low-level implementation.
 5. Update status, tests, documentation, and evaluation instructions with every
    completed increment.

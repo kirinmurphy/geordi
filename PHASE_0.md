@@ -1,5 +1,7 @@
 # Phase 0 Implementation Brief
 
+Status: completed historical brief. See `COMPLETED_PHASES.md`.
+
 ## Objective
 
 Deliver a runnable native macOS concept that proves HAL's core interaction:

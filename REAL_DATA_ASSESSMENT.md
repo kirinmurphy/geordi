@@ -1,5 +1,10 @@
 # Real Machine Data Assessment
 
+Status: historical assessment. Its initial domain and read-only collection
+recommendations have been implemented. Current priority is defined in
+`NEXT_PRODUCT_VALIDATION_PLAN.md`; remaining engineering work is tracked in
+`FUTURE_PHASE_PLANS.md`.
+
 ## Decision
 
 HAL should take a hybrid approach:
