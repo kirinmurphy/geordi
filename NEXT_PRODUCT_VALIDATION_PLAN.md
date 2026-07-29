@@ -1,6 +1,6 @@
 # Next Product Validation Plan — Application Story and Guided Proof
 
-Status: recommended next phase  
+Status: implemented; representative product evaluation pending
 Priority: user-facing proof before additional plumbing  
 Constraint: use current observations and fixtures; do not start Future Phase 6
 
@@ -128,6 +128,13 @@ build Observation History or analytics for this purpose.
 - At least three representative evaluation sessions are recorded.
 - The outcome produces a go, revise, or stop decision for the application-story
   thesis.
+
+Implementation status:
+
+- The user-facing experience, guided walkthrough, tests, and evaluation
+  materials are implemented.
+- The requirement for three representative sessions remains open because it
+  requires participant observation rather than code.
 
 ## Decision after this phase
 

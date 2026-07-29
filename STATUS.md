@@ -3,15 +3,17 @@
 ## Current phase
 
 Product discovery and exploration phases 1–5 are implemented and verified.
-The next recommended phase is **Application Story and Guided Proof**, a
-user-facing product-validation sprint using existing data.
+The **Application Story and Guided Proof** interface is implemented. The
+current phase is representative product evaluation and revision based on
+observed user behavior.
 
 Future Phase 6, Observation History, is deliberately parked.
 
 ## Current milestone
 
-Validate the application-explanation thesis before adding more collection,
-history, measurement, or persistence infrastructure.
+Run at least three Application Story evaluation sessions and make a go, revise,
+or stop decision before adding more collection, history, measurement, or
+persistence infrastructure.
 
 ## What exists
 
@@ -103,12 +105,16 @@ history, measurement, or persistence infrastructure.
   copy-only removal guidance
 - A separate sparse Filesystem Map with deterministic hierarchy, breadcrumbs,
   observed-entity associations, and explicit not-enumerated/unavailable states
+- Task-oriented home entry points and an application-first narrative explaining
+  activity, source, startup behavior, associations, uncertainty, and next steps
+- A replayable, keyboard-accessible fictional walkthrough driven by a validated
+  presentation manifest
 
 ## Implementation state
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 117 deterministic tests plus fixture and bundle validation
+- Test harness: 120 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 3 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -164,13 +170,9 @@ make verify
 
 ## Recommended next task
 
-Implement `NEXT_PRODUCT_VALIDATION_PLAN.md`:
-
-1. task-oriented homepage entry points;
-2. an Application Story page that explains identity, activity, origin,
-   startup, associated locations, uncertainty, and next actions;
-3. an optional guided fictional walkthrough; and
-4. a repeatable evaluation with at least three representative sessions.
+Use `PRODUCT_EVALUATION_GUIDE.md` to run at least three representative sessions,
+record each with `PRODUCT_EVALUATION_SESSION_TEMPLATE.md`, and revise the
+highest-frequency user-facing friction.
 
 Do not start Observation History, recursive measurement, telemetry, cleanup, or
 privileged collection yet.
@@ -258,9 +260,8 @@ evaluation.
 
 ## Product-owner involvement needed next
 
-Evaluate the Application Story information hierarchy and then test the
-implemented journey. No permission, privacy, signing, history, or destructive
-decision is required.
+Recruit representative participants for the Application Story evaluation. No
+permission, privacy, signing, history, or destructive decision is required.
 
 ## Documentation map
 

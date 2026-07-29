@@ -50,6 +50,12 @@ struct ContentView: View {
             )
           case .filesystem:
             FilesystemMapView(model: model)
+          case .entity(let id):
+            if let entity = model.fixture.entity(id), entity.type == .application {
+              ApplicationStoryView(model: model, application: entity)
+            } else {
+              AtlasDetailView(model: model)
+            }
           default:
             AtlasDetailView(model: model)
           }
@@ -578,6 +584,7 @@ private struct OverviewView: View {
   let model: AppModel
   let diagnosticExportAction: () -> Void
   @State private var commandSearch = ""
+  @State private var guidedProofPresented = false
 
   var body: some View {
     ScrollView {
@@ -587,6 +594,10 @@ private struct OverviewView: View {
             linkAction: model.linkToMac,
             dismissAction: model.dismissWelcome
           )
+        }
+
+        TaskOrientedExploreView(model: model) {
+          guidedProofPresented = true
         }
 
         if model.isSynthetic {
@@ -796,6 +807,11 @@ private struct OverviewView: View {
       .frame(maxWidth: .infinity, alignment: .top)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .sheet(isPresented: $guidedProofPresented) {
+      GuidedProofView(model: model) {
+        guidedProofPresented = false
+      }
+    }
   }
 
   private var applications: [Entity] {
@@ -2014,7 +2030,7 @@ private struct SystemReferenceView: View {
 
 }
 
-private struct AtlasDetailView: View {
+struct AtlasDetailView: View {
   let model: AppModel
 
   var body: some View {

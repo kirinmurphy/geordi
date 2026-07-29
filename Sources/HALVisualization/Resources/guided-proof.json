@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "title": "How HAL explains an application",
+  "storyEntityID": "app.vscode",
+  "steps": [
+    {
+      "id": "identity",
+      "title": "Start with the application story",
+      "summary": "HAL begins with a readable explanation of identity, activity, source, and confidence—not a wall of collector output.",
+      "symbol": "app.badge.checkmark",
+      "takeaway": "You should understand the main story without opening a map."
+    },
+    {
+      "id": "activity",
+      "title": "Separate observation from inference",
+      "summary": "A running process is an observed instance. Its connection to an application includes direction, confidence, and supporting evidence.",
+      "symbol": "play.circle",
+      "takeaway": "HAL shows why a connection exists instead of presenting it as magic."
+    },
+    {
+      "id": "startup",
+      "title": "Explain why software may return",
+      "summary": "Startup declarations appear separately from current processes. Their presence does not prove that the application is running now.",
+      "symbol": "power",
+      "takeaway": "Current activity and persistence are different questions."
+    },
+    {
+      "id": "data",
+      "title": "Distinguish support data from rebuildable data",
+      "summary": "Application support can contain valuable user state. Rebuildable caches are described separately, with ownership evidence and no deletion action.",
+      "symbol": "externaldrive.badge.questionmark",
+      "takeaway": "Observed location is not permission to remove it."
+    },
+    {
+      "id": "maps",
+      "title": "Use maps for supporting context",
+      "summary": "The Relationship Map explains connections. The Filesystem Map explains location. Both support the application story instead of replacing it.",
+      "symbol": "point.3.connected.trianglepath.dotted",
+      "takeaway": "Open the maps when you want to investigate the evidence."
+    }
+  ]
+}

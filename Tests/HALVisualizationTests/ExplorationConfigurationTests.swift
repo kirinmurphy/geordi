@@ -1,5 +1,6 @@
 import Foundation
 import HALDomain
+import HALFixtures
 import HALVisualization
 import Testing
 
@@ -70,6 +71,24 @@ struct ExplorationConfigurationTests {
       try FilesystemLocationCatalog.decode(
         invalid,
         schema: try resource("filesystem-locations.schema")
+      )
+    }
+  }
+
+  @Test("Guided proof is schema validated and has a stable story target")
+  func guidedProof() throws {
+    let configuration = try GuidedProofConfiguration.bundled()
+    #expect(configuration.storyEntityID == "app.vscode")
+    #expect(configuration.steps.count == 5)
+    #expect(FixtureCatalog.familiarMac.entity(EntityID(configuration.storyEntityID)) != nil)
+
+    let invalid = """
+      {"schemaVersion":1,"title":"Tour","storyEntityID":"app","steps":[{"id":"one","title":"One","summary":"Summary","symbol":"app","takeaway":"Takeaway","unknown":true}]}
+      """.data(using: .utf8)!
+    #expect(throws: GuidedProofConfigurationError.self) {
+      try GuidedProofConfiguration.decode(
+        invalid,
+        schema: try resource("guided-proof.schema")
       )
     }
   }

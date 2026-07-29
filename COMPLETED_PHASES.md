@@ -53,6 +53,15 @@ The completion boundary recorded on July 29, 2026 passed:
 
 The primary implementation commit is `d99a298`.
 
+## Application Story implementation
+
+The user-facing Application Story, task-oriented homepage, manifest-driven
+fictional walkthrough, and evaluation materials are implemented. Product
+evaluation remains open and is not counted as completed merely because the UI
+exists.
+
+Implementation details: `APPLICATION_STORY_IMPLEMENTATION_RECORD.md`
+
 ## Intentionally not completed
 
 Completion of a prototype phase does not claim product-market validation or
