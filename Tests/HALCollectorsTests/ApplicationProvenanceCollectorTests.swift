@@ -10,11 +10,8 @@ struct ApplicationProvenanceCollectorTests {
   @Test("Bundled adapters are declarative and schema validated")
   func bundledConfiguration() throws {
     let configuration = try ApplicationProvenanceConfiguration.bundled()
-    #expect(configuration.schemaVersion == 2)
-    #expect(
-      configuration.adapters.map(\.kind) == [
-        .appStoreReceipt, .downloadOrigin, .homebrewCask,
-      ])
+    #expect(configuration.schemaVersion == 3)
+    #expect(configuration.adapters.map(\.kind) == [.appStoreReceipt, .downloadOrigin])
   }
 
   @Test("Unknown configuration keys fail declarative validation")
@@ -22,7 +19,7 @@ struct ApplicationProvenanceCollectorTests {
     let data = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "adapters": [
           {
             "id": "receipt",

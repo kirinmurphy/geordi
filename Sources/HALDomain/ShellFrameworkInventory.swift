@@ -22,6 +22,8 @@ public struct ShellFrameworkValue: Hashable, Codable, Sendable {
   public let configurationPath: String
   public let configurationStatus: ShellFrameworkConfigurationStatus
   public let repositoryHost: String?
+  public let associatedShellExecutablePaths: [String]
+  public let maximumAssociatedProcesses: Int
 
   public init(
     frameworkID: String,
@@ -30,7 +32,9 @@ public struct ShellFrameworkValue: Hashable, Codable, Sendable {
     installationStatus: ShellFrameworkInstallationStatus,
     configurationPath: String,
     configurationStatus: ShellFrameworkConfigurationStatus,
-    repositoryHost: String? = nil
+    repositoryHost: String? = nil,
+    associatedShellExecutablePaths: [String] = [],
+    maximumAssociatedProcesses: Int = 0
   ) {
     self.frameworkID = frameworkID
     self.label = label
@@ -39,5 +43,7 @@ public struct ShellFrameworkValue: Hashable, Codable, Sendable {
     self.configurationPath = configurationPath
     self.configurationStatus = configurationStatus
     self.repositoryHost = repositoryHost
+    self.associatedShellExecutablePaths = associatedShellExecutablePaths
+    self.maximumAssociatedProcesses = maximumAssociatedProcesses
   }
 }

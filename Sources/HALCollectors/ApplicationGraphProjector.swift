@@ -775,6 +775,75 @@ public struct ApplicationGraphProjector: Sendable {
         details: frameworkDetails
       )
     }
+    let shellProcessMatches = (shellFrameworks?.observations ?? []).flatMap { framework in
+      guard framework.value.installationStatus == .observed,
+        framework.value.configurationStatus == .active
+      else {
+        return [(CollectedObservation<ShellFrameworkValue>, CollectedObservation<ProcessValue>)]()
+      }
+      let executablePaths = Set(framework.value.associatedShellExecutablePaths)
+      return (processes?.observations ?? []).filter { process in
+        guard let executablePath = process.value.executablePath else { return false }
+        return executablePaths.contains(
+          URL(filePath: executablePath).standardizedFileURL.path
+        )
+      }.sorted { $0.value.pid < $1.value.pid }
+        .prefix(framework.value.maximumAssociatedProcesses)
+        .map { (framework, $0) }
+    }
+    let shellProcessEntities = shellProcessMatches.map { framework, process in
+      Entity(
+        id: shellProcessEntityID(framework.value.frameworkID, pid: process.value.pid),
+        type: .process,
+        name: process.value.name,
+        summary:
+          "A current shell process whose exact executable matches this framework's declared shell.",
+        details: [
+          Detail("PID", "\(process.value.pid)"),
+          Detail("Executable", process.value.executablePath ?? "Unavailable"),
+          Detail("Framework configuration", "Active"),
+        ]
+      )
+    }
+    let shellProcessRelationships = shellProcessMatches.map { framework, process in
+      Relationship(
+        id: RelationshipID(
+          "shell-framework-process:\(framework.value.frameworkID):\(process.value.pid)"
+        ),
+        source: shellFrameworkEntityID(framework.value.frameworkID),
+        target: shellProcessEntityID(framework.value.frameworkID, pid: process.value.pid),
+        type: .provides,
+        confidence: .possible,
+        explanation:
+          "This observed shell may load the active framework reference. HAL did not inspect its environment or prove that this process sourced the configuration.",
+        evidence: [
+          Evidence(
+            id: "\(framework.id.rawValue):configuration-reference",
+            kind: .observed,
+            summary: "The declared shell configuration contains the framework reference.",
+            source: "Bounded shell-framework configuration check",
+            observationID: framework.id,
+            observedAt: framework.observedAt
+          ),
+          Evidence(
+            id: "\(process.id.rawValue):shell-executable",
+            kind: .observed,
+            summary: "A process with the exact declared shell executable is currently present.",
+            source: "Point-in-time process snapshot",
+            observationID: process.id,
+            observedAt: process.observedAt
+          ),
+          Evidence(
+            id: "\(framework.id.rawValue):possible-process-association:\(process.value.pid)",
+            kind: .inferred,
+            summary: "The active configuration may apply to this shell process.",
+            source: "Shell-framework manifest rule",
+            ruleID: "active-config-exact-shell-executable",
+            ruleVersion: ShellFrameworkCollector.version
+          ),
+        ]
+      )
+    }
     let completedAt = [
       output.run.completedAt,
       signatures?.run.completedAt,
@@ -868,13 +937,13 @@ public struct ApplicationGraphProjector: Sendable {
         }
         + homebrewManagerEntities + homebrewPackageEntities + homebrewCaskEntities + runtimeEntities
         + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities
-        + shellFrameworkEntities,
+        + shellFrameworkEntities + shellProcessEntities,
       relationships:
         processRelationships + persistenceRelationships + relationships
         + rebuildableManagerRelationships + homebrewPackageRelationships
         + homebrewCaskRelationships + homebrewApplicationRelationships
         + ecosystemRelationships + runtimeInstallationRelationships
-        + commandLineRelationships
+        + commandLineRelationships + shellProcessRelationships
     )
     return GraphSnapshot(
       graph: graph,
@@ -1022,6 +1091,10 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func shellFrameworkEntityID(_ id: String) -> EntityID {
     EntityID("shell-framework:\(id)")
+  }
+
+  private func shellProcessEntityID(_ frameworkID: String, pid: Int32) -> EntityID {
+    EntityID("shell-process:\(frameworkID):\(pid)")
   }
 
   private func preferredPresentAssociations(

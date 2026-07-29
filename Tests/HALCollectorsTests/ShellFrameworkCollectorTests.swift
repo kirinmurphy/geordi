@@ -10,7 +10,7 @@ struct ShellFrameworkCollectorTests {
   @Test("Bundled framework definitions are versioned and schema validated")
   func bundledConfiguration() throws {
     let configuration = try ShellFrameworkConfiguration.bundled()
-    #expect(configuration.schemaVersion == 1)
+    #expect(configuration.schemaVersion == 2)
     #expect(configuration.frameworks.map(\.id) == ["oh-my-zsh"])
   }
 
@@ -19,7 +19,7 @@ struct ShellFrameworkCollectorTests {
     let schema = try ShellFrameworkConfiguration.declarativeSchemaData()
     let unknown = Data(
       """
-      {"schemaVersion":1,"frameworks":[{"id":"x","label":"X","rootPath":"$USER_HOME/.x","configurationPath":"$USER_HOME/.zshrc","requiredRelativePaths":["x"],"configurationReferenceTokens":["x"],"repositoryHosts":["example.com"],"repositoryPathSuffixes":["x/x"],"extra":true}]}
+      {"schemaVersion":2,"frameworks":[{"id":"x","label":"X","rootPath":"$USER_HOME/.x","configurationPath":"$USER_HOME/.zshrc","requiredRelativePaths":["x"],"configurationReferenceTokens":["x"],"repositoryHosts":["example.com"],"repositoryPathSuffixes":["x/x"],"associatedShellExecutablePaths":["/bin/zsh"],"maximumAssociatedProcesses":8,"extra":true}]}
       """.utf8
     )
     #expect(throws: ShellFrameworkCollectorError.self) {
@@ -27,7 +27,7 @@ struct ShellFrameworkCollectorTests {
     }
     let unsafe = Data(
       """
-      {"schemaVersion":1,"frameworks":[{"id":"x","label":"X","rootPath":"$USER_HOME/../x","configurationPath":"$USER_HOME/.zshrc","requiredRelativePaths":["x"],"configurationReferenceTokens":["x"],"repositoryHosts":["example.com"],"repositoryPathSuffixes":["x/x"]}]}
+      {"schemaVersion":2,"frameworks":[{"id":"x","label":"X","rootPath":"$USER_HOME/../x","configurationPath":"$USER_HOME/.zshrc","requiredRelativePaths":["x"],"configurationReferenceTokens":["x"],"repositoryHosts":["example.com"],"repositoryPathSuffixes":["x/x"],"associatedShellExecutablePaths":["/bin/zsh"],"maximumAssociatedProcesses":8}]}
       """.utf8
     )
     #expect(throws: ShellFrameworkCollectorError.self) {
@@ -158,6 +158,84 @@ struct ShellFrameworkCollectorTests {
     #expect(!entity.details.contains { $0.value.contains("curl") })
   }
 
+  @Test("Projection bounds possible active-shell relationships without claiming proof")
+  func activeShellProjection() throws {
+    let applications = CollectorOutput<ApplicationBundleValue>(
+      run: CollectorRun(
+        collectorID: ApplicationBundleCollector.id,
+        collectorVersion: 1,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: []
+    )
+    let framework = CollectedObservation(
+      id: ObservationID("shell-framework:oh-my-zsh"),
+      scanID: ScanID("scan"),
+      collectorID: ShellFrameworkCollector.id,
+      schemaVersion: 2,
+      observedAt: timestamp,
+      subject: SubjectIdentity(
+        primary: IdentityClaim(kind: .canonicalPath, value: "/Users/test/.oh-my-zsh")
+      ),
+      value: ShellFrameworkValue(
+        frameworkID: "oh-my-zsh",
+        label: "Oh My Zsh",
+        rootPath: "/Users/test/.oh-my-zsh",
+        installationStatus: .observed,
+        configurationPath: "/Users/test/.zshrc",
+        configurationStatus: .active,
+        associatedShellExecutablePaths: ["/bin/zsh"],
+        maximumAssociatedProcesses: 1
+      )
+    )
+    let frameworkOutput = CollectorOutput(
+      run: CollectorRun(
+        collectorID: ShellFrameworkCollector.id,
+        collectorVersion: 2,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: [framework]
+    )
+    let processOutput = CollectorOutput(
+      run: CollectorRun(
+        collectorID: ProcessCollector.id,
+        collectorVersion: 1,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: [
+        process(pid: 10, executable: "/bin/zsh"),
+        process(pid: 11, executable: "/bin/zsh"),
+        process(pid: 12, executable: "/bin/bash"),
+      ]
+    )
+
+    let snapshot = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: applications,
+      processes: processOutput,
+      shellFrameworks: frameworkOutput
+    )
+
+    let relationship = try #require(
+      snapshot.graph.relationships.first { $0.id.rawValue.contains("shell-framework-process") }
+    )
+    #expect(
+      snapshot.graph.entities.filter { $0.id.rawValue.hasPrefix("shell-process:") }.count == 1
+    )
+    #expect(relationship.confidence == .possible)
+    #expect(relationship.explanation.contains("did not inspect"))
+    #expect(!relationship.explanation.contains("loaded"))
+  }
+
   private func collector(home: URL) -> ShellFrameworkCollector {
     ShellFrameworkCollector(
       configuration: ShellFrameworkConfiguration(frameworks: [definition]),
@@ -175,7 +253,29 @@ struct ShellFrameworkCollectorTests {
       requiredRelativePaths: ["oh-my-zsh.sh", "plugins", "themes", ".git/config"],
       configurationReferenceTokens: ["$ZSH/oh-my-zsh.sh"],
       repositoryHosts: ["github.com"],
-      repositoryPathSuffixes: ["ohmyzsh/ohmyzsh"]
+      repositoryPathSuffixes: ["ohmyzsh/ohmyzsh"],
+      associatedShellExecutablePaths: ["/bin/zsh"],
+      maximumAssociatedProcesses: 8
+    )
+  }
+
+  private func process(pid: Int32, executable: String) -> CollectedObservation<ProcessValue> {
+    CollectedObservation(
+      id: ObservationID("process:\(pid)"),
+      scanID: ScanID("scan"),
+      collectorID: ProcessCollector.id,
+      schemaVersion: 1,
+      observedAt: timestamp,
+      subject: SubjectIdentity(
+        primary: IdentityClaim(kind: .processInstance, value: "\(pid)")
+      ),
+      value: ProcessValue(
+        pid: pid,
+        parentPID: 1,
+        name: URL(fileURLWithPath: executable).lastPathComponent,
+        executablePath: executable,
+        accessibility: .accessible
+      )
     )
   }
 

@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ShellFrameworkConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
   public let schemaVersion: Int
   public let frameworks: [ShellFrameworkDefinition]
 
@@ -61,6 +61,8 @@ public struct ShellFrameworkDefinition: Codable, Hashable, Sendable, Identifiabl
   public let configurationReferenceTokens: [String]
   public let repositoryHosts: [String]
   public let repositoryPathSuffixes: [String]
+  public let associatedShellExecutablePaths: [String]
+  public let maximumAssociatedProcesses: Int
 
   public init(
     id: String,
@@ -70,7 +72,9 @@ public struct ShellFrameworkDefinition: Codable, Hashable, Sendable, Identifiabl
     requiredRelativePaths: [String],
     configurationReferenceTokens: [String],
     repositoryHosts: [String],
-    repositoryPathSuffixes: [String]
+    repositoryPathSuffixes: [String],
+    associatedShellExecutablePaths: [String],
+    maximumAssociatedProcesses: Int
   ) {
     self.id = id
     self.label = label
@@ -80,6 +84,8 @@ public struct ShellFrameworkDefinition: Codable, Hashable, Sendable, Identifiabl
     self.configurationReferenceTokens = configurationReferenceTokens
     self.repositoryHosts = repositoryHosts
     self.repositoryPathSuffixes = repositoryPathSuffixes
+    self.associatedShellExecutablePaths = associatedShellExecutablePaths
+    self.maximumAssociatedProcesses = maximumAssociatedProcesses
   }
 
   fileprivate var hasSafePaths: Bool {
@@ -89,12 +95,15 @@ public struct ShellFrameworkDefinition: Codable, Hashable, Sendable, Identifiabl
       && requiredRelativePaths.allSatisfy {
         !$0.hasPrefix("/") && !$0.split(separator: "/").contains("..")
       }
+      && associatedShellExecutablePaths.allSatisfy {
+        $0.hasPrefix("/") && !$0.split(separator: "/").contains("..")
+      }
   }
 }
 
 public struct ShellFrameworkCollector: Sendable {
   public static let id: CollectorID = "shell-frameworks"
-  public static let version = 1
+  public static let version = 2
 
   private let configuration: ShellFrameworkConfiguration
   private let userHome: URL
@@ -170,7 +179,11 @@ public struct ShellFrameworkCollector: Sendable {
         installationStatus: status,
         configurationPath: config.path,
         configurationStatus: configurationStatus,
-        repositoryHost: host
+        repositoryHost: host,
+        associatedShellExecutablePaths: definition.associatedShellExecutablePaths.map {
+          URL(filePath: $0).standardizedFileURL.path
+        },
+        maximumAssociatedProcesses: definition.maximumAssociatedProcesses
       )
     )
   }

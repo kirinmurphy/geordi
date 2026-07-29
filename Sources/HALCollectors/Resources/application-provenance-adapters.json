@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "adapters": [
     {
       "id": "app-store-receipt",
@@ -10,12 +10,6 @@
       "id": "download-origin",
       "kind": "downloadOrigin",
       "displayLabel": "Download origin"
-    },
-    {
-      "id": "homebrew-cask",
-      "kind": "homebrewCask",
-      "displayLabel": "Homebrew cask",
-      "pathPrefixes": ["/opt/homebrew/Caskroom", "/usr/local/Caskroom"]
     }
   ]
 }

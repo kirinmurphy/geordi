@@ -10,7 +10,7 @@ filesystem scanning.
 ## Priority 1 — Explain shell frameworks installed outside package managers
 
 Implementation status: completed in the current development boundary; linked
-Mac product validation remains.
+Mac evidence validation passed; representative UI sessions remain.
 
 Observed example: Oh My Zsh installed through its published curl/bootstrap
 flow at `~/.oh-my-zsh`.
@@ -56,7 +56,7 @@ Acceptance criteria:
 ## Priority 1 — Make Homebrew cask provenance reliable
 
 Implementation status: completed in the current development boundary; linked
-Mac product validation remains.
+Mac evidence validation passed; representative UI sessions remain.
 
 Observed example: Warp installed with Homebrew cask.
 

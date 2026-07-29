@@ -114,7 +114,7 @@ persistence infrastructure.
 
 - Native application: runnable Debug concept
 - Swift packages: domain, fixtures, visualization, app, validator
-- Test harness: 133 deterministic tests plus fixture and bundle validation
+- Test harness: 134 deterministic tests plus fixture and bundle validation
 - Profile schema: canonical declarative Draft 2020-12 version 3 JSON Schema,
   with generic Swift validation plus typed semantic endpoint and evidence
   checks
@@ -177,9 +177,10 @@ Use `PRODUCT_EVALUATION_GUIDE.md` to run at least three representative sessions,
 record each with `PRODUCT_EVALUATION_SESSION_TEMPLATE.md`, and revise the
 highest-frequency user-facing friction.
 
-New hands-on gaps are captured in `USER_FACING_TODO.md`: live Oh My Zsh
-explanation, reliable Homebrew cask provenance, and adaptable discovery of Warp,
-cmux, iTerm2, Ghostty, and other compatible terminal applications.
+The three hands-on gaps in `USER_FACING_TODO.md` are implemented. The focused
+linked evidence pass is recorded in `LINKED_MAC_ACCEPTANCE_RECORD.md`;
+representative participant sessions and the remaining lifecycle checks are
+still required.
 
 Do not start Observation History, recursive measurement, telemetry, cleanup, or
 privileged collection yet.

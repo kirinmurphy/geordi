@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "frameworks": [
     {
       "id": "oh-my-zsh",
@@ -12,7 +12,9 @@
         ".oh-my-zsh/oh-my-zsh.sh"
       ],
       "repositoryHosts": ["github.com"],
-      "repositoryPathSuffixes": ["ohmyzsh/ohmyzsh", "robbyrussell/oh-my-zsh"]
+      "repositoryPathSuffixes": ["ohmyzsh/ohmyzsh", "robbyrussell/oh-my-zsh"],
+      "associatedShellExecutablePaths": ["/bin/zsh"],
+      "maximumAssociatedProcesses": 8
     }
   ]
 }

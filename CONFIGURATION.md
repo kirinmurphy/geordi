@@ -122,11 +122,17 @@ preserves the explicitly weaker location-only classification. Classification
 is a presentation aid and does not prove which person or installer placed an
 application on the Mac.
 
+Version 4 adds a schema-validated `startsWith` detail predicate so
+instance-bearing evidence such as **Installed with: Homebrew cask warp** can
+select a generic category without hardcoding cask names in Swift.
+
 Application provenance adapters are selected and labeled by
 `HALCollectors/Resources/application-provenance-adapters.json`, validated by
 its adjacent versioned schema. The current adapters observe App Store receipt
 presence and retained download-origin metadata. Adapter manifests select
 bounded collector implementations; they cannot add arbitrary executable code.
+Version 3 removes resolved-path Homebrew cask detection; cask ownership now
+comes exclusively from the distinct Homebrew inventory and receipt evidence.
 
 Conventional application-associated locations are defined by
 `HALCollectors/Resources/application-associated-locations.json` and its
@@ -197,3 +203,7 @@ Swift enforces user-home containment, symlink boundaries, and metadata-size
 budgets. The collector retains only status, declared framework identity,
 paths already selected by the manifest, and a matching repository host; it
 does not retain Git credentials or shell configuration contents.
+Version 2 also declares exact shell executable paths and a maximum associated
+process count. The projector may correlate only active configuration
+references with current exact-executable observations, and must preserve that
+the resulting relationship is possible rather than proven.

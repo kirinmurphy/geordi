@@ -67,6 +67,17 @@ installation and explicitly says HAL did not witness the original install
 command. General shell history was rejected because it would add sensitive,
 unbounded evidence without improving the truth of this current-state claim.
 
+The linked acceptance pass also removed the obsolete resolved-path Homebrew
+cask provenance adapter after it produced a contradictory negative beside the
+stronger receipt-backed ownership detail. Application classification version 4
+now supports a generic `startsWith` detail rule and selects Homebrew Casks from
+the receipt-backed **Installed with** value.
+
+When an active declared shell configuration and an exact manifest-declared
+shell executable are both observed, HAL projects a bounded, possible
+framework/process relationship. The explanation explicitly preserves the gap
+between “may load this active configuration” and “proved loaded.”
+
 ### Narrative before graph
 
 Options considered were keeping the map as the application landing page,

@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/shell-frameworks/v1",
+  "$id": "https://hal.local/schemas/shell-frameworks/v2",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "frameworks"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
     "frameworks": {
       "type": "array",
       "minItems": 1,
@@ -20,7 +20,9 @@
           "requiredRelativePaths",
           "configurationReferenceTokens",
           "repositoryHosts",
-          "repositoryPathSuffixes"
+          "repositoryPathSuffixes",
+          "associatedShellExecutablePaths",
+          "maximumAssociatedProcesses"
         ],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
@@ -50,6 +52,17 @@
             "minItems": 1,
             "uniqueItems": true,
             "items": { "type": "string", "minLength": 1 }
+          },
+          "associatedShellExecutablePaths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^/" }
+          },
+          "maximumAssociatedProcesses": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32
           }
         }
       }

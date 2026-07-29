@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "allApplicationsLabel": "All Applications",
   "defaultCategoryID": "user-installed",
   "categories": [
@@ -32,12 +32,17 @@
     {
       "id": "homebrew-cask",
       "label": "Homebrew Casks",
-      "summary": "Application bundles whose resolved path is inside a configured Homebrew Caskroom.",
+      "summary": "Applications correlated to an installed Homebrew cask through bounded Caskroom receipt evidence.",
       "priority": 280,
       "isFallback": false,
       "platformBinaryWhenKnown": null,
       "pathPrefixes": [],
-      "detailRules": [{ "label": "Homebrew cask", "equals": "Present", "excludes": [] }]
+      "detailRules": [{
+        "label": "Installed with",
+        "equals": null,
+        "startsWith": "Homebrew cask ",
+        "excludes": []
+      }]
     },
     {
       "id": "app-store",
@@ -47,7 +52,12 @@
       "isFallback": false,
       "platformBinaryWhenKnown": null,
       "pathPrefixes": [],
-      "detailRules": [{ "label": "App Store receipt", "equals": "Present", "excludes": [] }]
+      "detailRules": [{
+        "label": "App Store receipt",
+        "equals": "Present",
+        "startsWith": null,
+        "excludes": []
+      }]
     },
     {
       "id": "downloaded",
@@ -60,6 +70,7 @@
       "detailRules": [{
         "label": "Download origin",
         "equals": null,
+        "startsWith": null,
         "excludes": ["Not observed", "Unavailable — metadata could not be read"]
       }]
     },

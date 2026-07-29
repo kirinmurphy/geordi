@@ -69,7 +69,7 @@ struct ApplicationClassificationConfigurationTests {
       configuration.category(
         forApplicationPath: "/Applications/Brew.app",
         platformBinary: false,
-        details: [Detail("Homebrew cask", "Present")],
+        details: [Detail("Installed with", "Homebrew cask brew")],
         userHome: home
       ).id == "homebrew-cask"
     )
@@ -80,7 +80,7 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
@@ -112,7 +112,7 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{

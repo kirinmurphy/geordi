@@ -214,6 +214,7 @@ struct HomebrewCollectorTests {
       }
     )
     #expect(!projectedApplication.details.contains { $0.label == "Download origin" })
+    #expect(!projectedApplication.details.contains { $0.label == "Homebrew cask" })
     #expect(
       snapshot.graph.relationships.contains {
         $0.source.rawValue.contains("cask:homebrew")
