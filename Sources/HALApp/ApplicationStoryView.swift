@@ -24,7 +24,7 @@ struct ApplicationStoryView: View {
           .buttonStyle(.bordered)
           Spacer()
           Text("Relationship Map")
-            .font(.headline)
+            .font(.halRowTitle)
         }
         .padding(12)
         .background(.bar)
@@ -65,23 +65,23 @@ struct ApplicationStoryView: View {
         .frame(width: 64, height: 64)
       VStack(alignment: .leading, spacing: 6) {
         Text("APPLICATION STORY")
-          .font(.caption.bold())
+          .font(.halSmall.bold())
           .foregroundStyle(.secondary)
         HStack(spacing: 10) {
           Text(application.name)
-            .font(.largeTitle.bold())
+            .font(.halDisplay.bold())
             .textSelection(.enabled)
           statusBadge
         }
         Text(application.summary)
-          .font(.title3)
+          .font(.halSubsection)
           .foregroundStyle(.secondary)
           .textSelection(.enabled)
       }
       Spacer()
       if model.isSynthetic {
         Label("Fictional example", systemImage: "sparkles")
-          .font(.callout.weight(.semibold))
+          .font(.halSecondary.weight(.semibold))
           .foregroundStyle(.purple)
       }
     }
@@ -110,7 +110,7 @@ struct ApplicationStoryView: View {
       case .unhealthy: .red
       }
     return Text(story.status.label)
-      .font(.caption.bold())
+      .font(.halSmall.bold())
       .foregroundStyle(.white)
       .padding(.horizontal, 9)
       .padding(.vertical, 4)
@@ -174,14 +174,14 @@ struct ApplicationStoryView: View {
         .frame(width: 24)
       VStack(alignment: .leading, spacing: 4) {
         Text(connection.entity.name)
-          .font(.headline)
+          .font(.halRowTitle)
         Text(connection.relationship.explanation)
           .foregroundStyle(.secondary)
           .textSelection(.enabled)
         Text(
           "Why HAL connects these: \(evidenceExplanation(connection.relationship))"
         )
-        .font(.caption)
+        .font(.halSmall)
         .foregroundStyle(
           connection.relationship.confidence == .ambiguous ? Color.orange : Color.secondary
         )
@@ -241,7 +241,7 @@ struct ApplicationStoryView: View {
 
   private func sectionTitle(_ title: String, symbol: String) -> some View {
     Label(title, systemImage: symbol)
-      .font(.title2.bold())
+      .font(.halSection.bold())
   }
 
   private func calmEmpty(_ message: String) -> some View {

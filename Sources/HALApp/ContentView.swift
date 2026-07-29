@@ -180,7 +180,7 @@ struct ContentView: View {
     VStack(alignment: .leading, spacing: 0) {
       VStack(alignment: .leading, spacing: 5) {
         Text("HAL")
-          .font(.largeTitle.bold())
+          .font(.halDisplay.bold())
         Text("Understand this Mac")
           .foregroundStyle(.secondary)
       }
@@ -214,7 +214,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 2) {
                   Text(application.name)
                   Text(application.details.first?.value ?? application.summary)
-                    .font(.caption)
+                    .font(.halSmall)
                     .foregroundStyle(.secondary)
                 }
               }
@@ -238,7 +238,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 2) {
                   Text(tool.name)
                   Text(tool.type.label)
-                    .font(.caption)
+                    .font(.halSmall)
                     .foregroundStyle(.secondary)
                 }
               }
@@ -255,9 +255,9 @@ struct ContentView: View {
             .foregroundStyle(.secondary)
           VStack(alignment: .leading, spacing: 2) {
             Text(model.isSynthetic ? "Fictional profile" : "Linked to this Mac")
-              .font(.caption.weight(.semibold))
+              .font(.halSmall.weight(.semibold))
             Text(model.isSynthetic ? "No machine access" : "Read-only application access")
-              .font(.caption2)
+              .font(.halSmall)
               .foregroundStyle(.secondary)
           }
           Spacer()
@@ -291,7 +291,7 @@ struct ContentView: View {
         ForEach(Array(model.breadcrumb.enumerated()), id: \.offset) { index, title in
           if index > 0 {
             Image(systemName: "chevron.right")
-              .font(.caption2)
+              .font(.halSmall)
               .foregroundStyle(.tertiary)
           }
           if index == 0, title == "Home", model.destination != .overview {
@@ -299,12 +299,12 @@ struct ContentView: View {
               model.navigate(to: .overview)
             }
             .buttonStyle(.plain)
-            .font(.subheadline.weight(.medium))
+            .font(.halSecondary.weight(.medium))
             .foregroundStyle(.secondary)
             .accessibilityHint("Return to the inventory")
           } else {
             Text(title)
-              .font(index == model.breadcrumb.count - 1 ? .headline : .subheadline)
+              .font(index == model.breadcrumb.count - 1 ? .halRowTitle : .halSecondary)
               .foregroundStyle(index == model.breadcrumb.count - 1 ? .primary : .secondary)
           }
         }
@@ -333,7 +333,7 @@ struct ContentView: View {
             Text(freshnessText(freshness))
             if !model.isSynthetic {
               Image(systemName: "chevron.up")
-                .font(.caption2)
+                .font(.halSmall)
             }
           }
         }
@@ -537,9 +537,9 @@ private struct AppBanner: View {
         Image(systemName: severity.symbol)
           .foregroundStyle(severity.color)
         Text(title.uppercased())
-          .font(.caption.bold())
+          .font(.halSmall.bold())
         Text(message)
-          .font(.caption)
+          .font(.halSmall)
           .foregroundStyle(.secondary)
         Spacer()
         if let actionTitle, let action {
@@ -553,7 +553,7 @@ private struct AppBanner: View {
             }
           } label: {
             Image(systemName: "xmark")
-              .font(.caption.bold())
+              .font(.halSmall.bold())
           }
           .buttonStyle(.plain)
           .help("Dismiss notification")
@@ -639,7 +639,7 @@ private struct OverviewView: View {
                 Text(
                   "\(counts.visible) visible · \(counts.hidden) hidden · \(counts.uncertain) unclassified"
                 )
-                .font(.callout)
+                .font(.halSecondary)
                 .foregroundStyle(.secondary)
                 Picker(
                   "Software type",
@@ -663,7 +663,7 @@ private struct OverviewView: View {
         ) {
           if applications.isEmpty {
             Text("No applications match this software type.")
-              .font(.callout)
+              .font(.halSecondary)
               .foregroundStyle(.secondary)
               .frame(maxWidth: .infinity, alignment: .leading)
               .padding(.vertical, 8)
@@ -694,48 +694,41 @@ private struct OverviewView: View {
               if index > 0 { Divider() }
               let applications = managedItems(for: manager, type: .application)
               let packages = managedItems(for: manager, type: .package)
-              DisclosureGroup {
-                Button("Open \(manager.name) details") { model.focus(manager) }
-                  .buttonStyle(.borderless)
-                  .padding(.vertical, 6)
-                if !applications.isEmpty {
-                  Text("APPLICATIONS")
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 6)
-                  ForEach(applications) { application in
-                    InventoryRow(
-                      symbol: "app",
-                      tint: EntityVisualStyle.color(for: .application),
-                      title: application.name,
-                      trailing: "Application",
-                      applicationPath: detail("Path", in: application)
-                    ) { model.focus(application) }
-                    .padding(.leading, 18)
-                  }
+              InventoryRow(
+                symbol: "shippingbox",
+                tint: EntityVisualStyle.color(for: .packageManager),
+                title: manager.name,
+                trailing: "\(applications.count + packages.count) managed"
+              ) { model.focus(manager) }
+              if !applications.isEmpty {
+                softwareKindHeader("Applications", symbol: "app.fill", tint: .blue)
+                ForEach(Array(applications.enumerated()), id: \.element.id) {
+                  childIndex, application in
+                  if childIndex > 0 { Divider().padding(.leading, 44) }
+                  InventoryRow(
+                    symbol: "app",
+                    tint: EntityVisualStyle.color(for: .application),
+                    title: application.name,
+                    trailing: "Application",
+                    applicationPath: detail("Path", in: application),
+                    compact: true
+                  ) { model.focus(application) }
+                  .padding(.leading, 12)
                 }
-                if !packages.isEmpty {
-                  Text("PACKAGES")
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 6)
-                  ForEach(packages) { package in
-                    InventoryRow(
-                      symbol: "cube.box",
-                      tint: EntityVisualStyle.color(for: .package),
-                      title: package.name,
-                      trailing: "Package"
-                    ) { model.focus(package) }
-                    .padding(.leading, 18)
-                  }
+              }
+              if !packages.isEmpty {
+                softwareKindHeader("Packages", symbol: "cube.box.fill", tint: .purple)
+                ForEach(Array(packages.enumerated()), id: \.element.id) { childIndex, package in
+                  if childIndex > 0 { Divider().padding(.leading, 44) }
+                  InventoryRow(
+                    symbol: "cube.box",
+                    tint: EntityVisualStyle.color(for: .package),
+                    title: package.name,
+                    trailing: "Package",
+                    compact: true
+                  ) { model.focus(package) }
+                  .padding(.leading, 12)
                 }
-              } label: {
-                Label(
-                  "\(manager.name) · \(applications.count + packages.count)",
-                  systemImage: "shippingbox"
-                )
-                .font(.headline)
-                .padding(.vertical, 11)
               }
             }
           }
@@ -772,7 +765,7 @@ private struct OverviewView: View {
               .accessibilityLabel("Search command-line software")
             if systemCommandCount > 0 {
               Text("\(systemCommandCount) macOS system commands grouped")
-                .font(.callout.weight(.semibold))
+                .font(.halSecondary.weight(.semibold))
                 .foregroundStyle(.secondary)
             }
             DisclosureGroup("Show all discovered commands") {
@@ -883,6 +876,18 @@ private struct OverviewView: View {
     }
   }
 
+  private func softwareKindHeader(_ title: String, symbol: String, tint: Color) -> some View {
+    Label(title, systemImage: symbol)
+      .font(.halSmall.bold())
+      .foregroundStyle(tint)
+      .textCase(.uppercase)
+      .padding(.horizontal, 10)
+      .padding(.vertical, 6)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
+      .padding(.top, 4)
+  }
+
   private var commandLineSoftware: [Entity] {
     model.fixture.entities.filter {
       $0.id.rawValue.hasPrefix("command-line-software:")
@@ -954,13 +959,13 @@ private struct OverviewView: View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(alignment: .firstTextBaseline) {
         Label(title, systemImage: symbol)
-          .font(.title2.bold())
+          .font(.halSection.bold())
           .foregroundStyle(tint)
         Spacer()
         headerAccessory()
         if let subtitle {
           Text(subtitle)
-            .font(.callout)
+            .font(.halSecondary)
             .foregroundStyle(.secondary)
         }
         if let headerActionTitle, let headerAction {
@@ -1009,19 +1014,19 @@ private struct CurrentActivityView: View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(alignment: .firstTextBaseline) {
         Label("Current activity", systemImage: "waveform.path.ecg")
-          .font(.title2.bold())
+          .font(.halSection.bold())
         Spacer()
       }
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: 12)], spacing: 12) {
         ForEach(metrics) { metric in
           VStack(alignment: .leading, spacing: 7) {
             Label(metric.title, systemImage: metric.symbol)
-              .font(.callout.weight(.semibold))
+              .font(.halSecondary.weight(.semibold))
               .foregroundStyle(metric.tint)
             Text(metric.value)
-              .font(.title2.bold())
+              .font(.halSection.bold())
             Text(metric.context)
-              .font(.caption)
+              .font(.halSmall)
               .foregroundStyle(.secondary)
           }
           .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
@@ -1053,7 +1058,7 @@ private struct WelcomePrompt: View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
         Label("Welcome to HAL", systemImage: "sparkles")
-          .font(.title2.bold())
+          .font(.halSection.bold())
         Spacer()
         Button(action: dismissAction) {
           Image(systemName: "xmark")
@@ -1094,7 +1099,7 @@ private struct InitialLinkOverlay: View {
             .controlSize(.regular)
           VStack(alignment: .leading, spacing: 3) {
             Text("Linking this Mac")
-              .font(.title2.bold())
+              .font(.halSection.bold())
             Text("HAL is building a read-only application atlas.")
               .foregroundStyle(.secondary)
           }
@@ -1109,12 +1114,12 @@ private struct InitialLinkOverlay: View {
           Image(systemName: "chevron.right")
           setupStage("Ready")
         }
-        .font(.caption)
+        .font(.halSmall)
 
         Text(
           "HAL is reading application bundles, signing facts, conventional related locations, current processes, and startup declarations. It will not modify applications or machine data."
         )
-        .font(.callout)
+        .font(.halSecondary)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
 
@@ -1154,11 +1159,11 @@ private struct LiveCoverageNotice: View {
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
       Image(systemName: "checkmark.shield")
-        .font(.title2)
+        .font(.halSection)
         .foregroundStyle(.green)
       VStack(alignment: .leading, spacing: 5) {
         Text("This Mac is linked")
-          .font(.headline)
+          .font(.halRowTitle)
         Text(
           "HAL found your installed software and built a read-only map. Start exploring, or check the observation details."
         )
@@ -1252,7 +1257,7 @@ private struct CollectionHealthPanel: View {
     ScrollView {
       VStack(alignment: .leading, spacing: 14) {
         Text("Collection Health")
-          .font(.title2.bold())
+          .font(.halSection.bold())
         Text("HAL only read configured sources. It did not change applications or machine data.")
           .foregroundStyle(.secondary)
           .textSelection(.enabled)
@@ -1260,7 +1265,7 @@ private struct CollectionHealthPanel: View {
           VStack(alignment: .leading, spacing: 4) {
             HStack {
               Text(run.collectorID.rawValue)
-                .font(.headline)
+                .font(.halRowTitle)
               Spacer()
               Text(run.state.rawValue.capitalized)
                 .foregroundStyle(run.state == .complete ? Color.secondary : Color.orange)
@@ -1335,7 +1340,7 @@ struct AppButtonStyle: ButtonStyle {
 
     var body: some View {
       configuration.label
-        .font(.callout.weight(kind == .cta ? .semibold : .medium))
+        .font(.halSecondary.weight(kind == .cta ? .semibold : .medium))
         .underline(kind == .inline || kind == .inlineCTA)
         .foregroundStyle(foregroundColor)
         .padding(.horizontal, isInline ? 0 : 13)
@@ -1409,6 +1414,7 @@ private struct InventoryRow: View {
   var subtitle: String? = nil
   let trailing: String
   var applicationPath: String? = nil
+  var compact = false
   let action: () -> Void
 
   var body: some View {
@@ -1418,33 +1424,33 @@ private struct InventoryRow: View {
           Image(nsImage: NSWorkspace.shared.icon(forFile: applicationPath))
             .resizable()
             .scaledToFit()
-            .frame(width: 32, height: 32)
+            .frame(width: compact ? 25 : 32, height: compact ? 25 : 32)
         } else {
           Image(systemName: symbol)
-            .font(.title3)
+            .font(.halSubsection)
             .foregroundStyle(tint)
-            .frame(width: 32, height: 32)
+            .frame(width: compact ? 25 : 32, height: compact ? 25 : 32)
             .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
         }
         VStack(alignment: .leading, spacing: 3) {
           Text(title)
-            .font(.headline)
+            .font(.halRowTitle)
           if let subtitle {
             Text(subtitle)
-              .font(.callout)
+              .font(.halSecondary)
               .foregroundStyle(.secondary)
               .multilineTextAlignment(.leading)
           }
         }
         Spacer()
         Text(trailing)
-          .font(.callout.weight(.medium))
+          .font(.halSecondary.weight(.medium))
           .foregroundStyle(.secondary)
         Image(systemName: "chevron.right")
-          .font(.caption.bold())
+          .font(.halSmall.bold())
           .foregroundStyle(.tertiary)
       }
-      .padding(.vertical, 11)
+      .padding(.vertical, compact ? 6 : 11)
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
@@ -1557,30 +1563,30 @@ struct ReferenceConceptPanel: View {
         HStack(spacing: 9) {
           Image(systemName: item.symbol)
             .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
-          Text(item.title).font(.title.bold())
+          Text(item.title).font(.halTitle.bold())
         }
         .foregroundStyle(item.tint)
         Spacer()
         Button(action: onClose) {
           Image(systemName: "xmark.circle.fill")
-            .font(.title2)
+            .font(.halSection)
             .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
         .keyboardShortcut(.cancelAction)
         .accessibilityLabel("Close concept details")
       }
-      Text(item.question).font(.title3.bold())
+      Text(item.question).font(.halSubsection.bold())
       Text(item.explanation)
-        .font(.body)
+        .font(.halBody)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
       VStack(alignment: .leading, spacing: 5) {
         Text("Examples")
-          .font(.caption.weight(.semibold))
+          .font(.halSmall.weight(.semibold))
           .foregroundStyle(.secondary)
           .textCase(.uppercase)
-        Text(item.examples).font(.callout)
+        Text(item.examples).font(.halSecondary)
       }
     }
     .padding(26)
@@ -1607,11 +1613,11 @@ private struct SystemReferenceView: View {
         HStack(alignment: .top, spacing: 20) {
           VStack(alignment: .leading, spacing: 8) {
             Text("How HAL fits together")
-              .font(.largeTitle.bold())
+              .font(.halDisplay.bold())
             Text(
               "The complete user-facing model, from what exists on a Mac to an informed decision. Select any section for context. Collector and implementation internals are intentionally omitted."
             )
-            .font(.title3)
+            .font(.halSubsection)
             .foregroundStyle(.secondary)
           }
           Spacer()
@@ -1627,7 +1633,7 @@ private struct SystemReferenceView: View {
         VStack(alignment: .leading, spacing: 18) {
           VStack(alignment: .leading, spacing: 16) {
             Label("What HAL observes on this Mac", systemImage: "desktopcomputer")
-              .font(.headline)
+              .font(.halRowTitle)
 
             HStack(spacing: 12) {
               referenceCard("mac")
@@ -1638,11 +1644,11 @@ private struct SystemReferenceView: View {
 
             VStack(alignment: .leading, spacing: 4) {
               Text("Inside the machine: one software example")
-                .font(.headline)
+                .font(.halRowTitle)
               Text(
                 "The single Software card below is one installed item. Every connected line represents one specific relationship."
               )
-              .font(.caption)
+              .font(.halSmall)
               .foregroundStyle(.secondary)
             }
 
@@ -1673,7 +1679,7 @@ private struct SystemReferenceView: View {
 
             HStack(spacing: 10) {
               Text("Changes to any component above are recorded as")
-                .font(.callout)
+                .font(.halSecondary)
                 .foregroundStyle(.secondary)
               connectedArrow("")
               referenceCard("history")
@@ -1692,11 +1698,11 @@ private struct SystemReferenceView: View {
 
           VStack(alignment: .leading, spacing: 12) {
             Text("How HAL turns observations into guidance")
-              .font(.headline)
+              .font(.halRowTitle)
             Text(
               "This is HAL’s review workflow, not another set of components inside the computer."
             )
-            .font(.caption)
+            .font(.halSmall)
             .foregroundStyle(.secondary)
 
             HStack(spacing: 10) {
@@ -1719,7 +1725,7 @@ private struct SystemReferenceView: View {
 
         VStack(alignment: .leading, spacing: 12) {
           Text("Important distinctions")
-            .font(.title2.bold())
+            .font(.halSection.bold())
           distinction(
             "User data is not cache",
             "A large project or browser profile may belong to an application without being safe to remove."
@@ -1784,10 +1790,10 @@ private struct SystemReferenceView: View {
           } label: {
             VStack(alignment: .leading, spacing: 7) {
               Label(item.title, systemImage: item.symbol)
-                .font(.headline)
+                .font(.halRowTitle)
                 .foregroundStyle(item.tint)
               Text(item.detail)
-                .font(.callout)
+                .font(.halSecondary)
                 .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 76, alignment: .topLeading)
@@ -1824,9 +1830,9 @@ private struct SystemReferenceView: View {
               .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
               .foregroundStyle(item.tint)
             VStack(alignment: .leading, spacing: 2) {
-              Text(item.title).font(.headline)
+              Text(item.title).font(.halRowTitle)
               Text(item.detail)
-                .font(.caption)
+                .font(.halSmall)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
             }
@@ -1862,7 +1868,7 @@ private struct SystemReferenceView: View {
         .frame(height: 1)
       if !label.isEmpty {
         Text(label)
-          .font(.caption.weight(.medium))
+          .font(.halSmall.weight(.medium))
           .foregroundStyle(.secondary)
           .lineLimit(1)
           .minimumScaleFactor(0.78)
@@ -1874,7 +1880,7 @@ private struct SystemReferenceView: View {
         .fill(Color.secondary.opacity(0.45))
         .frame(height: 1)
       Image(systemName: "arrowtriangle.right.fill")
-        .font(.system(size: 8))
+        .font(.halSmall)
         .foregroundStyle(.secondary)
     }
     .frame(maxWidth: .infinity)
@@ -1894,11 +1900,11 @@ private struct SystemReferenceView: View {
             HStack(spacing: 8) {
               Image(systemName: item.symbol)
                 .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
-              Text(item.title).font(.headline)
+              Text(item.title).font(.halRowTitle)
             }
             .foregroundStyle(item.tint)
             Text(item.detail)
-              .font(.caption)
+              .font(.halSmall)
               .foregroundStyle(.secondary)
           }
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -1951,10 +1957,10 @@ private struct SystemReferenceView: View {
       Color.clear.frame(width: 150)
       VStack(spacing: 1) {
         Image(systemName: "arrowtriangle.up.fill")
-          .font(.system(size: 8))
+          .font(.halSmall)
         Rectangle().frame(width: 1)
         Text("can start later")
-          .font(.caption2.weight(.medium))
+          .font(.halSmall.weight(.medium))
           .lineLimit(1)
       }
       .foregroundStyle(.secondary)
@@ -1975,14 +1981,14 @@ private struct SystemReferenceView: View {
         } label: {
           HStack(spacing: 10) {
             Text("\(number)")
-              .font(.caption.bold())
+              .font(.halSmall.bold())
               .foregroundStyle(.secondary)
               .frame(width: 24, height: 24)
               .background(Color.secondary.opacity(0.12), in: Circle())
             VStack(alignment: .leading, spacing: 2) {
-              Text(item.title).font(.callout.bold())
+              Text(item.title).font(.halSecondary.bold())
               Text(item.detail)
-                .font(.caption)
+                .font(.halSmall)
                 .foregroundStyle(.secondary)
             }
           }
@@ -2004,7 +2010,7 @@ private struct SystemReferenceView: View {
   private func horizontalArrow(_ label: String) -> some View {
     VStack(spacing: 2) {
       Text(label.isEmpty ? " " : label)
-        .font(.caption.weight(.medium))
+        .font(.halSmall.weight(.medium))
         .foregroundStyle(.secondary)
         .lineLimit(1)
       Image(systemName: "arrow.right")
@@ -2016,7 +2022,7 @@ private struct SystemReferenceView: View {
   private func flowArrow(_ label: String) -> some View {
     VStack(spacing: 2) {
       Text(label)
-        .font(.caption)
+        .font(.halSmall)
         .foregroundStyle(.secondary)
       Image(systemName: "arrow.down")
         .foregroundStyle(.secondary)
@@ -2026,7 +2032,7 @@ private struct SystemReferenceView: View {
   private func flowBranch(_ label: String) -> some View {
     VStack(spacing: 2) {
       Text(label)
-        .font(.caption)
+        .font(.halSmall)
         .foregroundStyle(.secondary)
       Image(systemName: "arrow.down")
         .foregroundStyle(.secondary)
@@ -2037,7 +2043,7 @@ private struct SystemReferenceView: View {
   private func distinction(_ title: String, _ explanation: String) -> some View {
     VStack(alignment: .leading, spacing: 3) {
       Text(title)
-        .font(.headline)
+        .font(.halRowTitle)
       Text(explanation)
         .foregroundStyle(.secondary)
     }
@@ -2101,7 +2107,7 @@ struct AtlasDetailView: View {
     HStack(alignment: .center, spacing: 18) {
       VStack(alignment: .leading, spacing: 6) {
         Text(summaryTitle)
-          .font(.title2.bold())
+          .font(.halSection.bold())
         Text(summaryText)
           .foregroundStyle(.secondary)
       }
@@ -2199,7 +2205,7 @@ private struct SearchField: View {
                 VStack(alignment: .leading) {
                   Text(entity.name)
                   Text(entity.summary)
-                    .font(.caption)
+                    .font(.halSmall)
                     .foregroundStyle(.secondary)
                 }
               }

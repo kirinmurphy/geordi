@@ -15,7 +15,7 @@ struct GlossaryTermToggle: View {
     } label: {
       HStack(spacing: 4) {
         Image(systemName: "book.closed")
-          .font(.caption2)
+          .font(.halSmall)
         Text(label)
           .underline()
       }
@@ -33,7 +33,7 @@ struct GlossaryTermToggle: View {
     }
     .popover(isPresented: $presented) {
       VStack(alignment: .leading, spacing: 8) {
-        Text(term.displayTerm).font(.headline)
+        Text(term.displayTerm).font(.halRowTitle)
         Text(term.description).textSelection(.enabled)
         if let explanation = term.explanation {
           Text(explanation).foregroundStyle(.secondary).textSelection(.enabled)

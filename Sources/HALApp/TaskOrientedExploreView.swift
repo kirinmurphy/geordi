@@ -9,7 +9,7 @@ struct TaskOrientedExploreView: View {
       HStack {
         VStack(alignment: .leading, spacing: 3) {
           Text("What do you want to understand?")
-            .font(.title2.bold())
+            .font(.halSection.bold())
           Text("Start with a question. HAL will show the summary before the technical evidence.")
             .foregroundStyle(.secondary)
         }
@@ -84,18 +84,18 @@ struct TaskOrientedExploreView: View {
     Button(action: action) {
       VStack(alignment: .leading, spacing: 9) {
         Image(systemName: symbol)
-          .font(.title2)
+          .font(.halSection)
           .foregroundStyle(.blue)
         Text(title)
-          .font(.headline)
+          .font(.halRowTitle)
           .multilineTextAlignment(.leading)
         Text(explanation)
-          .font(.callout)
+          .font(.halSecondary)
           .foregroundStyle(.secondary)
           .multilineTextAlignment(.leading)
         Spacer(minLength: 0)
         Label("Explore", systemImage: "arrow.right")
-          .font(.caption.bold())
+          .font(.halSmall.bold())
           .foregroundStyle(.blue)
       }
       .padding(14)

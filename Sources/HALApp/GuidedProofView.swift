@@ -22,20 +22,20 @@ struct GuidedProofView: View {
             .accessibilityHidden(true)
           VStack(spacing: 10) {
             Text("STEP \(stepIndex + 1) OF \(configuration.steps.count)")
-              .font(.caption.bold())
+              .font(.halSmall.bold())
               .foregroundStyle(.secondary)
             Text(step.title)
-              .font(.largeTitle.bold())
+              .font(.halDisplay.bold())
               .multilineTextAlignment(.center)
             Text(step.summary)
-              .font(.title3)
+              .font(.halSubsection)
               .foregroundStyle(.secondary)
               .multilineTextAlignment(.center)
               .textSelection(.enabled)
               .frame(maxWidth: 620)
           }
           Label(step.takeaway, systemImage: "lightbulb")
-            .font(.headline)
+            .font(.halRowTitle)
             .padding(16)
             .background(.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
             .textSelection(.enabled)
@@ -60,9 +60,9 @@ struct GuidedProofView: View {
     HStack {
       VStack(alignment: .leading, spacing: 2) {
         Text(configuration?.title ?? "Guided tour")
-          .font(.headline)
+          .font(.halRowTitle)
         Text("Fictional example · no Mac collection")
-          .font(.caption)
+          .font(.halSmall)
           .foregroundStyle(.secondary)
       }
       Spacer()

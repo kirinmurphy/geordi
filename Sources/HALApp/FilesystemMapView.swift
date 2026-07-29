@@ -41,7 +41,7 @@ struct FilesystemMapView: View {
       ForEach(Array(focusedAncestry.enumerated()), id: \.element.id) { index, node in
         if index > 0 {
           Image(systemName: "chevron.right")
-            .font(.caption2)
+            .font(.halSmall)
             .foregroundStyle(.secondary)
         }
         Button(node.label) {
@@ -63,7 +63,7 @@ struct FilesystemMapView: View {
         ForEach(depths, id: \.self) { depth in
           VStack(alignment: .leading, spacing: 18) {
             Text(depth == 0 ? "VOLUME" : "DEPTH \(depth)")
-              .font(.caption.bold())
+              .font(.halSmall.bold())
               .foregroundStyle(.secondary)
             ForEach(visibleNodes.filter { $0.depth == depth }) { node in
               nodeCard(node)
@@ -85,21 +85,21 @@ struct FilesystemMapView: View {
       VStack(alignment: .leading, spacing: 8) {
         HStack {
           Image(systemName: node.symbol)
-            .font(.title3)
+            .font(.halSubsection)
           Text(node.label)
-            .font(.headline)
+            .font(.halRowTitle)
             .lineLimit(2)
           Spacer()
           if !node.entityIDs.isEmpty {
             Text("\(node.entityIDs.count)")
-              .font(.caption.bold())
+              .font(.halSmall.bold())
               .padding(.horizontal, 7)
               .padding(.vertical, 3)
               .background(.blue.opacity(0.15), in: Capsule())
           }
         }
         Text(stateLabel(node.state))
-          .font(.callout)
+          .font(.halSecondary)
           .foregroundStyle(node.state == .observed ? .primary : .secondary)
       }
       .padding(14)
@@ -125,12 +125,12 @@ struct FilesystemMapView: View {
     return ScrollView {
       VStack(alignment: .leading, spacing: 14) {
         if let node {
-          Text(node.label).font(.title2.bold())
+          Text(node.label).font(.halSection.bold())
           Text(node.purpose).textSelection(.enabled)
           PathActionMenu(path: node.path)
           Label(stateLabel(node.state), systemImage: stateSymbol(node.state))
           Divider()
-          Text("Observed here").font(.headline)
+          Text("Observed here").font(.halRowTitle)
           if node.entityIDs.isEmpty {
             Text("No entity association is present. This does not mean the folder is empty.")
               .foregroundStyle(.secondary)

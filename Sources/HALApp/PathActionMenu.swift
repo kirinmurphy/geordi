@@ -141,7 +141,7 @@ struct PathActionMenu: View {
           .truncationMode(.middle)
           .textSelection(.enabled)
         Image(systemName: "chevron.down")
-          .font(.caption2)
+          .font(.halSmall)
       }
     }
     .menuStyle(.borderlessButton)

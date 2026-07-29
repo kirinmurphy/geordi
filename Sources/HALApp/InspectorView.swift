@@ -44,7 +44,7 @@ struct InspectorView: View {
           Image(systemName: EntityVisualStyle.symbol(for: entity.type))
             .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
           Text(entity.type.label.uppercased())
-            .font(.caption.bold())
+            .font(.halSmall.bold())
         }
         .foregroundStyle(EntityVisualStyle.color(for: entity.type))
         Button {
@@ -57,8 +57,8 @@ struct InspectorView: View {
         .help("Explain \(entity.type.label.lowercased())")
         .accessibilityLabel("About \(entity.type.label)")
       }
-      Text(entity.name).font(.title.bold())
-      Text(entity.summary).font(.title3)
+      Text(entity.name).font(.halTitle.bold())
+      Text(entity.summary).font(.halSubsection)
       if !entity.details.isEmpty || !entity.instances.isEmpty {
         Divider()
         if entity.type == .application {
@@ -67,12 +67,12 @@ struct InspectorView: View {
             groupedDetails(entity.details)
               .padding(.top, 10)
           }
-          .font(.subheadline.weight(.semibold))
+          .font(.halSecondary.weight(.semibold))
         } else {
           if !entity.details.isEmpty {
             if !entity.instances.isEmpty {
               Text("Shared attributes")
-                .font(.headline)
+                .font(.halRowTitle)
             }
             groupedDetails(entity.details)
           }
@@ -120,7 +120,7 @@ struct InspectorView: View {
       ForEach(groups.filter { grouped[$0.id]?.isEmpty == false }) { group in
         VStack(alignment: .leading, spacing: 8) {
           Text(group.label)
-            .font(.subheadline.bold())
+            .font(.halSecondary.bold())
           detailGrid(grouped[group.id] ?? [])
         }
       }
@@ -133,7 +133,7 @@ struct InspectorView: View {
     return Group {
       if !paths.isEmpty || manager == "Homebrew" {
         VStack(alignment: .leading, spacing: 10) {
-          Text("Explore further").font(.headline)
+          Text("Explore further").font(.halRowTitle)
           ForEach(paths, id: \.self) { PathActionMenu(path: $0) }
           if manager == "Homebrew", isSafePackageName(entity.name) {
             Button("Copy Homebrew removal guidance") {
@@ -164,7 +164,7 @@ struct InspectorView: View {
     }
     return VStack(alignment: .leading, spacing: 10) {
       Text("Identity & provenance")
-        .font(.headline)
+        .font(.halRowTitle)
       evidenceSummaryRow(
         title: "Signing",
         value: signature.map { signatureDetail in
@@ -195,10 +195,10 @@ struct InspectorView: View {
         .foregroundStyle(.secondary)
       VStack(alignment: .leading, spacing: 2) {
         Text(title)
-          .font(.caption.bold())
+          .font(.halSmall.bold())
           .foregroundStyle(.secondary)
         Text(value)
-          .font(.callout.weight(.medium))
+          .font(.halSecondary.weight(.medium))
       }
     }
   }
@@ -253,7 +253,7 @@ struct InspectorView: View {
     }
     return VStack(alignment: .leading, spacing: 10) {
       Text("Observed instances (\(instances.count))")
-        .font(.headline)
+        .font(.halRowTitle)
       ScrollView(.horizontal) {
         Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 10) {
           GridRow {
@@ -262,7 +262,7 @@ struct InspectorView: View {
               Text(label)
             }
           }
-          .font(.caption.bold())
+          .font(.halSmall.bold())
           .foregroundStyle(.secondary)
 
           Divider()
@@ -286,15 +286,15 @@ struct InspectorView: View {
   private func relationshipView(_ relationship: Relationship) -> some View {
     VStack(alignment: .leading, spacing: 18) {
       label("Relationship", systemImage: "arrow.right")
-      Text(relationship.type.rawValue.capitalized).font(.title.bold())
+      Text(relationship.type.rawValue.capitalized).font(.halTitle.bold())
       HStack {
         Text(graph.entity(relationship.source)?.name ?? "Unknown source")
         Image(systemName: "arrow.right")
           .accessibilityLabel("points to")
         Text(graph.entity(relationship.target)?.name ?? "Unknown target")
       }
-      .font(.headline)
-      Text(relationship.explanation).font(.title3)
+      .font(.halRowTitle)
+      Text(relationship.explanation).font(.halSubsection)
       Label(
         "\(relationship.confidence.plainLanguage) · \(relationship.confidence.rawValue.capitalized)",
         systemImage: relationship.confidence == .ambiguous
@@ -303,15 +303,15 @@ struct InspectorView: View {
       .foregroundStyle(relationship.confidence == .ambiguous ? .orange : .secondary)
       VStack(alignment: .leading, spacing: 12) {
         Text("Evidence (\(relationship.evidence.count))")
-          .font(.headline)
+          .font(.halRowTitle)
         ForEach(relationship.evidence) { evidence in
           VStack(alignment: .leading, spacing: 4) {
             Text(evidence.kind == .observed ? "OBSERVED FACT" : "HAL INFERENCE")
-              .font(.caption2.bold())
+              .font(.halSmall.bold())
               .foregroundStyle(evidence.kind == .observed ? .green : .blue)
             Text(evidence.summary)
             Text(evidence.source)
-              .font(.caption)
+              .font(.halSmall)
               .foregroundStyle(.secondary)
           }
         }
@@ -328,7 +328,7 @@ struct InspectorView: View {
   ) -> some View {
     VStack(alignment: .leading, spacing: 10) {
       Text(title)
-        .font(.subheadline.bold())
+        .font(.halSecondary.bold())
         .foregroundStyle(.secondary)
       ForEach(groupedRelationships(relationships, isUpstream: isUpstream), id: \.key) { group in
         relationshipGroup(
@@ -357,7 +357,7 @@ struct InspectorView: View {
           Image(systemName: EntityVisualStyle.symbol(for: nodeType))
             .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
           Text(nodeType.label.uppercased())
-            .font(.caption2.bold())
+            .font(.halSmall.bold())
         }
         .foregroundStyle(tint)
       }
@@ -371,7 +371,7 @@ struct InspectorView: View {
           isUpstream: isUpstream
         )
       )
-      .font(.callout.bold())
+      .font(.halSecondary.bold())
 
       if relationships.count > 1 {
         VStack(alignment: .leading, spacing: 6) {
@@ -381,14 +381,14 @@ struct InspectorView: View {
                 .fill(tint.opacity(0.8))
                 .frame(width: 5, height: 5)
               Text(counterpart.name)
-                .font(.callout.weight(.medium))
+                .font(.halSecondary.weight(.medium))
             }
           }
         }
         .padding(.top, 2)
       } else {
         Text(first.explanation)
-          .font(.caption)
+          .font(.halSmall)
           .foregroundStyle(.secondary)
       }
     }
@@ -447,7 +447,7 @@ struct InspectorView: View {
     tint: Color = .secondary
   ) -> some View {
     Label(text.uppercased(), systemImage: systemImage)
-      .font(.caption.bold())
+      .font(.halSmall.bold())
       .foregroundStyle(tint)
   }
 }
