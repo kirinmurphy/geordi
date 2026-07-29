@@ -174,6 +174,10 @@ Use `PRODUCT_EVALUATION_GUIDE.md` to run at least three representative sessions,
 record each with `PRODUCT_EVALUATION_SESSION_TEMPLATE.md`, and revise the
 highest-frequency user-facing friction.
 
+New hands-on gaps are captured in `USER_FACING_TODO.md`: live Oh My Zsh
+explanation, reliable Homebrew cask provenance, and adaptable discovery of Warp,
+cmux, iTerm2, Ghostty, and other compatible terminal applications.
+
 Do not start Observation History, recursive measurement, telemetry, cleanup, or
 privileged collection yet.
 
@@ -269,3 +273,4 @@ permission, privacy, signing, history, or destructive decision is required.
 - Current product phase: `NEXT_PRODUCT_VALIDATION_PLAN.md`
 - Future and parked phases: `FUTURE_PHASE_PLANS.md`
 - Parked Observation History: `FUTURE_PHASE_6_OBSERVATION_HISTORY.md`
+- User-facing product gaps: `USER_FACING_TODO.md`

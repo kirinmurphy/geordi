@@ -3,6 +3,9 @@
 Status: prioritized parking lot  
 Current phase: `NEXT_PRODUCT_VALIDATION_PLAN.md`
 
+Hands-on user-facing gaps and acceptance criteria are tracked in
+`USER_FACING_TODO.md`.
+
 This file separates future work from completed implementation records. Sequence
 is intentionally conditional on product evidence; phase numbers do not imply
 automatic execution.
@@ -63,6 +66,9 @@ Potential outcome:
 
 Entry signal: current signing, receipt, download, and package evidence fails to
 answer “where did this come from?” in representative evaluations.
+
+The first concrete provenance gap is reliable Homebrew cask ownership for
+applications placed in `/Applications`; see `USER_FACING_TODO.md`.
 
 ## Later milestones
 
