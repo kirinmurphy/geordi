@@ -37,6 +37,86 @@ struct ExplorationConfigurationTests {
     }
   }
 
+  @Test("Terminal availability uses declared identity and capability")
+  func terminalAvailability() throws {
+    let configuration = try TerminalAdapterConfiguration.bundled()
+    let available = TerminalAvailabilityResolver().availableAdapters(
+      configuration: configuration,
+      installedApplications: [
+        InstalledTerminalApplication(
+          bundleIdentifier: "dev.warp.Warp-Stable",
+          declaredURLSchemes: ["warp"]
+        ),
+        InstalledTerminalApplication(bundleIdentifier: "com.cmuxterm.app"),
+        InstalledTerminalApplication(bundleIdentifier: "unsupported.terminal"),
+      ],
+      runningBundleIdentifiers: ["com.cmuxterm.app"],
+      activationOrder: ["com.cmuxterm.app"],
+      preferredBundleIdentifier: "dev.warp.Warp-Stable"
+    )
+
+    #expect(available.map(\.adapter.id) == ["cmux", "warp"])
+    #expect(available.first?.isRunning == true)
+    #expect(available.last?.isPreferred == true)
+  }
+
+  @Test("Recent activation ranks running terminals deterministically")
+  func activationRanking() throws {
+    let configuration = try TerminalAdapterConfiguration.bundled()
+    let installed = [
+      InstalledTerminalApplication(bundleIdentifier: "com.apple.Terminal"),
+      InstalledTerminalApplication(bundleIdentifier: "com.cmuxterm.app"),
+    ]
+    let available = TerminalAvailabilityResolver().availableAdapters(
+      configuration: configuration,
+      installedApplications: installed,
+      runningBundleIdentifiers: ["com.apple.Terminal", "com.cmuxterm.app"],
+      activationOrder: ["com.cmuxterm.app", "com.apple.Terminal"],
+      preferredBundleIdentifier: nil
+    )
+    #expect(available.map(\.adapter.id) == ["cmux", "apple-terminal"])
+  }
+
+  @Test("Missing declared URL scheme makes a reviewed strategy unavailable")
+  func unavailableStrategy() throws {
+    let configuration = try TerminalAdapterConfiguration.bundled()
+    let available = TerminalAvailabilityResolver().availableAdapters(
+      configuration: configuration,
+      installedApplications: [
+        InstalledTerminalApplication(bundleIdentifier: "dev.warp.Warp-Stable")
+      ],
+      runningBundleIdentifiers: [],
+      activationOrder: [],
+      preferredBundleIdentifier: nil
+    )
+    #expect(available.isEmpty)
+  }
+
+  @Test("Terminal path targets distinguish files, directories, and unsafe input")
+  func terminalPathTargets() {
+    #expect(
+      TerminalPathTarget.directoryPath(
+        for: "/Users/example/project",
+        exists: true,
+        isDirectory: true
+      ) == "/Users/example/project"
+    )
+    #expect(
+      TerminalPathTarget.directoryPath(
+        for: "/Users/example/project/file.txt",
+        exists: true,
+        isDirectory: false
+      ) == "/Users/example/project"
+    )
+    #expect(
+      TerminalPathTarget.directoryPath(
+        for: "relative/file.txt",
+        exists: true,
+        isDirectory: false
+      ) == nil
+    )
+  }
+
   @Test("Filesystem projection is deterministic, sparse, and does not enumerate")
   func filesystemProjection() throws {
     let graph = SystemGraph(

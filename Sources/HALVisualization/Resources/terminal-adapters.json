@@ -1,22 +1,39 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "adapters": [
     {
       "id": "apple-terminal",
       "displayName": "Terminal",
       "bundleIdentifier": "com.apple.Terminal",
+      "requiredURLSchemes": [],
       "strategy": "workspace-open"
     },
     {
       "id": "iterm2",
       "displayName": "iTerm2",
       "bundleIdentifier": "com.googlecode.iterm2",
+      "requiredURLSchemes": [],
+      "strategy": "workspace-open"
+    },
+    {
+      "id": "warp",
+      "displayName": "Warp",
+      "bundleIdentifier": "dev.warp.Warp-Stable",
+      "requiredURLSchemes": ["warp"],
+      "strategy": "warp-new-window-url"
+    },
+    {
+      "id": "cmux",
+      "displayName": "cmux",
+      "bundleIdentifier": "com.cmuxterm.app",
+      "requiredURLSchemes": [],
       "strategy": "workspace-open"
     },
     {
       "id": "ghostty",
       "displayName": "Ghostty",
       "bundleIdentifier": "com.mitchellh.ghostty",
+      "requiredURLSchemes": [],
       "strategy": "workspace-open"
     }
   ]

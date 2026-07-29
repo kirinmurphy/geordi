@@ -37,6 +37,22 @@ invoking Homebrew for JSON. Containment does not cover every cask installation
 shape, and a subprocess was unnecessary because the installed receipt provides
 the required bounded evidence.
 
+### Terminal compatibility is declared and capability checked
+
+The path menu now has an explicit **Open in Terminal** submenu. A versioned
+manifest declares reviewed bundle identifiers, required URL schemes, and a
+small closed set of launch strategies; Swift retains control of the strategies
+and never executes a discovered application binary. Availability requires an
+installed bundle-identifier match and any declared URL-scheme capability.
+
+Warp uses its documented `warp://action/new_window` directory action. The
+installed cmux bundle declares `public.folder` support, so it uses the native
+workspace folder-open strategy. Running adapters rank before non-running ones,
+and the most recently activated running adapter ranks first. A saved preference
+is an explicit user decision. The standard application chooser requires a
+second explicit **Open Once** or **Open and Remember** decision for an
+unreviewed application.
+
 ### Narrative before graph
 
 Options considered were keeping the map as the application landing page,
@@ -75,6 +91,10 @@ validated manifest. Swift implements generic presentation and navigation.
 - Homebrew-focused tests cover schema versioning, unknown keys, unsafe paths,
   formula inventory, Caskroom artifacts, bundle identity, and the independent
   Application Story ownership projection.
+- Terminal-focused tests cover manifest validation, Warp and cmux identity,
+  declared capability, installed/running availability, activation ranking,
+  saved preference state, unsupported candidates, and safe file/directory
+  target selection.
 
 ## Remaining work
 

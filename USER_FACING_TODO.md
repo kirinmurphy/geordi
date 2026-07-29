@@ -96,6 +96,9 @@ Acceptance criteria:
 
 ## Priority 1 — Discover and offer compatible terminal applications
 
+Implementation status: completed in the current development boundary; chooser
+and reviewed-adapter behavior still need hands-on product validation.
+
 Observed examples:
 
 - Apple Terminal
