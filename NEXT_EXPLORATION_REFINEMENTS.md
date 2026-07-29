@@ -14,22 +14,26 @@ they repeat the section's meaning and make the inventory harder to scan.
 Descriptions remain useful in the entity inspector, where a user has asked for
 an atomic explanation.
 
-## 2. Make packages children of their package managers
+## 2. Make installed items children of their software sources
 
 Replace the separate **Installed Packages** section with a hierarchical
-**Package Managers** section:
+**Software Sources** section:
 
-- each manager is a clickable parent;
+- each package manager or store is a clickable parent;
 - each directly owned package is a clickable child;
+- App Store is a source group whose children are applications with observed
+  Mac App Store receipts;
 - packages without a known manager appear in a clearly labeled **Other** or
   **Unattributed** presentation group; and
 - managers with large inventories start collapsed and show their package count.
 
 This structure answers both “what installed this?” and “what does this manager
 own?” without making users reconcile two loose lists. The parent-child
-relationship must be derived from graph relationships, not package-name
-conventions. “Other” is a presentation group for missing ownership evidence,
-not a fabricated package-manager entity.
+relationship must be derived from observed provenance or graph relationships,
+not package-name conventions. “Other” is a presentation group for missing
+ownership evidence, not a fabricated package-manager entity. App Store
+membership requires an observed receipt; path or developer signature alone is
+insufficient.
 
 Keep developer capabilities separate. A Go installation can be a package owned
 by Homebrew and also provide a Go toolchain; those are different facts and
@@ -110,4 +114,3 @@ copy later uses that exact concept.
 2. Question-specific destinations, reusing the new command-line hierarchy.
 3. Generalized graph fan-out policy and focused group exploration.
 4. Glossary-aware paragraph rendering and a broader domain-language inventory.
-

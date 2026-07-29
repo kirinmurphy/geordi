@@ -34,14 +34,13 @@ struct ApplicationStoryView: View {
       ScrollView {
         VStack(alignment: .leading, spacing: 24) {
           storyHeader
-          atAGlance
+          originSection
           storySection(
             title: "Why it may be active",
             symbol: "play.circle",
             emptyMessage: "No active process or startup evidence was observed.",
             connections: story.processes + story.startupItems
           )
-          originSection
           storySection(
             title: "What HAL associates with it",
             symbol: "link",
@@ -68,9 +67,12 @@ struct ApplicationStoryView: View {
         Text("APPLICATION STORY")
           .font(.caption.bold())
           .foregroundStyle(.secondary)
-        Text(application.name)
-          .font(.largeTitle.bold())
-          .textSelection(.enabled)
+        HStack(spacing: 10) {
+          Text(application.name)
+            .font(.largeTitle.bold())
+            .textSelection(.enabled)
+          statusBadge
+        }
         Text(application.summary)
           .font(.title3)
           .foregroundStyle(.secondary)
@@ -99,15 +101,29 @@ struct ApplicationStoryView: View {
     }
   }
 
-  private var atAGlance: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      sectionTitle("At a glance", symbol: "rectangle.grid.2x2")
-      HStack(spacing: 12) {
-        storyFact("Current state", story.currentState, symbol: "waveform.path.ecg")
-        storyFact("Where it came from", story.sourceSummary, symbol: "shippingbox")
-        storyFact("Evidence", story.confidenceSummary, symbol: "checkmark.seal")
+  private var statusBadge: some View {
+    let color: Color =
+      switch story.status {
+      case .running: .green
+      case .offline: .gray
+      case .warnings: .orange
+      case .unhealthy: .red
       }
+    return Text(story.status.label)
+      .font(.caption.bold())
+      .foregroundStyle(.white)
+      .padding(.horizontal, 9)
+      .padding(.vertical, 4)
+      .background(color, in: Capsule())
+      .accessibilityLabel("Application status: \(story.status.label)")
+  }
+
+  private func evidenceExplanation(_ relationship: Relationship) -> String {
+    let summaries = relationship.evidence.map(\.summary)
+    guard !summaries.isEmpty else {
+      return "HAL retained no supporting evidence details."
     }
+    return summaries.prefix(2).joined(separator: " ")
   }
 
   private var originSection: some View {
@@ -163,12 +179,13 @@ struct ApplicationStoryView: View {
           .foregroundStyle(.secondary)
           .textSelection(.enabled)
         Text(
-          "\(connection.relationship.confidence.plainLanguage) · \(connection.relationship.evidence.count) supporting evidence item\(connection.relationship.evidence.count == 1 ? "" : "s")"
+          "Why HAL connects these: \(evidenceExplanation(connection.relationship))"
         )
-        .font(.caption.weight(.semibold))
+        .font(.caption)
         .foregroundStyle(
           connection.relationship.confidence == .ambiguous ? Color.orange : Color.secondary
         )
+        .textSelection(.enabled)
       }
       Spacer()
       Button("Inspect") { model.focus(connection.entity) }
@@ -225,20 +242,6 @@ struct ApplicationStoryView: View {
   private func sectionTitle(_ title: String, symbol: String) -> some View {
     Label(title, systemImage: symbol)
       .font(.title2.bold())
-  }
-
-  private func storyFact(_ title: String, _ value: String, symbol: String) -> some View {
-    VStack(alignment: .leading, spacing: 7) {
-      Label(title, systemImage: symbol)
-        .font(.caption.bold())
-        .foregroundStyle(.secondary)
-      Text(value)
-        .font(.headline)
-        .textSelection(.enabled)
-    }
-    .padding(14)
-    .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
   }
 
   private func calmEmpty(_ message: String) -> some View {

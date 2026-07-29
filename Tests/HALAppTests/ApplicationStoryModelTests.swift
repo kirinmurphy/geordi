@@ -40,8 +40,8 @@ struct ApplicationStoryModelTests {
     #expect(story.startupItems.map(\.entity.id) == ["startup"])
     #expect(story.associatedItems.map(\.entity.id) == ["cache"])
     #expect(story.owners.map(\.entity.id) == ["manager"])
-    #expect(story.sourceSummary == "Homebrew cask example")
     #expect(story.currentState == "Running")
+    #expect(story.status == .running)
     #expect(story.unknowns.isEmpty)
   }
 
@@ -61,8 +61,60 @@ struct ApplicationStoryModelTests {
 
     let story = ApplicationStoryModel(application: application, graph: graph)
     #expect(story.currentState == "Not observed running")
-    #expect(story.sourceSummary == "Source evidence unavailable")
+    #expect(story.status == .offline)
     #expect(story.unknowns.count == 4)
+  }
+
+  @Test("Story turns App Store receipt evidence into a useful source conclusion")
+  func appStoreSource() {
+    let application = Entity(
+      id: "app",
+      type: .application,
+      name: "Store Example",
+      summary: "An App Store application.",
+      details: [
+        Detail("Download origin", "Not observed"),
+        Detail("App Store receipt", "Present"),
+      ]
+    )
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "store", name: "Store", summary: "Store"),
+      entities: [application],
+      relationships: []
+    )
+
+    let story = ApplicationStoryModel(application: application, graph: graph)
+    #expect(story.provenance == [Detail("Installation source", "App Store")])
+  }
+
+  @Test("Story status prioritizes health and warning details")
+  func healthStatus() {
+    let warningApplication = Entity(
+      id: "warning",
+      type: .application,
+      name: "Warning Example",
+      summary: "Warnings",
+      details: [Detail("Warnings", "2"), Detail("Current state", "Running")]
+    )
+    let unhealthyApplication = Entity(
+      id: "unhealthy",
+      type: .application,
+      name: "Broken Example",
+      summary: "Broken",
+      details: [Detail("Application health", "Unhealthy"), Detail("Warnings", "2")]
+    )
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "health", name: "Health", summary: "Health"),
+      entities: [warningApplication, unhealthyApplication],
+      relationships: []
+    )
+
+    #expect(
+      ApplicationStoryModel(application: warningApplication, graph: graph).status == .warnings(2)
+    )
+    #expect(
+      ApplicationStoryModel(application: unhealthyApplication, graph: graph).status == .unhealthy
+    )
   }
 
   private func relationship(

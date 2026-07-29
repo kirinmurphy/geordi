@@ -1,6 +1,22 @@
 import HALDomain
 
 struct ApplicationStoryModel: Equatable {
+  enum Status: Equatable {
+    case running
+    case offline
+    case warnings(Int)
+    case unhealthy
+
+    var label: String {
+      switch self {
+      case .running: "Running"
+      case .offline: "Offline"
+      case .warnings(let count): "\(count) warning\(count == 1 ? "" : "s")"
+      case .unhealthy: "Application unhealthy"
+      }
+    }
+  }
+
   struct Connection: Identifiable, Equatable {
     let id: RelationshipID
     let entity: Entity
@@ -33,13 +49,21 @@ struct ApplicationStoryModel: Equatable {
       $0.relationship.target == application.id
         && [.packageManager, .package].contains($0.entity.type)
     }
-    provenance = application.details.filter {
+    let rawProvenance = application.details.filter {
       let label = $0.label.lowercased()
-      return label.contains("signature") || label.contains("team")
-        || label.contains("receipt") || label.contains("origin")
+      return label.contains("receipt") || label.contains("origin")
         || label.contains("installed with") || label.contains("download")
         || label.contains("package manager")
     }
+    let hasAppStoreReceipt = rawProvenance.contains {
+      $0.label == "App Store receipt" && $0.value == "Present"
+    }
+    provenance =
+      rawProvenance.filter {
+        $0.label != "App Store receipt"
+          && $0.value != "Not observed"
+          && !$0.value.hasPrefix("Unavailable")
+      } + (hasAppStoreReceipt ? [Detail("Installation source", "App Store")] : [])
 
     var missing: [String] = []
     if processes.isEmpty {
@@ -66,25 +90,22 @@ struct ApplicationStoryModel: Equatable {
       ?? (processes.isEmpty ? "Not observed running" : "Observed running")
   }
 
-  var sourceSummary: String {
-    if let installed = application.details.first(where: { $0.label == "Installed with" }) {
-      return installed.value
+  var status: Status {
+    if application.details.contains(where: {
+      $0.label == "Application health"
+        && ["broken", "unhealthy"].contains($0.value.lowercased())
+    }) {
+      return .unhealthy
     }
-    if let owner = owners.first {
-      return "Managed by \(owner.entity.name)"
+    if let warningCount = application.details.first(where: { $0.label == "Warnings" })
+      .flatMap({ Int($0.value) }), warningCount > 0
+    {
+      return .warnings(warningCount)
     }
-    if let provenance = provenance.first {
-      return "\(provenance.label): \(provenance.value)"
+    let normalizedState = currentState.lowercased()
+    if !processes.isEmpty || ["running", "observed running"].contains(normalizedState) {
+      return .running
     }
-    return "Source evidence unavailable"
-  }
-
-  var confidenceSummary: String {
-    let connected = processes + startupItems + associatedItems + owners
-    guard !connected.isEmpty else { return "No connected evidence" }
-    if connected.contains(where: { $0.relationship.confidence == .ambiguous }) {
-      return "Some connections are uncertain"
-    }
-    return "Evidence-backed connections"
+    return .offline
   }
 }

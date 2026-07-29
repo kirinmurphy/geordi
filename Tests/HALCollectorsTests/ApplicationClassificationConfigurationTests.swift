@@ -67,6 +67,14 @@ struct ApplicationClassificationConfigurationTests {
     )
     #expect(
       configuration.category(
+        forApplicationPath: "/Applications/StorePlatform.app",
+        platformBinary: true,
+        details: [Detail("App Store receipt", "Present")],
+        userHome: home
+      ).id == "app-store"
+    )
+    #expect(
+      configuration.category(
         forApplicationPath: "/Applications/Brew.app",
         platformBinary: false,
         details: [Detail("Installed with", "Homebrew cask brew")],
