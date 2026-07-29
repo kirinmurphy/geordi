@@ -194,7 +194,7 @@ struct ContentView: View {
         }
         Section("Explore") {
           navigationButton(
-            "Installed software", symbol: "square.grid.2x2", destination: .applications)
+            "Installed software", symbol: "macwindow.on.rectangle", destination: .applications)
           navigationButton(
             "Filesystem Map", symbol: "point.3.connected.trianglepath.dotted",
             destination: .filesystem)
@@ -588,6 +588,7 @@ private struct OverviewView: View {
   @State private var commandSearch = ""
   @State private var guidedProofPresented = false
   @State private var expandedSoftwareGroups = Set<String>()
+  @State private var hoveredSoftwareGroupID: String?
 
   var body: some View {
     ScrollView {
@@ -661,7 +662,7 @@ private struct OverviewView: View {
                       symbol: "app",
                       tint: EntityVisualStyle.color(for: .application),
                       title: application.name,
-                      trailing: "Application",
+                      trailing: "",
                       applicationPath: detail("Path", in: application),
                       compact: true
                     ) { model.focus(application) }
@@ -681,7 +682,7 @@ private struct OverviewView: View {
                       symbol: "cube.box",
                       tint: EntityVisualStyle.color(for: .package),
                       title: package.name,
-                      trailing: "Package",
+                      trailing: "",
                       compact: true
                     ) { model.focus(package) }
                     .padding(.leading, 44)
@@ -709,7 +710,7 @@ private struct OverviewView: View {
                       symbol: "app",
                       tint: EntityVisualStyle.color(for: .application),
                       title: application.name,
-                      trailing: "Application",
+                      trailing: "",
                       applicationPath: detail("Path", in: application),
                       compact: true
                     ) { model.focus(application) }
@@ -810,7 +811,7 @@ private struct OverviewView: View {
   private var applicationInventorySection: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(spacing: 8) {
-        Image(systemName: "square.grid.2x2")
+        Image(systemName: "macwindow.on.rectangle")
         Text("Applications:")
         if !model.isSynthetic, let configuration = model.applicationClassifications {
           Menu {
@@ -832,9 +833,10 @@ private struct OverviewView: View {
           } label: {
             HStack(spacing: 5) {
               Text(selectedApplicationCategoryLabel)
+                .font(.halSection.bold())
                 .underline()
               Image(systemName: "chevron.down")
-                .font(.halSmall.bold())
+                .font(.system(size: 14, weight: .bold))
             }
           }
           .menuIndicator(.hidden)
@@ -980,14 +982,15 @@ private struct OverviewView: View {
     } label: {
       HStack(spacing: 12) {
         Image(systemName: symbol)
+          .font(.system(size: 17, weight: .semibold))
           .foregroundStyle(tint)
-          .frame(width: 25, height: 25)
+          .frame(width: 28, height: 28)
         Text(title)
           .font(.halRowTitle)
-        Spacer()
         Image(systemName: expanded ? "chevron.up" : "chevron.down")
-          .font(.halSmall.bold())
+          .font(.system(size: 13, weight: .bold))
           .foregroundStyle(.secondary)
+        Spacer()
       }
       .padding(.leading, 22)
       .padding(.trailing, 16)
@@ -995,11 +998,17 @@ private struct OverviewView: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
-    .background(Color.secondary.opacity(0.035))
+    .background(
+      hoveredSoftwareGroupID == id
+        ? Color.accentColor.opacity(0.14) : Color.secondary.opacity(0.035)
+    )
     .overlay(alignment: .bottom) {
       Rectangle().fill(Color.secondary.opacity(0.16)).frame(height: 1)
     }
     .padding(.horizontal, -16)
+    .onHover { hovering in
+      hoveredSoftwareGroupID = hovering ? id : nil
+    }
     if expanded {
       content()
     }
@@ -1608,12 +1617,12 @@ private struct InventoryRow: View {
           Image(nsImage: NSWorkspace.shared.icon(forFile: applicationPath))
             .resizable()
             .scaledToFit()
-            .frame(width: compact ? 25 : 32, height: compact ? 25 : 32)
+            .frame(width: compact ? 28 : 34, height: compact ? 28 : 34)
         } else {
           Image(systemName: symbol)
             .font(.halSubsection)
             .foregroundStyle(tint)
-            .frame(width: compact ? 25 : 32, height: compact ? 25 : 32)
+            .frame(width: compact ? 28 : 34, height: compact ? 28 : 34)
             .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
         }
         VStack(alignment: .leading, spacing: 3) {
@@ -1631,7 +1640,7 @@ private struct InventoryRow: View {
           .font(.halSecondary.weight(.medium))
           .foregroundStyle(.secondary)
         Image(systemName: "chevron.right")
-          .font(.halSmall.bold())
+          .font(.system(size: 13, weight: .bold))
           .foregroundStyle(.tertiary)
       }
       .padding(.horizontal, 16)

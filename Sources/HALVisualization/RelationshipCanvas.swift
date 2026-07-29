@@ -404,7 +404,7 @@ public struct RelationshipCanvas: View {
 /// Red and orange remain available exclusively for warnings, findings, and status.
 public enum EntityVisualStyle {
   /// The shared icon size for semantic nodes in maps, diagrams, and inspectors.
-  public static let nodeIconSize: CGFloat = 20
+  public static let nodeIconSize: CGFloat = 23
 
   public static func symbol(for type: EntityType) -> String {
     switch type {

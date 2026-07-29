@@ -32,6 +32,12 @@
       ],
       "detailRules": [
         {
+          "label": "App Store receipt",
+          "equals": "Present",
+          "startsWith": null,
+          "excludes": []
+        },
+        {
           "label": "Installation timing",
           "equals": "Present at setup",
           "startsWith": null,

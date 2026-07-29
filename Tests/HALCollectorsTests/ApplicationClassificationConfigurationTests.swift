@@ -122,6 +122,17 @@ struct ApplicationClassificationConfigurationTests {
     )
     #expect(
       configuration.category(
+        forApplicationPath: "/Applications/Warp.app",
+        platformBinary: false,
+        details: [
+          Detail("Installation timing", "Present at setup"),
+          Detail("Installed with", "Homebrew cask warp"),
+        ],
+        userHome: home
+      ).id == "user-installed"
+    )
+    #expect(
+      configuration.category(
         forApplicationPath: "/Applications/Unknown.app",
         platformBinary: false,
         details: [Detail("Installation timing", "Unknown")],
