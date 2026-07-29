@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 4
+  public static let currentVersion = 5
 
   public let schemaVersion: Int
   public let allApplicationsLabel: String
@@ -62,11 +62,17 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
       guard Set(configuration.categories.map(\.id)).count == configuration.categories.count else {
         throw ApplicationClassificationConfigurationError.duplicateCategoryID
       }
-      guard configuration.categories.contains(where: { $0.id == configuration.defaultCategoryID })
+      guard
+        configuration.categories.contains(where: {
+          $0.id == configuration.defaultCategoryID && $0.kind == .scope
+        })
       else {
         throw ApplicationClassificationConfigurationError.unknownDefaultCategory
       }
-      guard configuration.categories.filter(\.isFallback).count == 1 else {
+      guard
+        configuration.categories.filter({ $0.kind == .scope && $0.isFallback }).count == 1,
+        configuration.categories.allSatisfy({ $0.kind == .scope || !$0.isFallback })
+      else {
         throw ApplicationClassificationConfigurationError.invalidFallbackCount
       }
       for category in configuration.categories {
@@ -93,7 +99,7 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
       if $0.priority != $1.priority { return $0.priority > $1.priority }
       return $0.id < $1.id
     }
-    for category in orderedCategories where !category.isFallback {
+    for category in orderedCategories where category.kind == .scope && !category.isFallback {
       if let expected = category.platformBinaryWhenKnown {
         guard let platformBinary, expected == platformBinary else {
           continue
@@ -108,12 +114,47 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
         return category
       }
     }
-    return categories.first(where: \.isFallback)!
+    return categories.first { $0.kind == .scope && $0.isFallback }!
+  }
+
+  public func source(
+    forApplicationPath path: String,
+    platformBinary: Bool? = nil,
+    details: [Detail] = [],
+    userHome: URL = FileManager.default.homeDirectoryForCurrentUser
+  ) -> ApplicationClassificationCategory? {
+    let applicationURL = URL(filePath: path).standardizedFileURL
+    return
+      categories
+      .filter { $0.kind == .source }
+      .sorted {
+        if $0.priority != $1.priority { return $0.priority > $1.priority }
+        return $0.id < $1.id
+      }
+      .first { category in
+        if let expected = category.platformBinaryWhenKnown,
+          platformBinary != expected
+        {
+          return false
+        }
+        let pathMatches =
+          category.pathPrefixes.isEmpty
+          || category.pathPrefixes.contains {
+            $0.matches(applicationURL, userHome: userHome)
+          }
+        return pathMatches && category.detailRules.allSatisfy { $0.matches(details) }
+      }
   }
 }
 
 public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Identifiable {
+  public enum Kind: String, Codable, Hashable, Sendable {
+    case scope
+    case source
+  }
+
   public let id: String
+  public let kind: Kind
   public let label: String
   public let summary: String
   public let priority: Int
@@ -124,6 +165,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
 
   public init(
     id: String,
+    kind: Kind = .scope,
     label: String,
     summary: String,
     priority: Int,
@@ -133,6 +175,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     detailRules: [ApplicationClassificationDetailRule] = []
   ) {
     self.id = id
+    self.kind = kind
     self.label = label
     self.summary = summary
     self.priority = priority

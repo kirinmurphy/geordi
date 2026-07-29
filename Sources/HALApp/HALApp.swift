@@ -182,7 +182,8 @@ final class AppModel {
       }
     )
     return applicationClassifications.categories.filter {
-      observedCategoryIDs.contains($0.id) || $0.id == selectedApplicationCategoryID
+      $0.kind == .scope
+        && (observedCategoryIDs.contains($0.id) || $0.id == selectedApplicationCategoryID)
     }
   }
 
@@ -209,11 +210,11 @@ final class AppModel {
       let path = application.details.first(where: { $0.label == "Path" })?.value,
       let applicationClassifications
     else { return nil }
-    return applicationClassifications.category(
+    return applicationClassifications.source(
       forApplicationPath: path,
       platformBinary: platformBinaryEvidence(for: application),
       details: application.details
-    ).label
+    )?.label
   }
 
   var applicationScopeCounts: ApplicationScopeCounts {
@@ -228,7 +229,9 @@ final class AppModel {
       )
     }
     let fallbackIDs = Set(
-      applicationClassifications.categories.filter(\.isFallback).map(\.id)
+      applicationClassifications.categories.filter {
+        $0.kind == .scope && $0.isFallback
+      }.map(\.id)
     )
     let uncertain = all.filter { application in
       guard let path = application.details.first(where: { $0.label == "Path" })?.value else {

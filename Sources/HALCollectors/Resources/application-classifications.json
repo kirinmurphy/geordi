@@ -1,10 +1,11 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "allApplicationsLabel": "All Applications",
   "defaultCategoryID": "user-installed",
   "categories": [
     {
       "id": "system-utilities",
+      "kind": "scope",
       "label": "System Utilities",
       "summary": "Utilities and supporting apps included with macOS.",
       "priority": 300,
@@ -18,6 +19,7 @@
     },
     {
       "id": "bundled-software",
+      "kind": "scope",
       "label": "Bundled Software",
       "summary": "Applications included in macOS system locations.",
       "priority": 290,
@@ -31,6 +33,7 @@
     },
     {
       "id": "homebrew-cask",
+      "kind": "source",
       "label": "Homebrew Casks",
       "summary": "Applications correlated to an installed Homebrew cask through bounded Caskroom receipt evidence.",
       "priority": 400,
@@ -46,6 +49,7 @@
     },
     {
       "id": "app-store",
+      "kind": "source",
       "label": "App Store",
       "summary": "Applications with an observed Mac App Store receipt.",
       "priority": 390,
@@ -61,6 +65,7 @@
     },
     {
       "id": "downloaded",
+      "kind": "source",
       "label": "Downloaded",
       "summary": "Applications with observed filesystem download-origin metadata.",
       "priority": 380,
@@ -76,8 +81,9 @@
     },
     {
       "id": "user-installed",
-      "label": "Application Folders",
-      "summary": "Apps found in standard application folders without stronger installation-source evidence.",
+      "kind": "scope",
+      "label": "User-installed Applications",
+      "summary": "Applications added to standard application folders beyond the software included with macOS.",
       "priority": 100,
       "isFallback": false,
       "platformBinaryWhenKnown": false,
@@ -89,6 +95,7 @@
     },
     {
       "id": "other",
+      "kind": "scope",
       "label": "Other / Unclassified",
       "summary": "Applications whose location does not match a known software category.",
       "priority": 0,

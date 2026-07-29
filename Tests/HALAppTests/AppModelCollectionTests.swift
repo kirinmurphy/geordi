@@ -189,8 +189,11 @@ struct AppModelCollectionTests {
       model.applications(in: model.selectedApplicationCategoryID).map(\.id) == ["warp", "local"])
     #expect(model.applicationScopeCounts.visible == 2)
 
-    model.selectedApplicationCategoryID = "homebrew-cask"
-    #expect(model.applications(in: model.selectedApplicationCategoryID).map(\.id) == ["warp"])
+    model.selectedApplicationCategoryID = "user-installed"
+    #expect(
+      model.applications(in: model.selectedApplicationCategoryID).map(\.id) == ["warp", "local"]
+    )
+    #expect(model.applicationSourceLabel(linked.graph.entity("warp")!) == "Homebrew Casks")
   }
 
   @Test("Linked storage and performance views use collected entity types")

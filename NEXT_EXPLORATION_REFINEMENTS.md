@@ -20,7 +20,7 @@ Replace the separate **Installed Packages** section with a hierarchical
 **Software Sources** section:
 
 - each package manager or store is a clickable parent;
-- each directly owned package is a clickable child;
+- each directly managed application or package is a clickable child;
 - App Store is a source group whose children are applications with observed
   Mac App Store receipts;
 - packages without a known manager appear in a clearly labeled **Other** or
@@ -35,9 +35,21 @@ ownership evidence, not a fabricated package-manager entity. App Store
 membership requires an observed receipt; path or developer signature alone is
 insufficient.
 
-Keep developer capabilities separate. A Go installation can be a package owned
-by Homebrew and also provide a Go toolchain; those are different facts and
-should link to the same entity rather than duplicate it.
+Within a source, distinguish **Applications** from **Packages** with labeled
+subgroups and different entity icons. An application is a user-facing macOS
+application bundle. A package is a manager-owned installation record such as a
+formula, cask, or npm package. A manager may own both kinds.
+
+Do not merge an application and package merely because their names match. For
+example, a Homebrew cask record and the application bundle it installed are
+distinct entities with distinct identities and evidence, connected by an
+installation/ownership relationship. Both remain clickable. This also allows a
+package with no application artifact, such as TypeScript, to coexist with a
+package whose artifact is a user-facing application.
+
+Keep developer capabilities separate as well. A Go package can provide a Go
+toolchain; those are different facts connected to the relevant entities rather
+than alternate names for one undifferentiated row.
 
 Large groups need search and disclosure. Rendering hundreds of children
 expanded by default would reproduce the current noise in a deeper indentation.

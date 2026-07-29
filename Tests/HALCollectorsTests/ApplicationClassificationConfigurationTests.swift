@@ -63,7 +63,7 @@ struct ApplicationClassificationConfigurationTests {
         platformBinary: false,
         details: [Detail("App Store receipt", "Present")],
         userHome: home
-      ).id == "app-store"
+      ).id == "user-installed"
     )
     #expect(
       configuration.category(
@@ -71,7 +71,7 @@ struct ApplicationClassificationConfigurationTests {
         platformBinary: true,
         details: [Detail("App Store receipt", "Present")],
         userHome: home
-      ).id == "app-store"
+      ).id == "bundled-software"
     )
     #expect(
       configuration.category(
@@ -79,7 +79,23 @@ struct ApplicationClassificationConfigurationTests {
         platformBinary: false,
         details: [Detail("Installed with", "Homebrew cask brew")],
         userHome: home
-      ).id == "homebrew-cask"
+      ).id == "user-installed"
+    )
+    #expect(
+      configuration.source(
+        forApplicationPath: "/Applications/Store.app",
+        platformBinary: false,
+        details: [Detail("App Store receipt", "Present")],
+        userHome: home
+      )?.id == "app-store"
+    )
+    #expect(
+      configuration.source(
+        forApplicationPath: "/Applications/Brew.app",
+        platformBinary: false,
+        details: [Detail("Installed with", "Homebrew cask brew")],
+        userHome: home
+      )?.id == "homebrew-cask"
     )
   }
 
@@ -88,11 +104,12 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 4,
+        "schemaVersion": 5,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
           "id": "other",
+          "kind": "scope",
           "label": "Other",
           "summary": "Fallback",
           "priority": 0,
@@ -120,11 +137,12 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 4,
+        "schemaVersion": 5,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{
           "id": "apps",
+          "kind": "scope",
           "label": "Apps",
           "summary": "Apps",
           "priority": 1,
