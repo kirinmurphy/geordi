@@ -214,16 +214,30 @@ struct ApplicationStoryView: View {
     VStack(alignment: .leading, spacing: 12) {
       sectionTitle("Explore the evidence", symbol: "safari")
       Text(
-        "The story is the summary. Use the maps and inspector when you want the underlying context."
+        "The story is the summary. Open the preview for the full node explorer and inspector."
       )
       .foregroundStyle(.secondary)
-      HStack {
-        Button {
-          showsRelationshipMap = true
-        } label: {
-          Label("Open Relationship Map", systemImage: "point.3.connected.trianglepath.dotted")
+      Button {
+        showsRelationshipMap = true
+      } label: {
+        VStack(alignment: .leading, spacing: 4) {
+          ApplicationRelationshipPreview(
+            graph: model.presentedGraph,
+            layout: model.layout,
+            applicationID: application.id
+          )
+          HStack {
+            Spacer()
+            Label("Open full relationship map", systemImage: "arrow.up.right")
+              .font(.halSmall.weight(.semibold))
+          }
         }
-        .buttonStyle(.borderedProminent)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .help("Open the full relationship map")
+      .accessibilityLabel("Open the full relationship map for \(application.name)")
+      HStack {
         Button {
           model.navigate(to: .filesystem)
         } label: {
