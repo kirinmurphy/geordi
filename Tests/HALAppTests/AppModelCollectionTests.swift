@@ -135,6 +135,64 @@ struct AppModelCollectionTests {
     #expect(model.applicationEvidenceFactCount == 0)
   }
 
+  @Test("Application source classification does not hide apps by default")
+  func applicationSourcesDoNotHideApps() throws {
+    let date = Date(timeIntervalSince1970: 1_700_000_000)
+    let linked = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "sources", name: "Sources", summary: "Sources"),
+        entities: [
+          Entity(
+            id: "warp",
+            type: .application,
+            name: "Warp",
+            summary: "Terminal application",
+            details: [
+              Detail("Path", "/Applications/Warp.app"),
+              Detail("Installed with", "Homebrew cask warp"),
+              Detail("Platform binary", "No"),
+            ]
+          ),
+          Entity(
+            id: "local",
+            type: .application,
+            name: "Local",
+            summary: "Local application",
+            details: [
+              Detail("Path", "/Applications/Local.app"),
+              Detail("Platform binary", "No"),
+            ]
+          ),
+        ],
+        relationships: []
+      ),
+      scan: ScanContext(
+        id: "sources",
+        environment: .liveReadOnly,
+        startedAt: date,
+        completedAt: date
+      )
+    )
+    let store = try temporaryStore(containing: linked)
+    defer { try? FileManager.default.removeItem(at: store.root.deletingLastPathComponent()) }
+    let model = AppModel(
+      configuration: .phaseZero,
+      applicationClassifications: try ApplicationClassificationConfiguration.bundled(),
+      syntheticProvider: StaticProvider(snapshot(id: "synthetic", entityName: "Fictional")),
+      preferences: MemoryPreferences(mode: .linkedMac),
+      userDataStore: store,
+      liveSnapshot: { linked }
+    )
+
+    #expect(model.selectedApplicationCategoryID == nil)
+    #expect(
+      model.applications(in: model.selectedApplicationCategoryID).map(\.id) == ["warp", "local"])
+    #expect(model.applicationScopeCounts.visible == 2)
+
+    model.selectedApplicationCategoryID = "homebrew-cask"
+    #expect(model.applications(in: model.selectedApplicationCategoryID).map(\.id) == ["warp"])
+  }
+
   @Test("Linked storage and performance views use collected entity types")
   func linkedDestinationScopes() throws {
     let date = Date(timeIntervalSince1970: 1_700_000_000)

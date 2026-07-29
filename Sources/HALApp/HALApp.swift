@@ -140,7 +140,7 @@ final class AppModel {
   ) {
     self.configuration = configuration
     self.applicationClassifications = applicationClassifications
-    selectedApplicationCategoryID = applicationClassifications?.defaultCategoryID
+    selectedApplicationCategoryID = nil
     self.syntheticProvider = syntheticProvider
     self.preferences = preferences
     self.userDataStore = userDataStore
