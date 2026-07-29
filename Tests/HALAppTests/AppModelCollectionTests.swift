@@ -135,8 +135,8 @@ struct AppModelCollectionTests {
     #expect(model.applicationEvidenceFactCount == 0)
   }
 
-  @Test("Application source classification does not hide apps by default")
-  func applicationSourcesDoNotHideApps() throws {
+  @Test("Linked application inventory defaults to User-installed without a hidden source filter")
+  func applicationInventoryUsesVisibleDefaultFilter() throws {
     let date = Date(timeIntervalSince1970: 1_700_000_000)
     let linked = GraphSnapshot(
       graph: SystemGraph(
@@ -184,7 +184,7 @@ struct AppModelCollectionTests {
       liveSnapshot: { linked }
     )
 
-    #expect(model.selectedApplicationCategoryID == nil)
+    #expect(model.selectedApplicationCategoryID == "user-installed")
     #expect(
       model.applications(in: model.selectedApplicationCategoryID).map(\.id) == ["warp", "local"])
     #expect(model.applicationScopeCounts.visible == 2)

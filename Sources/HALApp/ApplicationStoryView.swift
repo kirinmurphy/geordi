@@ -249,7 +249,6 @@ struct ApplicationStoryView: View {
             ApplicationRelationshipPreview(
               graph: model.presentedGraph,
               layout: model.layout,
-              applicationID: application.id,
               configuration: model.configuration.layout
             )
             HStack {

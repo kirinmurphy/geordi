@@ -369,7 +369,8 @@ public struct RelationshipCanvas: View {
     viewportSize = size
     let horizontalScale = (size.width - 48) / max(layout.size.width, 1)
     let verticalScale = (size.height - 48) / max(layout.size.height, 1)
-    let readableMinimumScale = max(configuration.minimumScale, 0.72)
+    let readableMinimumScale =
+      isReadOnlyPreview ? 0.1 : max(configuration.minimumScale, 0.72)
     scale = min(
       1.15,
       configuration.maximumScale,

@@ -26,8 +26,11 @@ struct TaskOrientedExploreView: View {
       }
 
       LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 230, maximum: 320), spacing: 12)],
-        spacing: 12
+        columns: Array(
+          repeating: GridItem(.flexible(minimum: 220), spacing: 16),
+          count: 3
+        ),
+        spacing: 16
       ) {
         questionCard(
           "Understand an application",
@@ -75,11 +78,6 @@ struct TaskOrientedExploreView: View {
         }
       }
     }
-    .padding(18)
-    .background(.blue.opacity(0.055), in: RoundedRectangle(cornerRadius: 16))
-    .overlay {
-      RoundedRectangle(cornerRadius: 16).stroke(.blue.opacity(0.16))
-    }
     .accessibilityIdentifier("taskOrientedExplore")
   }
 
@@ -89,26 +87,62 @@ struct TaskOrientedExploreView: View {
     symbol: String,
     action: @escaping () -> Void
   ) -> some View {
+    QuestionCard(
+      title: title,
+      explanation: explanation,
+      symbol: symbol,
+      action: action
+    )
+  }
+}
+
+private struct QuestionCard: View {
+  let title: String
+  let explanation: String
+  let symbol: String
+  let action: () -> Void
+  @State private var isHovering = false
+
+  var body: some View {
     Button(action: action) {
-      VStack(alignment: .leading, spacing: 9) {
+      VStack(alignment: .leading, spacing: 12) {
         Image(systemName: symbol)
-          .font(.halSection)
+          .font(.system(size: 38, weight: .semibold))
           .foregroundStyle(.blue)
+          .frame(height: 46, alignment: .top)
         Text(title)
-          .font(.halRowTitle)
+          .font(.halSubsection.bold())
           .multilineTextAlignment(.leading)
-        GlossaryAwareText(explanation, context: "overview")
-          .font(.halSecondary)
+        Text(explanation)
+          .font(.halBody)
           .foregroundStyle(.secondary)
-        Spacer(minLength: 0)
-        Label("Explore", systemImage: "arrow.right")
-          .font(.halSmall.bold())
-          .foregroundStyle(.blue)
+          .multilineTextAlignment(.leading)
+          .fixedSize(horizontal: false, vertical: true)
+        Spacer(minLength: 10)
+        HStack {
+          Spacer()
+          Label("Explore", systemImage: "arrow.right")
+            .font(.halSecondary.bold())
+            .foregroundStyle(.blue)
+        }
       }
-      .padding(14)
-      .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
-      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+      .padding(18)
+      .frame(maxWidth: .infinity, minHeight: 230, alignment: .topLeading)
+      .background(
+        isHovering ? Color.accentColor.opacity(0.11) : Color(nsColor: .controlBackgroundColor),
+        in: RoundedRectangle(cornerRadius: 14)
+      )
+      .overlay {
+        RoundedRectangle(cornerRadius: 14)
+          .stroke(
+            isHovering ? Color.accentColor.opacity(0.7) : Color.secondary.opacity(0.22),
+            lineWidth: isHovering ? 1.5 : 1
+          )
+      }
+      .shadow(color: .black.opacity(isHovering ? 0.1 : 0.04), radius: isHovering ? 8 : 3, y: 2)
+      .contentShape(RoundedRectangle(cornerRadius: 14))
     }
     .buttonStyle(.plain)
+    .onHover { isHovering = $0 }
   }
 }

@@ -587,6 +587,7 @@ private struct OverviewView: View {
   let diagnosticExportAction: () -> Void
   @State private var commandSearch = ""
   @State private var guidedProofPresented = false
+  @State private var expandedSoftwareGroups = Set<String>()
 
   var body: some View {
     ScrollView {
@@ -631,63 +632,7 @@ private struct OverviewView: View {
           LiveCoverageNotice(model: model, exportAction: diagnosticExportAction)
         }
 
-        inventorySection(
-          title: model.isSynthetic ? "User’s Applications" : "Observed Applications",
-          symbol: "square.grid.2x2",
-          headerAccessory: {
-            if !model.isSynthetic, let configuration = model.applicationClassifications {
-              HStack(spacing: 10) {
-                let counts = model.applicationScopeCounts
-                Text(
-                  "\(counts.visible) visible · \(counts.hidden) hidden · \(counts.uncertain) unclassified"
-                )
-                .font(.halSecondary)
-                .foregroundStyle(.secondary)
-                Picker(
-                  "Software type",
-                  selection: Binding(
-                    get: { model.selectedApplicationCategoryID },
-                    set: {
-                      model.selectedApplicationCategoryID = $0
-                      model.selectedApplicationSourceID = nil
-                    }
-                  )
-                ) {
-                  Text(configuration.allApplicationsLabel).tag(String?.none)
-                  ForEach(model.applicationCategoryOptions) { category in
-                    Text(category.label).tag(Optional(category.id))
-                  }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .fixedSize()
-                .accessibilityLabel("Software type")
-              }
-            }
-          }
-        ) {
-          if applications.isEmpty {
-            Text("No applications match this software type.")
-              .font(.halSecondary)
-              .foregroundStyle(.secondary)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding(.vertical, 8)
-          } else {
-            ForEach(Array(applications.enumerated()), id: \.element.id) { index, application in
-              if index > 0 { Divider() }
-              InventoryRow(
-                symbol: application.presentation?.symbol ?? "app",
-                tint: application.presentation.map { color(for: $0.tint) } ?? .accentColor,
-                title: application.name,
-                trailing: application.presentation?.trailingDetailLabel.flatMap {
-                  detail($0, in: application)
-                } ?? model.applicationSourceLabel(application)
-                  ?? detail("Current state", in: application) ?? "",
-                applicationPath: detail("Path", in: application)
-              ) { model.focus(application) }
-            }
-          }
-        }
+        applicationInventorySection
 
         if !packageManagers.isEmpty || !softwareSourceCategories.isEmpty {
           inventorySection(
@@ -695,19 +640,22 @@ private struct OverviewView: View {
             subtitle: "Package managers with their observed applications and packages",
             symbol: "shippingbox"
           ) {
-            ForEach(Array(packageManagers.enumerated()), id: \.element.id) { index, manager in
+            ForEach(packageManagers) { manager in
               let applications = managedItems(for: manager, type: .application)
               let packages = managedItems(for: manager, type: .package)
-              VStack(spacing: 0) {
-                InventoryRow(
-                  symbol: "shippingbox",
-                  tint: EntityVisualStyle.color(for: .packageManager),
-                  title: manager.name,
-                  trailing: "\(applications.count + packages.count) managed"
-                ) { model.focus(manager) }
-                .background(EntityVisualStyle.color(for: .packageManager).opacity(0.07))
-                if !applications.isEmpty {
-                  softwareKindHeader("Applications", symbol: "app.fill", tint: .blue)
+              InventoryRow(
+                symbol: "shippingbox",
+                tint: EntityVisualStyle.color(for: .packageManager),
+                title: manager.name,
+                trailing: "\(applications.count + packages.count) managed"
+              ) { model.focus(manager) }
+              if !applications.isEmpty {
+                softwareDisclosureRow(
+                  id: "\(manager.id.rawValue):applications",
+                  title: applications.count == 1 ? "1 app" : "\(applications.count) apps",
+                  symbol: "app",
+                  tint: .blue
+                ) {
                   ForEach(applications) { application in
                     InventoryRow(
                       symbol: "app",
@@ -717,11 +665,17 @@ private struct OverviewView: View {
                       applicationPath: detail("Path", in: application),
                       compact: true
                     ) { model.focus(application) }
-                    .padding(.leading, 22)
+                    .padding(.leading, 44)
                   }
                 }
-                if !packages.isEmpty {
-                  softwareKindHeader("Packages", symbol: "cube.box.fill", tint: .purple)
+              }
+              if !packages.isEmpty {
+                softwareDisclosureRow(
+                  id: "\(manager.id.rawValue):packages",
+                  title: packages.count == 1 ? "1 package" : "\(packages.count) packages",
+                  symbol: "cube.box",
+                  tint: .purple
+                ) {
                   ForEach(packages) { package in
                     InventoryRow(
                       symbol: "cube.box",
@@ -730,32 +684,27 @@ private struct OverviewView: View {
                       trailing: "Package",
                       compact: true
                     ) { model.focus(package) }
-                    .padding(.leading, 22)
+                    .padding(.leading, 44)
                   }
                 }
-              }
-              .overlay {
-                Rectangle()
-                  .stroke(Color.secondary.opacity(0.24), lineWidth: 1)
-              }
-              .padding(.vertical, 5)
-              if index < packageManagers.count - 1 {
-                Spacer().frame(height: 5)
               }
             }
             ForEach(softwareSourceCategories) { source in
               let sourceApplications = applications(from: source)
-              VStack(spacing: 0) {
-                InventoryRow(
-                  symbol: "apple.logo",
-                  tint: .blue,
-                  title: source.label,
-                  trailing: "\(sourceApplications.count) applications"
-                ) { model.showApplications(from: source.id) }
-                .background(.blue.opacity(0.07))
-                if !sourceApplications.isEmpty {
-                  softwareKindHeader("Applications", symbol: "app.fill", tint: .blue)
-                  ForEach(sourceApplications) { application in
+              InventoryRow(
+                symbol: "apple.logo",
+                tint: .blue,
+                title: source.label,
+                trailing: "\(sourceApplications.count) applications"
+              ) { model.navigate(to: .applications) }
+              ForEach(appStoreApplicationGroups(sourceApplications), id: \.id) { group in
+                softwareDisclosureRow(
+                  id: "\(source.id):\(group.id)",
+                  title: "\(group.applications.count) \(group.label)",
+                  symbol: "app",
+                  tint: group.tint
+                ) {
+                  ForEach(group.applications) { application in
                     InventoryRow(
                       symbol: "app",
                       tint: EntityVisualStyle.color(for: .application),
@@ -764,14 +713,10 @@ private struct OverviewView: View {
                       applicationPath: detail("Path", in: application),
                       compact: true
                     ) { model.focus(application) }
-                    .padding(.leading, 22)
+                    .padding(.leading, 44)
                   }
                 }
               }
-              .overlay {
-                Rectangle().stroke(Color.secondary.opacity(0.24), lineWidth: 1)
-              }
-              .padding(.vertical, 5)
             }
           }
         }
@@ -862,8 +807,105 @@ private struct OverviewView: View {
     }
   }
 
+  private var applicationInventorySection: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(spacing: 8) {
+        Image(systemName: "square.grid.2x2")
+        Text("Applications:")
+        if !model.isSynthetic, let configuration = model.applicationClassifications {
+          Menu {
+            Button(configuration.allApplicationsLabel) {
+              model.selectedApplicationCategoryID = nil
+            }
+            Divider()
+            ForEach(model.applicationCategoryOptions) { category in
+              Button {
+                model.selectedApplicationCategoryID = category.id
+              } label: {
+                if model.selectedApplicationCategoryID == category.id {
+                  Label(category.label, systemImage: "checkmark")
+                } else {
+                  Text(category.label)
+                }
+              }
+            }
+          } label: {
+            HStack(spacing: 5) {
+              Text(selectedApplicationCategoryLabel)
+                .underline()
+              Image(systemName: "chevron.down")
+                .font(.halSmall.bold())
+            }
+          }
+          .menuIndicator(.hidden)
+          .menuStyle(.borderlessButton)
+          .fixedSize()
+          .accessibilityLabel("Application filter: \(selectedApplicationCategoryLabel)")
+        } else {
+          Text("User installed").underline()
+        }
+        Spacer()
+        if !model.isSynthetic {
+          let counts = model.applicationScopeCounts
+          Text("\(counts.visible) shown · \(counts.hidden) in other groups")
+            .font(.halSecondary)
+            .foregroundStyle(.secondary)
+        }
+      }
+      .font(.halSection.bold())
+
+      VStack(spacing: 0) {
+        if applications.isEmpty {
+          Text("No applications match this filter.")
+            .font(.halSecondary)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 12)
+        } else {
+          ForEach(applications) { application in
+            InventoryRow(
+              symbol: application.presentation?.symbol ?? "app",
+              tint: application.presentation.map { color(for: $0.tint) } ?? .accentColor,
+              title: application.name,
+              trailing: application.presentation?.trailingDetailLabel.flatMap {
+                detail($0, in: application)
+              } ?? model.applicationSourceLabel(application)
+                ?? detail("Current state", in: application) ?? "",
+              applicationPath: detail("Path", in: application)
+            ) { model.focus(application) }
+          }
+        }
+      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 8)
+      .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 16))
+      .overlay {
+        RoundedRectangle(cornerRadius: 16).stroke(Color.secondary.opacity(0.16))
+      }
+    }
+  }
+
+  private var selectedApplicationCategoryLabel: String {
+    guard
+      let selectedID = model.selectedApplicationCategoryID,
+      let category = model.applicationClassifications?.categories.first(where: {
+        $0.id == selectedID
+      })
+    else {
+      return model.applicationClassifications?.allApplicationsLabel ?? "All Applications"
+    }
+    return category.label
+  }
+
   private var applications: [Entity] {
     model.applications(in: model.selectedApplicationCategoryID)
+  }
+
+  private struct SoftwareApplicationGroup: Identifiable {
+    let id: String
+    let label: String
+    let tint: Color
+    let applications: [Entity]
   }
 
   private var softwareSourceCategories: [ApplicationClassificationCategory] {
@@ -891,6 +933,75 @@ private struct OverviewView: View {
       )?.id == source.id
     }.sorted {
       $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+    }
+  }
+
+  private func appStoreApplicationGroups(
+    _ applications: [Entity]
+  ) -> [SoftwareApplicationGroup] {
+    guard let classifications = model.applicationClassifications else { return [] }
+    let grouped = Dictionary(grouping: applications) { application in
+      guard let path = detail("Path", in: application) else { return "other" }
+      return classifications.category(
+        forApplicationPath: path,
+        platformBinary: model.platformBinaryEvidence(for: application),
+        details: application.details
+      ).id
+    }
+    return classifications.categories
+      .filter { $0.kind == .scope }
+      .sorted { $0.priority > $1.priority }
+      .compactMap { category in
+        guard let members = grouped[category.id], !members.isEmpty else { return nil }
+        return SoftwareApplicationGroup(
+          id: category.id,
+          label: category.label,
+          tint: EntityVisualStyle.color(for: .application),
+          applications: members
+        )
+      }
+  }
+
+  @ViewBuilder
+  private func softwareDisclosureRow<Content: View>(
+    id: String,
+    title: String,
+    symbol: String,
+    tint: Color,
+    @ViewBuilder content: () -> Content
+  ) -> some View {
+    let expanded = expandedSoftwareGroups.contains(id)
+    Button {
+      if expanded {
+        expandedSoftwareGroups.remove(id)
+      } else {
+        expandedSoftwareGroups.insert(id)
+      }
+    } label: {
+      HStack(spacing: 12) {
+        Image(systemName: symbol)
+          .foregroundStyle(tint)
+          .frame(width: 25, height: 25)
+        Text(title)
+          .font(.halRowTitle)
+        Spacer()
+        Image(systemName: expanded ? "chevron.up" : "chevron.down")
+          .font(.halSmall.bold())
+          .foregroundStyle(.secondary)
+      }
+      .padding(.leading, 22)
+      .padding(.trailing, 16)
+      .padding(.vertical, 8)
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .background(Color.secondary.opacity(0.035))
+    .overlay(alignment: .bottom) {
+      Rectangle().fill(Color.secondary.opacity(0.16)).frame(height: 1)
+    }
+    .padding(.horizontal, -16)
+    if expanded {
+      content()
     }
   }
 

@@ -132,7 +132,6 @@ final class AppModel {
   var referencePresented = false
   var entityTypeReferencePresented: EntityType?
   var selectedApplicationCategoryID: String?
-  var selectedApplicationSourceID: String?
 
   init(
     configuration: AppConfiguration,
@@ -145,13 +144,15 @@ final class AppModel {
     self.configuration = configuration
     self.applicationClassifications = applicationClassifications
     selectedApplicationCategoryID = nil
-    selectedApplicationSourceID = nil
     self.syntheticProvider = syntheticProvider
     self.preferences = preferences
     self.userDataStore = userDataStore
     self.liveSnapshot = liveSnapshot
     displayPolicy = try? DisplayPolicy.bundled()
     let initialMode = preferences.mode()
+    if initialMode == .linkedMac {
+      selectedApplicationCategoryID = applicationClassifications?.defaultCategoryID
+    }
     dataSourceMode = initialMode
     welcomeDismissed = preferences.syntheticWelcomeDismissed()
     linkedCompletionDismissed = preferences.linkedCompletionDismissed()
@@ -201,29 +202,13 @@ final class AppModel {
       guard let path = application.details.first(where: { $0.label == "Path" })?.value else {
         return false
       }
-      let categoryMatches =
-        categoryID == nil
+      return categoryID == nil
         || applicationClassifications.category(
           forApplicationPath: path,
           platformBinary: platformBinaryEvidence(for: application),
           details: application.details
         ).id == categoryID
-      let sourceMatches =
-        selectedApplicationSourceID == nil
-        || applicationClassifications.source(
-          forApplicationPath: path,
-          platformBinary: platformBinaryEvidence(for: application),
-          details: application.details
-        )?.id == selectedApplicationSourceID
-      return categoryMatches && sourceMatches
     }
-  }
-
-  func showApplications(from sourceID: String) {
-    selectedApplicationCategoryID = nil
-    selectedApplicationSourceID =
-      selectedApplicationSourceID == sourceID ? nil : sourceID
-    destination = .overview
   }
 
   func applicationSourceLabel(_ application: Entity) -> String? {
@@ -285,7 +270,7 @@ final class AppModel {
     )
   }
 
-  private func platformBinaryEvidence(for application: Entity) -> Bool? {
+  func platformBinaryEvidence(for application: Entity) -> Bool? {
     switch application.details.first(where: { $0.label == "Platform binary" })?.value {
     case "Yes": true
     case "No": false
@@ -384,6 +369,9 @@ final class AppModel {
         fixture = snapshot.graph
         scanContext = snapshot.scan
         dataSourceMode = .linkedMac
+        if activity == .initialLink {
+          selectedApplicationCategoryID = applicationClassifications?.defaultCategoryID
+        }
         preferences.setMode(.linkedMac)
         navigate(to: .overview)
         switch activity {
