@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ApplicationProvenanceConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
   public let adapters: [ApplicationProvenanceAdapterConfiguration]
@@ -72,11 +72,18 @@ public struct ApplicationProvenanceAdapterConfiguration: Codable, Hashable, Send
   public let id: String
   public let kind: ApplicationProvenanceKind
   public let displayLabel: String
+  public let pathPrefixes: [String]?
 
-  public init(id: String, kind: ApplicationProvenanceKind, displayLabel: String) {
+  public init(
+    id: String,
+    kind: ApplicationProvenanceKind,
+    displayLabel: String,
+    pathPrefixes: [String] = []
+  ) {
     self.id = id
     self.kind = kind
     self.displayLabel = displayLabel
+    self.pathPrefixes = pathPrefixes.isEmpty ? nil : pathPrefixes
   }
 }
 

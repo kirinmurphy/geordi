@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/application-provenance-adapters/v1",
+  "$id": "https://hal.local/schemas/application-provenance-adapters/v2",
   "title": "HAL application provenance adapters",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "adapters"],
   "properties": {
     "schemaVersion": {
-      "const": 1
+      "const": 2
     },
     "adapters": {
       "type": "array",
@@ -22,11 +22,15 @@
             "minLength": 1
           },
           "kind": {
-            "enum": ["appStoreReceipt", "downloadOrigin"]
+            "enum": ["appStoreReceipt", "downloadOrigin", "homebrewCask"]
           },
           "displayLabel": {
             "type": "string",
             "minLength": 1
+          },
+          "pathPrefixes": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
           }
         }
       }

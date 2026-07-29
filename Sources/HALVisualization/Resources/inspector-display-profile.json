@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "fallbackGroupID": "technical",
+  "groups": [
+    {"id":"identity","label":"Identity","detailLabels":["Bundle identifier","Version","Build","Signature","Signing identifier","Team identifier"]},
+    {"id":"ownership","label":"Installation and ownership","detailLabels":["Package manager","Package","Installed versions","Installed formulae","Installed packages","Inventory classification"]},
+    {"id":"location","label":"Location","detailLabels":["Path","Executable","Resolved executable","Declaration","Program","Prefix","Cellar"]},
+    {"id":"observation","label":"Current observation","detailLabels":["Current state","Availability","Active instances","PID","Parent PID","Application resolution"]},
+    {"id":"resource","label":"Resource use","detailLabels":["Size","Synthetic size","Resident memory","Memory at observation"]},
+    {"id":"provenance","label":"Provenance and evidence","detailLabels":["Evidence facts","Evidence rule","Evidence confidence","Evidence explanation","Discovered from","Command aliases"]},
+    {"id":"technical","label":"Technical details","detailLabels":[]}
+  ]
+}

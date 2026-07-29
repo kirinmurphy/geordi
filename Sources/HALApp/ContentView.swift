@@ -10,6 +10,7 @@ struct ContentView: View {
   @State private var unlinkConfirmationPresented = false
   @State private var unlinkError: String?
   @State private var diagnosticExportError: String?
+  @State private var linkedStatusExpanded = false
 
   init(
     configuration: AppConfiguration,
@@ -47,6 +48,8 @@ struct ContentView: View {
               model: model,
               diagnosticExportAction: exportRedactedDiagnostics
             )
+          case .filesystem:
+            FilesystemMapView(model: model)
           default:
             AtlasDetailView(model: model)
           }
@@ -184,6 +187,9 @@ struct ContentView: View {
         Section("Explore") {
           navigationButton(
             "Installed software", symbol: "square.grid.2x2", destination: .applications)
+          navigationButton(
+            "Filesystem Map", symbol: "point.3.connected.trianglepath.dotted",
+            destination: .filesystem)
           if model.isSynthetic {
             navigationButton("Storage", symbol: "internaldrive", destination: .storage)
             navigationButton(
@@ -313,10 +319,22 @@ struct ContentView: View {
       let freshness = model.dataFreshness(at: context.date)
       HStack(spacing: 8) {
         Spacer()
-        Image(systemName: freshnessSymbol(freshness))
-          .font(.caption.bold())
-        Text(freshnessText(freshness))
-          .font(.caption.weight(.semibold))
+        Button {
+          linkedStatusExpanded.toggle()
+        } label: {
+          HStack(spacing: 8) {
+            Image(systemName: freshnessSymbol(freshness))
+            Text(freshnessText(freshness))
+            if !model.isSynthetic {
+              Image(systemName: "chevron.up")
+                .font(.caption2)
+            }
+          }
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $linkedStatusExpanded, arrowEdge: .bottom) {
+          CollectionHealthPanel(model: model, exportAction: exportRedactedDiagnostics)
+        }
       }
       .foregroundStyle(freshnessColor(freshness))
       .padding(.horizontal, 14)
@@ -520,7 +538,6 @@ private struct AppBanner: View {
         Spacer()
         if let actionTitle, let action {
           Button(actionTitle, action: action)
-            .buttonStyle(.borderedProminent)
             .controlSize(.small)
         }
         if allowsDismissal {
@@ -560,6 +577,7 @@ private struct AppBanner: View {
 private struct OverviewView: View {
   let model: AppModel
   let diagnosticExportAction: () -> Void
+  @State private var commandSearch = ""
 
   var body: some View {
     ScrollView {
@@ -596,7 +614,7 @@ private struct OverviewView: View {
           }
 
           CurrentActivityView()
-        } else {
+        } else if model.linkCompletionPending && !model.linkedCompletionDismissed {
           LiveCoverageNotice(model: model, exportAction: diagnosticExportAction)
         }
 
@@ -648,16 +666,112 @@ private struct OverviewView: View {
                 subtitle: application.presentation?.subtitle ?? application.summary,
                 trailing: application.presentation?.trailingDetailLabel.flatMap {
                   detail($0, in: application)
-                } ?? detail("Current state", in: application) ?? ""
+                } ?? model.applicationSourceLabel(application)
+                  ?? detail("Current state", in: application) ?? "",
+                applicationPath: detail("Path", in: application)
               ) { model.focus(application) }
+            }
+          }
+        }
+
+        if !packageManagers.isEmpty {
+          inventorySection(
+            title: "Package Managers",
+            subtitle: "Installers that own observed packages and applications",
+            symbol: "shippingbox"
+          ) {
+            ForEach(Array(packageManagers.enumerated()), id: \.element.id) {
+              index, software in
+              if index > 0 { Divider() }
+              InventoryRow(
+                symbol: "shippingbox",
+                tint: EntityVisualStyle.color(for: software.type),
+                title: software.name,
+                subtitle: software.summary,
+                trailing: foundationTrailingDetail(software)
+              ) { model.focus(software) }
+            }
+          }
+        }
+
+        if !runtimeCapabilities.isEmpty {
+          inventorySection(
+            title: "Runtimes & Developer Tools",
+            subtitle: "Executable capabilities that answered a version query",
+            symbol: "terminal"
+          ) {
+            ForEach(Array(runtimeCapabilities.enumerated()), id: \.element.id) {
+              index, software in
+              if index > 0 { Divider() }
+              InventoryRow(
+                symbol: "terminal",
+                tint: EntityVisualStyle.color(for: software.type),
+                title: software.name,
+                subtitle: software.summary,
+                trailing: foundationTrailingDetail(software)
+              ) { model.focus(software) }
+            }
+          }
+        }
+
+        if !installedPackages.isEmpty {
+          inventorySection(
+            title: "Installed Packages",
+            subtitle: "Packages observed inside configured package-manager roots",
+            symbol: "cube.box"
+          ) {
+            ForEach(Array(installedPackages.enumerated()), id: \.element.id) {
+              index, software in
+              if index > 0 { Divider() }
+              InventoryRow(
+                symbol: "cube.box",
+                tint: EntityVisualStyle.color(for: software.type),
+                title: software.name,
+                subtitle: software.summary,
+                trailing: foundationTrailingDetail(software)
+              ) { model.focus(software) }
+            }
+          }
+        }
+
+        if !commandLineSoftware.isEmpty {
+          inventorySection(
+            title: "Other Command-Line Software",
+            subtitle:
+              "\(commandLineSoftware.count) executable tools observed but not capability-classified",
+            symbol: "terminal"
+          ) {
+            TextField("Search commands", text: $commandSearch)
+              .textFieldStyle(.roundedBorder)
+              .accessibilityLabel("Search command-line software")
+            if systemCommandCount > 0 {
+              Text("\(systemCommandCount) macOS system commands grouped")
+                .font(.callout.weight(.semibold))
+                .foregroundStyle(.secondary)
+            }
+            DisclosureGroup("Show all discovered commands") {
+              ForEach(Array(filteredCommandLineSoftware.enumerated()), id: \.element.id) {
+                index, software in
+                if index > 0 { Divider() }
+                InventoryRow(
+                  symbol: "terminal",
+                  tint: .secondary,
+                  title: software.name,
+                  subtitle: detail("Discovered from", in: software) ?? software.summary,
+                  trailing: detail("Package", in: software) ?? "Unclassified"
+                ) { model.focus(software) }
+              }
+              .padding(.top, 8)
             }
           }
         }
 
         if !reclaimCandidates.isEmpty {
           inventorySection(
-            title: model.isSynthetic ? "Rebuildable Data" : "Observed Rebuildable Roots",
+            title: "Reclaimable Data",
+            subtitle: "Caches and generated files that their owning tools can recreate.",
             symbol: "arrow.3.trianglepath",
+            emphasized: true,
             headerActionTitle: model.isSynthetic ? "Reclaim File Space" : "Review Roots",
             headerAction: { model.navigate(to: .storage) }
           ) {
@@ -667,7 +781,7 @@ private struct OverviewView: View {
                 symbol: "folder",
                 tint: .green,
                 title: file.name,
-                subtitle: file.summary,
+                subtitle: managerSummary(for: file) ?? file.summary,
                 trailing:
                   model.isSynthetic
                   ? detail("Synthetic size", in: file) ?? ""
@@ -701,6 +815,82 @@ private struct OverviewView: View {
     let ids = Set(
       model.fixture.relationships.filter { $0.target == "resource.storage" }.map(\.source))
     return model.fixture.entities.filter { ids.contains($0.id) && $0.type == .file }
+  }
+
+  private var packageManagers: [Entity] {
+    model.fixture.entities.filter {
+      $0.type == .packageManager
+    }.sorted {
+      return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+    }
+  }
+
+  private var runtimeCapabilities: [Entity] {
+    model.fixture.entities.filter {
+      $0.id.rawValue.hasPrefix("runtime-availability:")
+    }.sorted {
+      $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+    }
+  }
+
+  private var installedPackages: [Entity] {
+    model.fixture.entities.filter {
+      $0.type == .package && !$0.id.rawValue.hasPrefix("runtime-availability:")
+        && !$0.id.rawValue.hasPrefix("command-line-software:")
+    }.sorted {
+      $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+    }
+  }
+
+  private var commandLineSoftware: [Entity] {
+    model.fixture.entities.filter {
+      $0.id.rawValue.hasPrefix("command-line-software:")
+        && detail("Package", in: $0) == nil
+    }.sorted {
+      $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+    }
+  }
+
+  private var filteredCommandLineSoftware: [Entity] {
+    commandLineSoftware.filter {
+      commandSearch.isEmpty
+        || $0.name.localizedCaseInsensitiveContains(commandSearch)
+        || $0.details.contains { $0.value.localizedCaseInsensitiveContains(commandSearch) }
+    }
+  }
+
+  private var systemCommandCount: Int {
+    commandLineSoftware.filter {
+      detail("Discovered from", in: $0) == "macOS system executable directory"
+    }.count
+  }
+
+  private func foundationTrailingDetail(_ entity: Entity) -> String {
+    if entity.id.rawValue.hasPrefix("runtime-availability:") {
+      let version = detail("Version", in: entity) ?? "Version unavailable"
+      let active = detail("Active instances", in: entity) ?? "0"
+      return "\(version) · \(active) active"
+    }
+    if let version = detail("Version", in: entity) { return version }
+    if let versions = detail("Installed versions", in: entity) { return versions }
+    if let formulae = detail("Installed formulae", in: entity) {
+      return "\(formulae) formulae"
+    }
+    if let packages = detail("Installed packages", in: entity) {
+      return "\(packages) packages"
+    }
+    return ""
+  }
+
+  private func managerSummary(for file: Entity) -> String? {
+    guard
+      let relationship = model.fixture.relationships.first(where: {
+        $0.target == file.id && $0.type == .owns
+      }),
+      let manager = model.fixture.entity(relationship.source),
+      manager.type == .packageManager
+    else { return nil }
+    return "Managed by \(manager.name) · \(file.summary)"
   }
 
   private func detail(_ label: String, in entity: Entity) -> String? {
@@ -738,16 +928,17 @@ private struct OverviewView: View {
           .foregroundStyle(tint)
         Spacer()
         headerAccessory()
+        if let subtitle {
+          Text(subtitle)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+        }
         if let headerActionTitle, let headerAction {
           Button(action: headerAction) {
             Text(headerActionTitle)
           }
           .buttonStyle(AppButtonStyle(.inlineCTA))
           .accessibilityHint("Open reclaimable storage review")
-        } else if let subtitle {
-          Text(subtitle)
-            .font(.callout)
-            .foregroundStyle(.secondary)
         }
       }
       VStack(spacing: 0) {
@@ -928,6 +1119,7 @@ private struct InitialLinkOverlay: View {
 private struct LiveCoverageNotice: View {
   let model: AppModel
   let exportAction: () -> Void
+  @State private var moreInfoPresented = false
 
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
@@ -935,56 +1127,21 @@ private struct LiveCoverageNotice: View {
         .font(.title2)
         .foregroundStyle(.green)
       VStack(alignment: .leading, spacing: 5) {
-        Text(model.linkCompletionPending ? "Your application atlas is ready" : "This Mac is linked")
+        Text("This Mac is linked")
           .font(.headline)
         Text(
-          "HAL read application bundles, signing and download provenance, conventional related locations, current processes, and startup declarations. It did not change applications or machine data. Storage totals and performance history are not collected yet."
+          "HAL found your installed software and built a read-only map. Start exploring, or check the observation details."
         )
         .foregroundStyle(.secondary)
-        let coverage = model.collectorCoverageCounts
-        Text(
-          "\(coverage.complete) of \(coverage.total) collectors complete"
-            + (coverage.limited > 0 ? " · \(coverage.limited) limited" : "")
-            + " · \(model.applicationEvidenceFactCount) application evidence facts"
-        )
-        .font(.caption.weight(.semibold))
-        .foregroundStyle(coverage.limited > 0 ? .orange : .secondary)
-        let unresolved = model.unresolvedProcessCounts
-        if unresolved.unmatched > 0 || unresolved.inaccessible > 0 {
-          Label(
-            "\(unresolved.unmatched) unmatched processes retained for search"
-              + (unresolved.inaccessible > 0
-                ? " · \(unresolved.inaccessible) inaccessible" : ""),
-            systemImage: "questionmark.diamond"
-          )
-          .font(.caption)
-          .foregroundStyle(unresolved.inaccessible > 0 ? .orange : .secondary)
-        }
-        ForEach(
-          model.scanContext.collectorRuns.flatMap(\.issues),
-          id: \.id
-        ) { issue in
-          Label(issue.summary, systemImage: "exclamationmark.triangle")
-            .font(.caption)
-            .foregroundStyle(issue.severity == .error ? .red : .orange)
-        }
         if model.collectionActivity == .refresh {
           ProgressView("Checking the same read-only sources again…")
             .controlSize(.small)
-        } else if model.linkCompletionPending {
+        } else {
           Button("Explore installed applications") {
             model.exploreLinkedApplications()
           }
           .buttonStyle(.borderedProminent)
           .controlSize(.small)
-        } else {
-          if let result = model.lastRefreshResult,
-            let completedAt = model.lastRefreshCompletedAt
-          {
-            Text(refreshSummary(result: result, completedAt: completedAt))
-              .font(.caption.weight(.medium))
-              .foregroundStyle(.secondary)
-          }
           HStack(spacing: 10) {
             Button("Check this Mac again") { model.refreshLiveData() }
               .buttonStyle(.bordered)
@@ -994,9 +1151,12 @@ private struct LiveCoverageNotice: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            Text("Reruns the same enabled read-only collectors.")
-              .font(.caption)
-              .foregroundStyle(.secondary)
+            Button("More Info") { moreInfoPresented = true }
+              .buttonStyle(.bordered)
+              .controlSize(.small)
+            Button("Dismiss") { model.dismissLinkedCompletion() }
+              .buttonStyle(.plain)
+              .controlSize(.small)
           }
         }
       }
@@ -1006,6 +1166,39 @@ private struct LiveCoverageNotice: View {
     .background(Color.green.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
     .overlay {
       RoundedRectangle(cornerRadius: 16).stroke(Color.green.opacity(0.25))
+    }
+    .popover(isPresented: $moreInfoPresented) {
+      CollectionHealthPanel(model: model, exportAction: exportAction)
+    }
+  }
+
+  private var groupedIssues: [GroupedCollectionIssue] {
+    Dictionary(
+      grouping: model.scanContext.collectorRuns.flatMap(\.issues).filter {
+        $0.severity != .information
+      },
+      by: \.summary
+    )
+    .map { summary, issues in
+      GroupedCollectionIssue(
+        summary: summary,
+        severity: issues.contains { $0.severity == .error } ? .error : .warning,
+        count: issues.count
+      )
+    }
+    .sorted { $0.summary < $1.summary }
+  }
+
+  private struct GroupedCollectionIssue {
+    let summary: String
+    let severity: CollectionIssue.Severity
+    let count: Int
+
+    var displayText: String {
+      if summary == "A persistence property list did not declare a launchd label.", count > 1 {
+        return "\(count) startup property lists did not declare launchd labels."
+      }
+      return summary + (count > 1 ? " (\(count) occurrences)" : "")
     }
   }
 
@@ -1018,6 +1211,68 @@ private struct LiveCoverageNotice: View {
       model.lastRefreshDuration.map { String(format: "%.1f seconds", $0) } ?? "duration unavailable"
     let checkedAt = completedAt.formatted(date: .omitted, time: .shortened)
     return "Checked \(checkedAt) · \(changeSummary) · \(duration)"
+  }
+}
+
+private struct CollectionHealthPanel: View {
+  let model: AppModel
+  let exportAction: () -> Void
+
+  var body: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 14) {
+        Text("Collection Health")
+          .font(.title2.bold())
+        Text("HAL only read configured sources. It did not change applications or machine data.")
+          .foregroundStyle(.secondary)
+          .textSelection(.enabled)
+        ForEach(Array(model.scanContext.collectorRuns.enumerated()), id: \.offset) { _, run in
+          VStack(alignment: .leading, spacing: 4) {
+            HStack {
+              Text(run.collectorID.rawValue)
+                .font(.headline)
+              Spacer()
+              Text(run.state.rawValue.capitalized)
+                .foregroundStyle(run.state == .complete ? Color.secondary : Color.orange)
+            }
+            Text(impact(for: run))
+              .foregroundStyle(.secondary)
+              .textSelection(.enabled)
+            if !run.issues.isEmpty {
+              DisclosureGroup(
+                "\(run.issues.count) issue\(run.issues.count == 1 ? "" : "s") logged for future updates"
+              ) {
+                ForEach(Array(run.issues.enumerated()), id: \.offset) { _, issue in
+                  Text(issue.summary)
+                    .textSelection(.enabled)
+                }
+              }
+            }
+          }
+          Divider()
+        }
+        HStack {
+          Button("Check This Mac Again") { model.refreshLiveData() }
+          Button("Export Redacted Diagnostics…") { exportAction() }
+        }
+        .buttonStyle(.bordered)
+      }
+      .padding(20)
+    }
+    .frame(width: 520, height: 520)
+  }
+
+  private func impact(for run: CollectorRun) -> String {
+    if run.state == .complete && run.availability == .available {
+      return "This source was observed normally."
+    }
+    if run.availability == .permissionDenied {
+      return "macOS access limits this source; granting access may improve coverage."
+    }
+    if run.issues.allSatisfy({ $0.severity == .information }) {
+      return "HAL logged a parser or coverage detail; no Mac repair is required."
+    }
+    return "Some observations from this source may be missing. Existing results remain usable."
   }
 }
 
@@ -1123,16 +1378,24 @@ private struct InventoryRow: View {
   let title: String
   let subtitle: String
   let trailing: String
+  var applicationPath: String? = nil
   let action: () -> Void
 
   var body: some View {
     Button(action: action) {
       HStack(spacing: 14) {
-        Image(systemName: symbol)
-          .font(.title3)
-          .foregroundStyle(tint)
-          .frame(width: 32, height: 32)
-          .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+        if let applicationPath {
+          Image(nsImage: NSWorkspace.shared.icon(forFile: applicationPath))
+            .resizable()
+            .scaledToFit()
+            .frame(width: 32, height: 32)
+        } else {
+          Image(systemName: symbol)
+            .font(.title3)
+            .foregroundStyle(tint)
+            .frame(width: 32, height: 32)
+            .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+        }
         VStack(alignment: .leading, spacing: 3) {
           Text(title)
             .font(.headline)
@@ -1829,6 +2092,7 @@ private struct AtlasDetailView: View {
     switch model.destination {
     case .storage: "What could be safely removed?"
     case .applications: "What software is installed?"
+    case .filesystem: "Where does observed software live?"
     case .performance:
       model.isSynthetic ? "What changed during the memory spike?" : "What is running now?"
     case .entity(let id): model.fixture.entity(id)?.name ?? "Selected item"
@@ -1850,6 +2114,8 @@ private struct AtlasDetailView: View {
       } else {
         "HAL observed \(model.applicationScopeCounts.total) application bundles in the configured read-only search roots."
       }
+    case .filesystem:
+      "A curated hierarchy of explanatory locations and observed paths; HAL has not indexed the whole disk."
     case .performance:
       if model.isSynthetic {
         "A Docker build, VS Code indexing, and restored Brave tabs overlapped; HAL does not claim timing alone proves causation."

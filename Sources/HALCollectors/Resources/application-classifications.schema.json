@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/application-classifications/v2",
+  "$id": "https://hal.local/schemas/application-classifications/v3",
   "title": "HAL application classifications",
   "type": "object",
   "additionalProperties": false,
@@ -11,7 +11,7 @@
     "categories"
   ],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "allApplicationsLabel": { "type": "string", "minLength": 1 },
     "defaultCategoryID": { "type": "string", "minLength": 1 },
     "categories": {
@@ -27,7 +27,8 @@
           "priority",
           "isFallback",
           "platformBinaryWhenKnown",
-          "pathPrefixes"
+          "pathPrefixes",
+          "detailRules"
         ],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
@@ -47,6 +48,22 @@
               "properties": {
                 "path": { "type": "string", "minLength": 1 },
                 "scope": { "enum": ["system", "user"] }
+              }
+            }
+          },
+          "detailRules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["label", "equals", "excludes"],
+              "properties": {
+                "label": { "type": "string", "minLength": 1 },
+                "equals": { "type": ["string", "null"] },
+                "excludes": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
               }
             }
           }

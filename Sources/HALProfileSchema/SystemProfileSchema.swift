@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public enum SystemProfileSchema {
-  public static let currentVersion = 2
+  public static let currentVersion = 3
 
   public static func declarativeSchemaData() throws -> Data {
     guard
@@ -148,7 +148,12 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
   public let name: String
   public let summary: String
   public let details: [ProfileDetail]
+  public let instances: [ProfileEntityInstance]
   public let presentation: EntityPresentation?
+
+  private enum CodingKeys: String, CodingKey {
+    case id, type, name, summary, details, instances, presentation
+  }
 
   public init(
     id: String,
@@ -156,6 +161,7 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
     name: String,
     summary: String,
     details: [ProfileDetail] = [],
+    instances: [ProfileEntityInstance] = [],
     presentation: EntityPresentation? = nil
   ) {
     self.id = id
@@ -163,7 +169,26 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
     self.name = name
     self.summary = summary
     self.details = details
+    self.instances = instances
     self.presentation = presentation
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(String.self, forKey: .id)
+    type = try container.decode(EntityType.self, forKey: .type)
+    name = try container.decode(String.self, forKey: .name)
+    summary = try container.decode(String.self, forKey: .summary)
+    details = try container.decode([ProfileDetail].self, forKey: .details)
+    instances =
+      try container.decodeIfPresent(
+        [ProfileEntityInstance].self,
+        forKey: .instances
+      ) ?? []
+    presentation = try container.decodeIfPresent(
+      EntityPresentation.self,
+      forKey: .presentation
+    )
   }
 
   fileprivate init(entity: Entity) {
@@ -172,6 +197,7 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
     name = entity.name
     summary = entity.summary
     presentation = entity.presentation
+    instances = entity.instances.map(ProfileEntityInstance.init(instance:))
     details = entity.details.map { ProfileDetail(label: $0.label, value: $0.value) }.sorted {
       if $0.label != $1.label { return $0.label < $1.label }
       return $0.value < $1.value
@@ -185,8 +211,28 @@ public struct ProfileEntity: Hashable, Codable, Sendable {
       name: name,
       summary: summary,
       details: details.map { Detail($0.label, $0.value) },
+      instances: instances.map(\.entityInstance),
       presentation: presentation
     )
+  }
+}
+
+public struct ProfileEntityInstance: Hashable, Codable, Sendable {
+  public let id: String
+  public let details: [ProfileDetail]
+
+  public init(id: String, details: [ProfileDetail]) {
+    self.id = id
+    self.details = details
+  }
+
+  fileprivate init(instance: EntityInstance) {
+    id = instance.id
+    details = instance.details.map { ProfileDetail(label: $0.label, value: $0.value) }
+  }
+
+  fileprivate var entityInstance: EntityInstance {
+    EntityInstance(id: id, details: details.map { Detail($0.label, $0.value) })
   }
 }
 

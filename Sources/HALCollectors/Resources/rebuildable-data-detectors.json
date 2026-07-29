@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "measurementPolicy": {
     "maxEntriesPerLocation": 250000,
     "maxDepth": 64,
@@ -36,6 +36,7 @@
         ".git",
         ".svn"
       ],
+      "manager": null,
       "evidenceRule": {
         "id": "xcode-managed-derived-data-root",
         "kind": "toolManagedRoot",
@@ -53,6 +54,7 @@
         }
       ],
       "excludedDescendantNames": [],
+      "manager": { "id": "homebrew", "label": "Homebrew" },
       "evidenceRule": {
         "id": "homebrew-managed-download-cache",
         "kind": "toolManagedRoot",
@@ -70,6 +72,7 @@
         }
       ],
       "excludedDescendantNames": [],
+      "manager": { "id": "npm", "label": "npm" },
       "evidenceRule": {
         "id": "npm-cache-path-convention",
         "kind": "pathConvention",

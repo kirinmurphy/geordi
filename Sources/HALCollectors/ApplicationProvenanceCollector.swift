@@ -22,8 +22,32 @@ public struct FileSystemApplicationProvenanceInspector: ApplicationProvenanceIns
         appStoreReceiptFact(at: url, displayLabel: adapter.displayLabel)
       case .downloadOrigin:
         downloadOriginFact(at: url, displayLabel: adapter.displayLabel)
+      case .homebrewCask:
+        homebrewCaskFact(
+          at: url,
+          displayLabel: adapter.displayLabel,
+          pathPrefixes: adapter.pathPrefixes ?? []
+        )
       }
     }
+  }
+
+  private func homebrewCaskFact(
+    at applicationURL: URL,
+    displayLabel: String,
+    pathPrefixes: [String]
+  ) -> ApplicationProvenanceFact {
+    let resolvedPath = applicationURL.resolvingSymlinksInPath().standardizedFileURL.path
+    let present = pathPrefixes.contains { prefix in
+      let standardized = URL(filePath: prefix).standardizedFileURL.path
+      return resolvedPath == standardized || resolvedPath.hasPrefix(standardized + "/")
+    }
+    return ApplicationProvenanceFact(
+      kind: .homebrewCask,
+      displayLabel: displayLabel,
+      status: present ? .present : .absent,
+      source: "Resolved application bundle path"
+    )
   }
 
   private func appStoreReceiptFact(

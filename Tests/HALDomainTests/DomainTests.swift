@@ -25,6 +25,40 @@ struct DomainTests {
     #expect(relationship.evidence.first?.kind == .observed)
   }
 
+  @Test("Instance partition separates shared node attributes from varying values")
+  func instanceDetailPartition() {
+    let partition = EntityInstancePartition(detailsByInstance: [
+      (
+        id: "Process 1307",
+        details: [
+          Detail("PID", "1307"),
+          Detail("Executable", "/Applications/Dropbox.app/Contents/MacOS/Dropbox"),
+          Detail("Memory at observation", "137 MB"),
+        ]
+      ),
+      (
+        id: "Process 1310",
+        details: [
+          Detail("PID", "1310"),
+          Detail("Executable", "/Applications/Dropbox.app/Contents/MacOS/Dropbox"),
+          Detail("Memory at observation", "95 MB"),
+        ]
+      ),
+    ])
+
+    #expect(
+      partition.sharedDetails == [
+        Detail("Executable", "/Applications/Dropbox.app/Contents/MacOS/Dropbox")
+      ])
+    #expect(partition.instances.map(\.id) == ["Process 1307", "Process 1310"])
+    #expect(
+      partition.instances.allSatisfy {
+        $0.details.map(\.label) == [
+          "PID", "Memory at observation",
+        ]
+      })
+  }
+
   @Test("Configuration rejects overlapping semantic columns")
   func configurationValidation() {
     let layout = LayoutConfiguration(

@@ -186,6 +186,8 @@ public struct RebuildableDataCollector: Sendable {
         evidenceConfidence: detector.evidenceRule.confidence,
         evidenceExplanation: detector.evidenceRule.explanation,
         excludedDescendantNames: detector.excludedDescendantNames,
+        managerID: detector.manager?.id,
+        managerLabel: detector.manager?.label,
         status: inspection.status,
         isDirectory: inspection.isDirectory,
         isSymbolicLink: inspection.isSymbolicLink

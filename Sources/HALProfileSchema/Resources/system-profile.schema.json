@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/system-profile-v2.schema.json",
+  "$id": "https://hal.local/schemas/system-profile-v3.schema.json",
   "title": "HAL System Profile",
   "description": "The normalized profile contract shared by synthetic profiles and live system scans.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "id", "name", "summary", "entities", "relationships"],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "id": { "$ref": "#/$defs/nonEmptyString" },
     "name": { "$ref": "#/$defs/nonEmptyString" },
     "summary": { "$ref": "#/$defs/nonEmptyString" },
@@ -44,6 +44,7 @@
       "type": "string",
       "enum": [
         "owns",
+        "provides",
         "launches",
         "reads and writes",
         "persists through",
@@ -75,6 +76,18 @@
         "value": { "type": "string" }
       }
     },
+    "entityInstance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "details"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "details": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/detail" }
+        }
+      }
+    },
     "entity": {
       "type": "object",
       "additionalProperties": false,
@@ -87,6 +100,10 @@
         "details": {
           "type": "array",
           "items": { "$ref": "#/$defs/detail" }
+        },
+        "instances": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/entityInstance" }
         },
         "presentation": { "$ref": "#/$defs/presentation" }
       }

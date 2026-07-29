@@ -35,11 +35,10 @@ public struct PersistenceApplicationResolver: Sendable {
         collectorID: Self.id,
         collectorVersion: Self.version,
         availability: declarations.run.availability,
-        state: declarations.run.state,
+        state: declarations.run.availability == .available ? .complete : .skipped,
         startedAt: startedAt,
         completedAt: clock.now(),
-        scope: ["declared-program-path"],
-        issues: declarations.run.issues
+        scope: ["declared-program-path"]
       ),
       observations: observations
     )

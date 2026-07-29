@@ -1,5 +1,6 @@
 import Foundation
 import HALCollectors
+import HALDomain
 import Testing
 
 @Suite("Application classification configuration")
@@ -11,24 +12,31 @@ struct ApplicationClassificationConfigurationTests {
 
     #expect(configuration.defaultCategoryID == "user-installed")
     #expect(
-      configuration.category(forApplicationPath: "/Applications/Firefox.app", userHome: home).id
+      configuration.category(
+        forApplicationPath: "/Applications/Firefox.app",
+        platformBinary: false,
+        userHome: home
+      ).id
         == "user-installed"
     )
     #expect(
       configuration.category(
         forApplicationPath: "/System/Applications/Utilities/Terminal.app",
+        platformBinary: true,
         userHome: home
       ).id == "system-utilities"
     )
     #expect(
       configuration.category(
         forApplicationPath: "/System/Applications/Calendar.app",
+        platformBinary: true,
         userHome: home
       ).id == "bundled-software"
     )
     #expect(
       configuration.category(
         forApplicationPath: "/Users/example/Applications/Local.app",
+        platformBinary: false,
         userHome: home
       ).id == "user-installed"
     )
@@ -47,7 +55,23 @@ struct ApplicationClassificationConfigurationTests {
         forApplicationPath: "/Applications/Platform.app",
         platformBinary: true,
         userHome: home
-      ).id == "other"
+      ).id == "bundled-software"
+    )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/Applications/Store.app",
+        platformBinary: false,
+        details: [Detail("App Store receipt", "Present")],
+        userHome: home
+      ).id == "app-store"
+    )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/Applications/Brew.app",
+        platformBinary: false,
+        details: [Detail("Homebrew cask", "Present")],
+        userHome: home
+      ).id == "homebrew-cask"
     )
   }
 
@@ -56,7 +80,7 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
@@ -67,6 +91,7 @@ struct ApplicationClassificationConfigurationTests {
           "isFallback": true,
           "platformBinaryWhenKnown": null,
           "pathPrefixes": [],
+          "detailRules": [],
           "color": "gray"
         }]
       }
@@ -87,7 +112,7 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{
@@ -97,7 +122,8 @@ struct ApplicationClassificationConfigurationTests {
           "priority": 1,
           "isFallback": false,
           "platformBinaryWhenKnown": false,
-          "pathPrefixes": [{ "path": "/Applications", "scope": "system" }]
+          "pathPrefixes": [{ "path": "/Applications", "scope": "system" }],
+          "detailRules": []
         }]
       }
       """.utf8

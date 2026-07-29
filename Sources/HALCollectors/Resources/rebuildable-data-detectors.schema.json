@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/rebuildable-data-detectors-v2.json",
+  "$id": "https://hal.local/schemas/rebuildable-data-detectors-v3.json",
   "title": "HAL rebuildable-data detectors",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "measurementPolicy", "classifications", "detectors"],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "measurementPolicy": {
       "type": "object",
       "additionalProperties": false,
@@ -74,6 +74,7 @@
           "classificationID",
           "locations",
           "excludedDescendantNames",
+          "manager",
           "evidenceRule"
         ],
         "properties": {
@@ -96,6 +97,15 @@
             "type": "array",
             "uniqueItems": true,
             "items": { "type": "string", "minLength": 1 }
+          },
+          "manager": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["id", "label"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "label": { "type": "string", "minLength": 1 }
+            }
           },
           "evidenceRule": {
             "type": "object",

@@ -175,6 +175,82 @@ struct AppModelCollectionTests {
     #expect(model.presentedGraph.entities.map(\.id) == ["process"])
   }
 
+  @Test("Package manager focus presents every direct installation and managed artifact")
+  func packageManagerFocus() {
+    let linked = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "linked", name: "This Mac", summary: "Linked"),
+        entities: [
+          Entity(id: "brew", type: .packageManager, name: "Homebrew", summary: "Manager"),
+          Entity(id: "go", type: .package, name: "go", summary: "Formula"),
+          Entity(id: "app", type: .application, name: "Cask App", summary: "Cask"),
+          Entity(id: "cache", type: .file, name: "Cache", summary: "Managed data"),
+          Entity(id: "process", type: .process, name: "Go process", summary: "Second hop"),
+        ],
+        relationships: [
+          Relationship(
+            id: "brew-go",
+            source: "brew",
+            target: "go",
+            type: .owns,
+            confidence: .confirmed,
+            explanation: "Installed formula",
+            evidence: []
+          ),
+          Relationship(
+            id: "brew-app",
+            source: "brew",
+            target: "app",
+            type: .owns,
+            confidence: .confirmed,
+            explanation: "Installed cask",
+            evidence: []
+          ),
+          Relationship(
+            id: "brew-cache",
+            source: "brew",
+            target: "cache",
+            type: .owns,
+            confidence: .confirmed,
+            explanation: "Managed cache",
+            evidence: []
+          ),
+          Relationship(
+            id: "go-process",
+            source: "go",
+            target: "process",
+            type: .launches,
+            confidence: .confirmed,
+            explanation: "Second-hop runtime",
+            evidence: []
+          ),
+        ]
+      ),
+      scan: ScanContext(
+        id: "linked",
+        environment: .liveReadOnly,
+        startedAt: .now,
+        completedAt: .now
+      )
+    )
+    let model = makeModel(preferences: MemoryPreferences()) { linked }
+    model.fixture = linked.graph
+    model.visibleTypes = Set<EntityType>([.packageManager])
+
+    model.focus(linked.graph.entity("brew")!)
+
+    #expect(Set(model.presentedGraph.entities.map(\.id)) == ["brew", "go", "app", "cache"])
+    #expect(
+      Set(model.presentedGraph.relationships.map(\.id)) == [
+        "brew-app", "brew-cache", "brew-go",
+      ])
+    #expect(
+      model.visibleTypes.isSuperset(
+        of: Set<EntityType>([.packageManager, .package, .application, .file])
+      ))
+    #expect(model.selection == GraphSelection(.entity("brew")))
+  }
+
   private func makeModel(
     preferences: MemoryPreferences,
     store: HALUserDataStore? = nil,

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "installations": [
+    {
+      "id": "apple-silicon-default",
+      "prefix": "/opt/homebrew",
+      "cellarRelativePath": "Cellar"
+    },
+    {
+      "id": "intel-default",
+      "prefix": "/usr/local",
+      "cellarRelativePath": "Cellar"
+    }
+  ]
+}

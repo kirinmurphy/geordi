@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct RebuildableDataConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 2
+  public static let currentVersion = 3
 
   public let schemaVersion: Int
   public let measurementPolicy: RebuildableDataMeasurementPolicy
@@ -172,19 +172,22 @@ public struct RebuildableDataDetector: Codable, Hashable, Sendable, Identifiable
   public let locations: [RebuildableDataLocation]
   public let excludedDescendantNames: [String]
   public let evidenceRule: RebuildableDataEvidenceRule
+  public let manager: RebuildableDataManager?
 
   public init(
     id: String,
     classificationID: String,
     locations: [RebuildableDataLocation],
     excludedDescendantNames: [String],
-    evidenceRule: RebuildableDataEvidenceRule
+    evidenceRule: RebuildableDataEvidenceRule,
+    manager: RebuildableDataManager? = nil
   ) {
     self.id = id
     self.classificationID = classificationID
     self.locations = locations
     self.excludedDescendantNames = excludedDescendantNames
     self.evidenceRule = evidenceRule
+    self.manager = manager
   }
 
   fileprivate func validate() throws {
@@ -227,6 +230,16 @@ public struct RebuildableDataDetector: Codable, Hashable, Sendable, Identifiable
       }
       return resolved
     }
+  }
+}
+
+public struct RebuildableDataManager: Codable, Hashable, Sendable {
+  public let id: String
+  public let label: String
+
+  public init(id: String, label: String) {
+    self.id = id
+    self.label = label
   }
 }
 

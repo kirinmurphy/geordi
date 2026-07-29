@@ -14,6 +14,10 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let maxUnmatchedProcesses: Int
   public let persistenceCollector: PersistenceCollector
   public let persistenceResolver: PersistenceApplicationResolver
+  public let homebrewCollector: HomebrewCollector?
+  public let runtimeCollector: RuntimeCollector?
+  public let packageEcosystemCollector: PackageEcosystemCollector?
+  public let commandLineSoftwareCollector: CommandLineSoftwareCollector?
   public let projector: ApplicationGraphProjector
 
   public init(
@@ -24,6 +28,10 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     rebuildableDataConfiguration: RebuildableDataConfiguration? = nil,
     processConfiguration: ProcessCollectorConfiguration,
     persistenceRoots: [PersistenceSearchRoot],
+    homebrewConfiguration: HomebrewInstallationConfiguration? = nil,
+    runtimeConfiguration: RuntimeCollectorConfiguration? = nil,
+    packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
+    commandLineSoftwareConfiguration: CommandLineSoftwareConfiguration? = nil,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -76,6 +84,18 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       clock: clock
     )
     persistenceResolver = PersistenceApplicationResolver(clock: clock)
+    homebrewCollector = homebrewConfiguration.map {
+      HomebrewCollector(configuration: $0, clock: clock)
+    }
+    runtimeCollector = runtimeConfiguration.map {
+      RuntimeCollector(configuration: $0, userHome: userHome, clock: clock)
+    }
+    packageEcosystemCollector = packageEcosystemConfiguration.map {
+      PackageEcosystemCollector(configuration: $0, userHome: userHome, clock: clock)
+    }
+    commandLineSoftwareCollector = commandLineSoftwareConfiguration.map {
+      CommandLineSoftwareCollector(configuration: $0, userHome: userHome, clock: clock)
+    }
     projector = ApplicationGraphProjector()
   }
 
@@ -87,6 +107,10 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     rebuildableDataConfiguration: RebuildableDataConfiguration? = nil,
     processConfiguration: ProcessCollectorConfiguration,
     persistenceConfiguration: PersistenceCollectorConfiguration,
+    homebrewConfiguration: HomebrewInstallationConfiguration? = nil,
+    runtimeConfiguration: RuntimeCollectorConfiguration? = nil,
+    packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
+    commandLineSoftwareConfiguration: CommandLineSoftwareConfiguration? = nil,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -108,6 +132,10 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       rebuildableDataConfiguration: rebuildableDataConfiguration,
       processConfiguration: processConfiguration,
       persistenceRoots: try persistenceConfiguration.resolvedRoots(userHome: userHome),
+      homebrewConfiguration: homebrewConfiguration,
+      runtimeConfiguration: runtimeConfiguration,
+      packageEcosystemConfiguration: packageEcosystemConfiguration,
+      commandLineSoftwareConfiguration: commandLineSoftwareConfiguration,
       userHome: userHome,
       signatureInspector: signatureInspector,
       provenanceInspector: provenanceInspector,
@@ -148,6 +176,10 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       declarations: persistence,
       applications: applications.observations
     )
+    let homebrew = homebrewCollector?.collect(scanID: scanID)
+    let runtimes = runtimeCollector?.collect(scanID: scanID)
+    let packageEcosystems = packageEcosystemCollector?.collect(scanID: scanID)
+    let commandLineSoftware = commandLineSoftwareCollector?.collect(scanID: scanID)
     return projector.snapshot(
       scanID: scanID,
       output: applications,
@@ -160,7 +192,11 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       maxProcessesPerApplication: maxProcessesPerApplication,
       maxUnmatchedProcesses: maxUnmatchedProcesses,
       persistence: persistence,
-      persistenceResolutions: persistenceResolutions
+      persistenceResolutions: persistenceResolutions,
+      homebrew: homebrew,
+      runtimes: runtimes,
+      packageEcosystems: packageEcosystems,
+      commandLineSoftware: commandLineSoftware
     )
   }
 }

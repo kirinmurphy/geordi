@@ -35,7 +35,7 @@
       "properties": {
         "type": {
           "enum": [
-            "owns", "launches", "reads and writes", "persists through",
+            "owns", "provides", "launches", "reads and writes", "persists through",
             "consumes", "contributes to", "occurred near", "may belong to", "shares"
           ]
         },

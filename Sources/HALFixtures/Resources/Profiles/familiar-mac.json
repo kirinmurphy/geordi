@@ -1259,6 +1259,6 @@
       "type" : "contributes to"
     }
   ],
-  "schemaVersion" : 2,
+  "schemaVersion" : 3,
   "summary" : "A fictional developer Mac shaped around familiar installed software."
 }

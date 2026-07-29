@@ -25,6 +25,8 @@ public struct RebuildableDataValue: Codable, Hashable, Sendable {
   public let evidenceConfidence: Confidence
   public let evidenceExplanation: String
   public let excludedDescendantNames: [String]
+  public let managerID: String?
+  public let managerLabel: String?
   public let status: RebuildableDataStatus
   public let isDirectory: Bool?
   public let isSymbolicLink: Bool?
@@ -41,6 +43,8 @@ public struct RebuildableDataValue: Codable, Hashable, Sendable {
     evidenceConfidence: Confidence,
     evidenceExplanation: String,
     excludedDescendantNames: [String],
+    managerID: String? = nil,
+    managerLabel: String? = nil,
     status: RebuildableDataStatus,
     isDirectory: Bool? = nil,
     isSymbolicLink: Bool? = nil
@@ -56,6 +60,8 @@ public struct RebuildableDataValue: Codable, Hashable, Sendable {
     self.evidenceConfidence = evidenceConfidence
     self.evidenceExplanation = evidenceExplanation
     self.excludedDescendantNames = excludedDescendantNames
+    self.managerID = managerID
+    self.managerLabel = managerLabel
     self.status = status
     self.isDirectory = isDirectory
     self.isSymbolicLink = isSymbolicLink

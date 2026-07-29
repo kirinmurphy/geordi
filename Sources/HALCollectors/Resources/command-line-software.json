@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "roots": [
+    {
+      "id": "user-local-bin",
+      "label": "User-local executable directory",
+      "path": "$USER_HOME/.local/bin",
+      "scope": "user",
+      "maxEntries": 512
+    },
+    {
+      "id": "homebrew-apple-silicon-bin",
+      "label": "Homebrew executable directory",
+      "path": "/opt/homebrew/bin",
+      "scope": "system",
+      "maxEntries": 2048,
+      "packageManagerID": "homebrew"
+    },
+    {
+      "id": "local-bin",
+      "label": "Local executable directory",
+      "path": "/usr/local/bin",
+      "scope": "system",
+      "maxEntries": 2048
+    },
+    {
+      "id": "macos-system-bin",
+      "label": "macOS system executable directory",
+      "path": "/usr/bin",
+      "scope": "system",
+      "maxEntries": 2048
+    }
+  ]
+}

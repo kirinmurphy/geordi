@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "runtimes": [
+    {
+      "id": "node",
+      "label": "Node.js",
+      "kind": "runtime",
+      "packageIdentities": [{ "managerID": "homebrew", "packageName": "node" }],
+      "executableCandidates": [
+        { "path": "$USER_HOME/.local/bin/node", "scope": "user" },
+        { "path": "/opt/homebrew/bin/node", "scope": "system" },
+        { "path": "/usr/local/bin/node", "scope": "system" }
+      ],
+      "versionArguments": ["--version"]
+    },
+    {
+      "id": "python",
+      "label": "Python",
+      "kind": "runtime",
+      "packageIdentities": [{ "managerID": "homebrew", "packageName": "python" }],
+      "executableCandidates": [
+        { "path": "$USER_HOME/.local/bin/python3", "scope": "user" },
+        { "path": "/opt/homebrew/bin/python3", "scope": "system" },
+        { "path": "/usr/local/bin/python3", "scope": "system" },
+        { "path": "/usr/bin/python3", "scope": "system" }
+      ],
+      "versionArguments": ["--version"]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "kind": "runtime",
+      "packageIdentities": [
+        { "managerID": "homebrew", "packageName": "openjdk" },
+        { "managerID": "homebrew", "packageName": "openjdk@21" },
+        { "managerID": "homebrew", "packageName": "openjdk@17" }
+      ],
+      "executableCandidates": [
+        { "path": "$USER_HOME/.local/bin/java", "scope": "user" },
+        { "path": "/opt/homebrew/bin/java", "scope": "system" },
+        { "path": "/usr/local/bin/java", "scope": "system" },
+        { "path": "/usr/bin/java", "scope": "system" }
+      ],
+      "versionArguments": ["-version"]
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "kind": "toolchain",
+      "packageIdentities": [{ "managerID": "homebrew", "packageName": "go" }],
+      "executableCandidates": [
+        { "path": "$USER_HOME/.local/bin/go", "scope": "user" },
+        { "path": "/opt/homebrew/bin/go", "scope": "system" },
+        { "path": "/usr/local/bin/go", "scope": "system" }
+      ],
+      "versionArguments": ["version"]
+    },
+    {
+      "id": "php",
+      "label": "PHP",
+      "kind": "runtime",
+      "packageIdentities": [{ "managerID": "homebrew", "packageName": "php" }],
+      "executableCandidates": [
+        { "path": "$USER_HOME/.local/bin/php", "scope": "user" },
+        { "path": "/opt/homebrew/bin/php", "scope": "system" },
+        { "path": "/usr/local/bin/php", "scope": "system" }
+      ],
+      "versionArguments": ["--version"]
+    },
+    {
+      "id": "javac",
+      "label": "Java Compiler",
+      "kind": "compiler",
+      "packageIdentities": [
+        { "managerID": "homebrew", "packageName": "openjdk" },
+        { "managerID": "homebrew", "packageName": "openjdk@21" },
+        { "managerID": "homebrew", "packageName": "openjdk@17" }
+      ],
+      "executableCandidates": [
+        { "path": "/opt/homebrew/bin/javac", "scope": "system" },
+        { "path": "/usr/local/bin/javac", "scope": "system" },
+        { "path": "/usr/bin/javac", "scope": "system" }
+      ],
+      "versionArguments": ["-version"]
+    }
+  ]
+}

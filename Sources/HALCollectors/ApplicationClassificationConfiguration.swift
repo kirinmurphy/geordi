@@ -1,8 +1,9 @@
 import Foundation
+import HALDomain
 import HALManifestKit
 
 public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 2
+  public static let currentVersion = 3
 
   public let schemaVersion: Int
   public let allApplicationsLabel: String
@@ -84,6 +85,7 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
   public func category(
     forApplicationPath path: String,
     platformBinary: Bool? = nil,
+    details: [Detail] = [],
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser
   ) -> ApplicationClassificationCategory {
     let applicationURL = URL(filePath: path).standardizedFileURL
@@ -92,15 +94,17 @@ public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendabl
       return $0.id < $1.id
     }
     for category in orderedCategories where !category.isFallback {
-      if let expected = category.platformBinaryWhenKnown,
-        let platformBinary,
-        expected != platformBinary
-      {
-        continue
+      if let expected = category.platformBinaryWhenKnown {
+        guard let platformBinary, expected == platformBinary else {
+          continue
+        }
       }
       if category.pathPrefixes.contains(where: {
         $0.matches(applicationURL, userHome: userHome)
-      }) {
+      }) || category.pathPrefixes.isEmpty {
+        guard category.detailRules.allSatisfy({ $0.matches(details) }) else {
+          continue
+        }
         return category
       }
     }
@@ -116,6 +120,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
   public let isFallback: Bool
   public let platformBinaryWhenKnown: Bool?
   public let pathPrefixes: [ApplicationClassificationPathPrefix]
+  public let detailRules: [ApplicationClassificationDetailRule]
 
   public init(
     id: String,
@@ -124,7 +129,8 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     priority: Int,
     isFallback: Bool,
     platformBinaryWhenKnown: Bool? = nil,
-    pathPrefixes: [ApplicationClassificationPathPrefix]
+    pathPrefixes: [ApplicationClassificationPathPrefix],
+    detailRules: [ApplicationClassificationDetailRule] = []
   ) {
     self.id = id
     self.label = label
@@ -133,6 +139,27 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     self.isFallback = isFallback
     self.platformBinaryWhenKnown = platformBinaryWhenKnown
     self.pathPrefixes = pathPrefixes
+    self.detailRules = detailRules
+  }
+}
+
+public struct ApplicationClassificationDetailRule: Codable, Hashable, Sendable {
+  public let label: String
+  public let equals: String?
+  public let excludes: [String]
+
+  public init(label: String, equals: String? = nil, excludes: [String] = []) {
+    self.label = label
+    self.equals = equals
+    self.excludes = excludes
+  }
+
+  fileprivate func matches(_ details: [Detail]) -> Bool {
+    guard let value = details.first(where: { $0.label == label })?.value else {
+      return false
+    }
+    if let equals, value != equals { return false }
+    return !excludes.contains(value)
   }
 }
 

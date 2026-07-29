@@ -11,6 +11,13 @@ public protocol DataSourcePreferenceStore: Sendable {
   func setMode(_ mode: DataSourceMode)
   func syntheticWelcomeDismissed() -> Bool
   func setSyntheticWelcomeDismissed(_ dismissed: Bool)
+  func linkedCompletionDismissed() -> Bool
+  func setLinkedCompletionDismissed(_ dismissed: Bool)
+}
+
+extension DataSourcePreferenceStore {
+  public func linkedCompletionDismissed() -> Bool { false }
+  public func setLinkedCompletionDismissed(_ dismissed: Bool) {}
 }
 
 public final class UserDefaultsDataSourcePreferenceStore: DataSourcePreferenceStore,
@@ -19,6 +26,7 @@ public final class UserDefaultsDataSourcePreferenceStore: DataSourcePreferenceSt
   private enum Key {
     static let mode = "dataSource.mode"
     static let welcomeDismissed = "dataSource.syntheticWelcomeDismissed"
+    static let linkedCompletionDismissed = "dataSource.linkedCompletionDismissed"
   }
 
   private let defaults: UserDefaults
@@ -41,6 +49,14 @@ public final class UserDefaultsDataSourcePreferenceStore: DataSourcePreferenceSt
 
   public func setSyntheticWelcomeDismissed(_ dismissed: Bool) {
     defaults.set(dismissed, forKey: Key.welcomeDismissed)
+  }
+
+  public func linkedCompletionDismissed() -> Bool {
+    defaults.bool(forKey: Key.linkedCompletionDismissed)
+  }
+
+  public func setLinkedCompletionDismissed(_ dismissed: Bool) {
+    defaults.set(dismissed, forKey: Key.linkedCompletionDismissed)
   }
 }
 

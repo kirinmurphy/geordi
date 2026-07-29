@@ -138,12 +138,76 @@ struct ProcessCollectorTests {
     try snapshot.graph.validate()
     #expect(snapshot.graph.entities.filter { $0.type == .process }.count == 2)
     #expect(snapshot.graph.relationships.count == 1)
-    #expect(snapshot.graph.relationships.first?.target == "process:pid:101")
+    #expect(
+      snapshot.graph.entity(snapshot.graph.relationships.first?.target ?? "")?.name == "Helper"
+    )
     #expect(snapshot.graph.relationships.first?.evidence.count == 2)
     #expect(
-      snapshot.graph.entity("process:pid:102")?.details.contains {
+      snapshot.graph.entities.first { $0.name == "Restricted" }?.details.contains {
         $0.label == "Application resolution" && $0.value == "Inaccessible"
       } == true)
+  }
+
+  @Test("Projection collapses identical executables and retains varying instance fields")
+  func projectionGroupsProcessInstances() throws {
+    let configuration = ProcessCollectorConfiguration(
+      maxProcessesPerApplication: 8,
+      strategies: [
+        ProcessResolutionStrategy(
+          id: "exact",
+          kind: .exactMainExecutable,
+          confidence: .confirmed,
+          priority: 100
+        )
+      ]
+    )
+    let application = application()
+    let processOutput = ProcessCollector(
+      sampler: DuplicateProcessSampler(),
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+    let resolutions = ProcessApplicationResolver(
+      configuration: configuration,
+      clock: FixedClock(timestamp)
+    ).resolve(
+      scanID: "scan",
+      processes: processOutput,
+      applications: [application]
+    )
+    let applications = CollectorOutput(
+      run: CollectorRun(
+        collectorID: ApplicationBundleCollector.id,
+        collectorVersion: 1,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: [application]
+    )
+
+    let graph = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: applications,
+      processes: processOutput,
+      processResolutions: resolutions
+    ).graph
+
+    let process = try #require(graph.entities.first { $0.type == .process })
+    #expect(graph.entities.filter { $0.type == .process }.count == 1)
+    #expect(process.instances.count == 2)
+    #expect(
+      process.details.contains {
+        $0.label == "Executable"
+          && $0.value == "/Applications/Example.app/Contents/MacOS/Example"
+      })
+    #expect(
+      process.instances.allSatisfy {
+        $0.details.contains { $0.label == "PID" }
+          && $0.details.contains { $0.label == "Memory at observation" }
+      })
+    #expect(graph.relationships.count == 1)
+    #expect(graph.relationships[0].evidence.filter { $0.kind == .observed }.count == 2)
   }
 
   private func application() -> CollectedObservation<ApplicationBundleValue> {
@@ -197,5 +261,26 @@ private struct StubProcessSampler: ProcessSampling {
 private struct FailingProcessSampler: ProcessSampling {
   func sample() throws -> [ProcessValue] {
     throw ProcessCollectorError.samplerFailed("Test")
+  }
+}
+
+private struct DuplicateProcessSampler: ProcessSampling {
+  func sample() throws -> [ProcessValue] {
+    [
+      ProcessValue(
+        pid: 1_307,
+        name: "Example",
+        executablePath: "/Applications/Example.app/Contents/MacOS/Example",
+        residentMemoryBytes: 137_000_000,
+        accessibility: .accessible
+      ),
+      ProcessValue(
+        pid: 1_310,
+        name: "Example",
+        executablePath: "/Applications/Example.app/Contents/MacOS/Example",
+        residentMemoryBytes: 95_000_000,
+        accessibility: .accessible
+      ),
+    ]
   }
 }

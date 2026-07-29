@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "adapters": [
+    {
+      "id": "apple-terminal",
+      "displayName": "Terminal",
+      "bundleIdentifier": "com.apple.Terminal",
+      "strategy": "workspace-open"
+    },
+    {
+      "id": "iterm2",
+      "displayName": "iTerm2",
+      "bundleIdentifier": "com.googlecode.iterm2",
+      "strategy": "workspace-open"
+    },
+    {
+      "id": "ghostty",
+      "displayName": "Ghostty",
+      "bundleIdentifier": "com.mitchellh.ghostty",
+      "strategy": "workspace-open"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import AppKit
 import HALDomain
 import HALVisualization
 import SwiftUI
@@ -6,6 +7,8 @@ struct InspectorView: View {
   let graph: SystemGraph
   let selection: GraphSelection?
   let onShowEntityTypeInfo: (EntityType) -> Void
+  private let glossary = try? Glossary.bundled()
+  private let displayProfile = try? InspectorDisplayProfile.bundled()
 
   var body: some View {
     ScrollView {
@@ -56,19 +59,29 @@ struct InspectorView: View {
       }
       Text(entity.name).font(.title.bold())
       Text(entity.summary).font(.title3)
-      if !entity.details.isEmpty {
+      if !entity.details.isEmpty || !entity.instances.isEmpty {
         Divider()
         if entity.type == .application {
           applicationEvidenceSummary(entity)
           DisclosureGroup("Technical details") {
-            detailGrid(entity.details)
+            groupedDetails(entity.details)
               .padding(.top, 10)
           }
           .font(.subheadline.weight(.semibold))
         } else {
-          detailGrid(entity.details)
+          if !entity.details.isEmpty {
+            if !entity.instances.isEmpty {
+              Text("Shared attributes")
+                .font(.headline)
+            }
+            groupedDetails(entity.details)
+          }
+          if !entity.instances.isEmpty {
+            instanceDetails(entity.instances)
+          }
         }
       }
+      exploreFurther(entity)
       Divider()
       let upstream = graph.relationships(connectedTo: entity.id).filter {
         $0.target == entity.id
@@ -93,6 +106,53 @@ struct InspectorView: View {
         )
       }
     }
+  }
+
+  private func groupedDetails(_ details: [Detail]) -> some View {
+    let grouped = Dictionary(grouping: details) {
+      displayProfile?.group(for: $0.label).id ?? "technical"
+    }
+    let groups =
+      displayProfile?.groups ?? [
+        InspectorDetailGroup(id: "technical", label: "Technical details", detailLabels: [])
+      ]
+    return VStack(alignment: .leading, spacing: 14) {
+      ForEach(groups.filter { grouped[$0.id]?.isEmpty == false }) { group in
+        VStack(alignment: .leading, spacing: 8) {
+          Text(group.label)
+            .font(.subheadline.bold())
+          detailGrid(grouped[group.id] ?? [])
+        }
+      }
+    }
+  }
+
+  private func exploreFurther(_ entity: Entity) -> some View {
+    let paths = Array(Set(entity.details.map(\.value).filter { $0.hasPrefix("/") })).sorted()
+    let manager = entity.details.first { $0.label == "Package manager" }?.value
+    return Group {
+      if !paths.isEmpty || manager == "Homebrew" {
+        VStack(alignment: .leading, spacing: 10) {
+          Text("Explore further").font(.headline)
+          ForEach(paths, id: \.self) { PathActionMenu(path: $0) }
+          if manager == "Homebrew", isSafePackageName(entity.name) {
+            Button("Copy Homebrew removal guidance") {
+              let command = "brew uninstall \(entity.name)"
+              NSPasteboard.general.clearContents()
+              NSPasteboard.general.setString(command, forType: .string)
+            }
+            .help("Copies guidance only. HAL never runs package removal.")
+          }
+        }
+      }
+    }
+  }
+
+  private func isSafePackageName(_ value: String) -> Bool {
+    !value.isEmpty
+      && value.unicodeScalars.allSatisfy {
+        CharacterSet.alphanumerics.contains($0) || "/@+_.-".unicodeScalars.contains($0)
+      }
   }
 
   private func applicationEvidenceSummary(_ entity: Entity) -> some View {
@@ -158,14 +218,68 @@ struct InspectorView: View {
     Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 10) {
       ForEach(details) { detail in
         GridRow {
-          Text(detail.label)
+          if let term = glossary?.term(matchingExactAlias: detail.label) {
+            GlossaryTermToggle(
+              label: detail.label,
+              term: term,
+              delayMilliseconds: glossary?.hoverDelayMilliseconds ?? 700
+            )
             .foregroundStyle(.secondary)
             .gridColumnAlignment(.trailing)
-          Text(detail.value)
-            .fontWeight(.semibold)
-            .gridColumnAlignment(.leading)
-            .textSelection(.enabled)
+          } else {
+            Text(detail.label)
+              .foregroundStyle(.secondary)
+              .gridColumnAlignment(.trailing)
+          }
+          if detail.value.hasPrefix("/") {
+            PathActionMenu(path: detail.value)
+              .fontWeight(.semibold)
+              .gridColumnAlignment(.leading)
+          } else {
+            Text(detail.value)
+              .fontWeight(.semibold)
+              .gridColumnAlignment(.leading)
+              .textSelection(.enabled)
+          }
         }
+      }
+    }
+  }
+
+  private func instanceDetails(_ instances: [EntityInstance]) -> some View {
+    let columns = instances.reduce(into: [String]()) { labels, instance in
+      for detail in instance.details where !labels.contains(detail.label) {
+        labels.append(detail.label)
+      }
+    }
+    return VStack(alignment: .leading, spacing: 10) {
+      Text("Observed instances (\(instances.count))")
+        .font(.headline)
+      ScrollView(.horizontal) {
+        Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 10) {
+          GridRow {
+            Text("Instance")
+            ForEach(columns, id: \.self) { label in
+              Text(label)
+            }
+          }
+          .font(.caption.bold())
+          .foregroundStyle(.secondary)
+
+          Divider()
+
+          ForEach(instances) { instance in
+            GridRow {
+              Text(instance.id)
+                .fontWeight(.semibold)
+              ForEach(columns, id: \.self) { label in
+                Text(instance.details.first { $0.label == label }?.value ?? "—")
+                  .textSelection(.enabled)
+              }
+            }
+          }
+        }
+        .padding(.vertical, 2)
       }
     }
   }

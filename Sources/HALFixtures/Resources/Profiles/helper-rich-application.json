@@ -237,6 +237,6 @@
       "type" : "consumes"
     }
   ],
-  "schemaVersion" : 2,
+  "schemaVersion" : 3,
   "summary" : "An editor with child processes, persistent login helper, caches, and shared support."
 }

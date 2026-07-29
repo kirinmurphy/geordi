@@ -10,7 +10,7 @@ struct FixtureTests {
     #expect(FixtureCatalog.all.count >= 4)
     for fixture in FixtureCatalog.all {
       try fixture.validate()
-      #expect(fixture.metadata.version == 2)
+      #expect(fixture.metadata.version == 3)
     }
   }
 

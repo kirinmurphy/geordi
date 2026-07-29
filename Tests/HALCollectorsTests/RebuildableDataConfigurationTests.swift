@@ -9,7 +9,7 @@ struct RebuildableDataConfigurationTests {
     let configuration = try RebuildableDataConfiguration.bundled()
     let home = URL(filePath: "/Users/example", directoryHint: .isDirectory)
 
-    #expect(configuration.schemaVersion == 2)
+    #expect(configuration.schemaVersion == 3)
     #expect(configuration.measurementPolicy.maxEntriesPerLocation == 250_000)
     #expect(configuration.measurementPolicy.maxDurationMilliseconds == 5_000)
     #expect(configuration.measurementPolicy.stayOnFileSystem)
@@ -35,7 +35,7 @@ struct RebuildableDataConfigurationTests {
     let unknownClassification = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "measurementPolicy": {
           "maxEntriesPerLocation": 250000,
           "maxDepth": 64,
@@ -56,6 +56,7 @@ struct RebuildableDataConfigurationTests {
           "classificationID": "missing",
           "locations": [{ "id": "bad-path", "path": "$USER_HOME/../Secret" }],
           "excludedDescendantNames": [],
+          "manager": null,
           "evidenceRule": {
             "id": "rule",
             "kind": "pathConvention",
@@ -85,7 +86,7 @@ struct RebuildableDataConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "classifications": [],
         "detectors": [],
         "allowDeletion": true

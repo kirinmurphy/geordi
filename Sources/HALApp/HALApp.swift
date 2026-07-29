@@ -28,6 +28,11 @@ struct HALApp: App {
           let rebuildableDataConfiguration = try RebuildableDataConfiguration.bundled()
           let processConfiguration = try ProcessCollectorConfiguration.bundled()
           let persistenceConfiguration = try PersistenceCollectorConfiguration.bundled()
+          let homebrewConfiguration = try HomebrewInstallationConfiguration.bundled()
+          let runtimeConfiguration = try RuntimeCollectorConfiguration.bundled()
+          let packageEcosystemConfiguration = try PackageEcosystemConfiguration.bundled()
+          let commandLineSoftwareConfiguration =
+            try CommandLineSoftwareConfiguration.bundled()
           return try ApplicationInventorySnapshotProvider(
             scanID: ScanID("live-\(UUID().uuidString)"),
             configuration: collectorConfiguration,
@@ -35,7 +40,11 @@ struct HALApp: App {
             associatedLocationConfiguration: associatedLocationConfiguration,
             rebuildableDataConfiguration: rebuildableDataConfiguration,
             processConfiguration: processConfiguration,
-            persistenceConfiguration: persistenceConfiguration
+            persistenceConfiguration: persistenceConfiguration,
+            homebrewConfiguration: homebrewConfiguration,
+            runtimeConfiguration: runtimeConfiguration,
+            packageEcosystemConfiguration: packageEcosystemConfiguration,
+            commandLineSoftwareConfiguration: commandLineSoftwareConfiguration
           ).snapshot()
         }
       )
@@ -83,6 +92,7 @@ final class AppModel {
     case overview
     case storage
     case applications
+    case filesystem
     case performance
     case entity(EntityID)
   }
@@ -103,6 +113,7 @@ final class AppModel {
   var collectionActivity: CollectionActivity?
   var collectionError: String?
   var linkCompletionPending = false
+  var linkedCompletionDismissed: Bool
   var lastRefreshResult: RefreshResult?
   var lastRefreshCompletedAt: Date?
   var lastRefreshDuration: TimeInterval?
@@ -136,6 +147,7 @@ final class AppModel {
     let initialMode = preferences.mode()
     dataSourceMode = initialMode
     welcomeDismissed = preferences.syntheticWelcomeDismissed()
+    linkedCompletionDismissed = preferences.linkedCompletionDismissed()
     let snapshot =
       initialMode == .linkedMac
       ? ((try? userDataStore?.loadSnapshot()) ?? nil) ?? Self.emptyLinkedSnapshot()
@@ -162,7 +174,8 @@ final class AppModel {
         }
         return applicationClassifications.category(
           forApplicationPath: path,
-          platformBinary: platformBinaryEvidence(for: application)
+          platformBinary: platformBinaryEvidence(for: application),
+          details: application.details
         ).id
       }
     )
@@ -182,9 +195,23 @@ final class AppModel {
       }
       return applicationClassifications.category(
         forApplicationPath: path,
-        platformBinary: platformBinaryEvidence(for: application)
+        platformBinary: platformBinaryEvidence(for: application),
+        details: application.details
       ).id == categoryID
     }
+  }
+
+  func applicationSourceLabel(_ application: Entity) -> String? {
+    guard
+      !isSynthetic,
+      let path = application.details.first(where: { $0.label == "Path" })?.value,
+      let applicationClassifications
+    else { return nil }
+    return applicationClassifications.category(
+      forApplicationPath: path,
+      platformBinary: platformBinaryEvidence(for: application),
+      details: application.details
+    ).label
   }
 
   var applicationScopeCounts: ApplicationScopeCounts {
@@ -208,7 +235,8 @@ final class AppModel {
       return fallbackIDs.contains(
         applicationClassifications.category(
           forApplicationPath: path,
-          platformBinary: platformBinaryEvidence(for: application)
+          platformBinary: platformBinaryEvidence(for: application),
+          details: application.details
         ).id
       )
     }.count
@@ -324,6 +352,8 @@ final class AppModel {
         switch activity {
         case .initialLink:
           linkCompletionPending = true
+          linkedCompletionDismissed = false
+          preferences.setLinkedCompletionDismissed(false)
         case .refresh:
           lastRefreshResult = snapshot.graph == previousGraph ? .unchanged : .changed
           lastRefreshCompletedAt = Date()
@@ -353,6 +383,14 @@ final class AppModel {
         "set up process collection"
       case is PersistenceCollectorConfigurationError:
         "set up startup-item collection"
+      case is HomebrewCollectorError:
+        "set up Homebrew package collection"
+      case is RuntimeCollectorError:
+        "set up runtime collection"
+      case is PackageEcosystemCollectorError:
+        "set up package ecosystem collection"
+      case is CommandLineSoftwareCollectorError:
+        "set up command-line software collection"
       default:
         "complete read-only collection"
       }
@@ -374,8 +412,14 @@ final class AppModel {
   }
 
   func exploreLinkedApplications() {
-    linkCompletionPending = false
+    dismissLinkedCompletion()
     navigate(to: .applications)
+  }
+
+  func dismissLinkedCompletion() {
+    linkCompletionPending = false
+    linkedCompletionDismissed = true
+    preferences.setLinkedCompletionDismissed(true)
   }
 
   func dismissWelcome() {
@@ -416,12 +460,12 @@ final class AppModel {
 
   var presentedGraph: SystemGraph {
     switch destination {
-    case .overview:
+    case .overview, .filesystem:
       return fixture.filtered(to: [.application, .resource, .incident])
     case .storage:
       return isSynthetic
         ? fixture.neighborhood(around: "resource.storage", depth: 2)
-        : fixture.filtered(to: [.file])
+        : fixture.filtered(to: [.file, .packageManager])
     case .applications:
       return fixture.filtered(to: [
         .application, .packageManager, .shellFramework, .package, .persistence,
@@ -431,10 +475,17 @@ final class AppModel {
         ? fixture.neighborhood(around: "incident.build", depth: 2)
         : fixture.filtered(to: [.process])
     case .entity(let id):
-      let neighborhood = fixture.neighborhood(around: id, depth: 2)
+      let entity = fixture.entity(id)
+      // A package manager is itself the center of an ownership map. Keep that
+      // view to its direct installations and managed artifacts so second-hop
+      // neighbors do not obscure the complete package inventory.
+      let neighborhood = fixture.neighborhood(
+        around: id,
+        depth: entity?.type == .packageManager ? 1 : 2
+      )
       guard
         !isSynthetic,
-        fixture.entity(id)?.type == .application,
+        entity?.type == .application,
         let policy = displayPolicy?.context("applicationDetail")
       else {
         return neighborhood
@@ -452,6 +503,7 @@ final class AppModel {
     case .overview: ["Home"]
     case .storage: ["Home", "Storage"]
     case .applications: ["Home", "Installed software"]
+    case .filesystem: ["Home", "Filesystem Map"]
     case .performance: ["Home", "Performance"]
     case .entity(let id):
       ["Home", fixture.entity(id)?.name ?? "Item"]
@@ -472,11 +524,13 @@ final class AppModel {
     case .overview:
       selection = nil
     case .storage:
-      selection = GraphSelection(.entity("resource.storage"))
+      selection = isSynthetic ? GraphSelection(.entity("resource.storage")) : nil
     case .applications:
       selection = nil
+    case .filesystem:
+      selection = nil
     case .performance:
-      selection = GraphSelection(.entity("incident.build"))
+      selection = isSynthetic ? GraphSelection(.entity("incident.build")) : nil
     case .entity(let id):
       selection = GraphSelection(.entity(id))
     }
@@ -485,8 +539,15 @@ final class AppModel {
   }
 
   func focus(_ entity: Entity) {
-    if !visibleTypes.contains(entity.type) {
-      visibleTypes.insert(entity.type)
+    visibleTypes.insert(entity.type)
+    if entity.type == .packageManager {
+      let connectedTypes = fixture.relationships(connectedTo: entity.id).compactMap {
+        relationship -> EntityType? in
+        let counterpartID =
+          relationship.source == entity.id ? relationship.target : relationship.source
+        return fixture.entity(counterpartID)?.type
+      }
+      visibleTypes.formUnion(connectedTypes)
     }
     destination = .entity(entity.id)
     selection = GraphSelection(.entity(entity.id))

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "hoverDelayMilliseconds": 700,
+  "terms": [
+    {"id":"shared-attributes","displayTerm":"Shared attributes","description":"Facts with the same value across every observed instance.","aliases":[],"contexts":["inspector"]},
+    {"id":"observed-instance","displayTerm":"Observed instance","description":"One point-in-time occurrence of a logical item.","aliases":["Observed instances","Instance"],"contexts":["inspector"]},
+    {"id":"pid","displayTerm":"PID","description":"The process identifier assigned by macOS for this running instance.","aliases":[],"contexts":["inspector"]},
+    {"id":"parent-pid","displayTerm":"Parent PID","description":"The process identifier of the process that launched this instance.","aliases":[],"contexts":["inspector"]},
+    {"id":"memory","displayTerm":"Resident memory","description":"Physical memory attributed to the process at observation time.","aliases":["Memory at observation"],"contexts":["inspector"]},
+    {"id":"package-manager","displayTerm":"Package manager","description":"Software that installs and tracks other software packages.","aliases":["Package Managers"],"contexts":["overview","inspector"]},
+    {"id":"runtime","displayTerm":"Runtime","description":"Software that executes programs written for a language or platform.","aliases":["Runtimes & Developer Tools"],"contexts":["overview","inspector"]},
+    {"id":"toolchain","displayTerm":"Toolchain","description":"A coordinated set of tools used to build or run software.","aliases":[],"contexts":["inspector"]},
+    {"id":"rebuildable","displayTerm":"Rebuildable","description":"Data whose owning tool can recreate it; this is not permission to delete it.","aliases":["Rebuildability","Reclaimable Data"],"contexts":["overview","inspector"]},
+    {"id":"persistence","displayTerm":"Persistence","description":"A declaration that may start software automatically.","aliases":["Startup declaration"],"contexts":["inspector"]},
+    {"id":"observed-evidence","displayTerm":"Observed","description":"A fact HAL directly read from an allowed source.","aliases":["OBSERVED FACT"],"contexts":["evidence"]},
+    {"id":"derived-evidence","displayTerm":"Derived","description":"A value computed deterministically from observed facts.","aliases":[],"contexts":["evidence"]},
+    {"id":"inferred-evidence","displayTerm":"Inferred","description":"A reasoned relationship that retains uncertainty and supporting evidence.","aliases":["HAL INFERENCE"],"contexts":["evidence"]},
+    {"id":"user-decided","displayTerm":"User-decided","description":"A choice made explicitly by the user rather than observed by HAL.","aliases":[],"contexts":["evidence"]}
+  ]
+}

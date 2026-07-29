@@ -55,6 +55,71 @@ struct PersistenceCollectorTests {
     #expect(output.run.state == .partial)
     #expect(output.observations.isEmpty)
     #expect(output.run.issues.count == 1)
+    #expect(output.run.issues.first?.severity == .warning)
+    #expect(
+      output.run.issues.first?.summary
+        == "A persistence property list did not declare a launchd label."
+    )
+  }
+
+  @Test("Empty property lists are logged as placeholders without limiting collection")
+  func emptyPlaceholder() throws {
+    let root = try temporaryDirectory()
+    try writePlist([:], to: root.appending(path: "placeholder.plist"))
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let output = PersistenceCollector(
+      roots: [PersistenceSearchRoot(id: "test", url: root, kind: .launchAgent)],
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+
+    #expect(output.run.state == .complete)
+    #expect(output.observations.isEmpty)
+    #expect(output.run.issues.count == 1)
+    #expect(output.run.issues.first?.severity == .information)
+    #expect(output.run.issues.first?.summary == "HAL ignored an empty persistence placeholder.")
+  }
+
+  @Test("Undecodable property lists remain partial outcomes")
+  func undecodable() throws {
+    let root = try temporaryDirectory()
+    try Data("not a property list".utf8).write(to: root.appending(path: "broken.plist"))
+    defer { try? FileManager.default.removeItem(at: root) }
+
+    let output = PersistenceCollector(
+      roots: [PersistenceSearchRoot(id: "test", url: root, kind: .launchAgent)],
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+
+    #expect(output.run.state == .partial)
+    #expect(output.run.issues.first?.severity == .warning)
+    #expect(
+      output.run.issues.first?.summary
+        == "HAL could not decode a persistence property list."
+    )
+  }
+
+  @Test("Resolver does not duplicate upstream declaration issues")
+  func resolverDoesNotDuplicateIssues() throws {
+    let root = try temporaryDirectory()
+    try writePlist(["Program": "/bin/example"], to: root.appending(path: "invalid.plist"))
+    defer { try? FileManager.default.removeItem(at: root) }
+    let declarations = PersistenceCollector(
+      roots: [PersistenceSearchRoot(id: "test", url: root, kind: .launchAgent)],
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+
+    let resolutions = PersistenceApplicationResolver(
+      clock: FixedClock(timestamp)
+    ).resolve(
+      scanID: "scan",
+      declarations: declarations,
+      applications: [application()]
+    )
+
+    #expect(declarations.run.state == .partial)
+    #expect(resolutions.run.state == .complete)
+    #expect(resolutions.run.issues.isEmpty)
   }
 
   @Test("Resolver preserves matched and unmatched declarations")

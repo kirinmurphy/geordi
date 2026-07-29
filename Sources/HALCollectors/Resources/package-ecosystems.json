@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "ecosystems": [
+    {
+      "id": "npm",
+      "label": "npm",
+      "layout": "nodeModules",
+      "roots": [
+        "$USER_HOME/.local/lib/node_modules",
+        "/opt/homebrew/lib/node_modules",
+        "/usr/local/lib/node_modules"
+      ]
+    },
+    {
+      "id": "pypi",
+      "label": "Python packages",
+      "layout": "pythonUserSitePackages",
+      "roots": ["$USER_HOME/Library/Python"]
+    }
+  ]
+}

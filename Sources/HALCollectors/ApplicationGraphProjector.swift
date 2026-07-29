@@ -16,7 +16,11 @@ public struct ApplicationGraphProjector: Sendable {
     maxProcessesPerApplication: Int = 8,
     maxUnmatchedProcesses: Int = 0,
     persistence: CollectorOutput<PersistenceDeclarationValue>? = nil,
-    persistenceResolutions: CollectorOutput<PersistenceApplicationResolutionValue>? = nil
+    persistenceResolutions: CollectorOutput<PersistenceApplicationResolutionValue>? = nil,
+    homebrew: CollectorOutput<HomebrewInventoryValue>? = nil,
+    runtimes: CollectorOutput<RuntimeValue>? = nil,
+    packageEcosystems: CollectorOutput<PackageEcosystemInventoryValue>? = nil,
+    commandLineSoftware: CollectorOutput<CommandLineSoftwareValue>? = nil
   ) -> GraphSnapshot {
     let signaturesByPath = Dictionary(
       uniqueKeysWithValues: (signatures?.observations ?? []).map {
@@ -159,6 +163,53 @@ public struct ApplicationGraphProjector: Sendable {
         },
       uniquingKeysWith: { first, _ in first }
     ).values.sorted { $0.id.rawValue < $1.id.rawValue }
+    let rebuildableManagerEntities = Dictionary(
+      (rebuildableData?.observations ?? []).compactMap { observation -> (EntityID, Entity)? in
+        guard
+          observation.value.status == .present,
+          let managerID = observation.value.managerID,
+          let managerLabel = observation.value.managerLabel
+        else { return nil }
+        let id = packageManagerEntityID(managerID)
+        return (
+          id,
+          Entity(
+            id: id,
+            type: .packageManager,
+            name: managerLabel,
+            summary: "A software manager inferred from one of its configured data roots."
+          )
+        )
+      },
+      uniquingKeysWith: { first, _ in first }
+    )
+    let rebuildableManagerRelationships = (rebuildableData?.observations ?? []).compactMap {
+      observation -> Relationship? in
+      guard
+        observation.value.status == .present,
+        let managerID = observation.value.managerID
+      else { return nil }
+      return Relationship(
+        id: RelationshipID("manager-data:\(managerID):\(observation.value.locationID)"),
+        source: packageManagerEntityID(managerID),
+        target: rebuildableDataEntityID(observation.value.path),
+        type: .owns,
+        confidence: observation.value.evidenceConfidence,
+        explanation: observation.value.evidenceExplanation,
+        evidence: [
+          Evidence(
+            id: "\(observation.id.rawValue):manager",
+            kind: .derived,
+            summary: "The versioned detector identifies this as a manager-controlled root.",
+            source: "Rebuildable-data detector manifest",
+            observationID: observation.id,
+            observedAt: observation.observedAt,
+            ruleID: observation.value.evidenceRuleID,
+            ruleVersion: RebuildableDataCollector.version
+          )
+        ]
+      )
+    }
     let processesByPID = Dictionary(
       uniqueKeysWithValues: (processes?.observations ?? []).map {
         ($0.value.pid, $0)
@@ -174,65 +225,151 @@ public struct ApplicationGraphProjector: Sendable {
       processesByPID: processesByPID,
       limit: maxUnmatchedProcesses
     )
-    let processEntities = (visibleProcessResolutions + unresolvedProcessResolutions)
-      .compactMap { resolution -> Entity? in
-        guard let process = processesByPID[resolution.value.processID] else { return nil }
-        var details = [
-          Detail("PID", "\(process.value.pid)"),
-          Detail("Application resolution", resolution.value.state.rawValue.capitalized),
-        ]
-        if let parentPID = process.value.parentPID {
-          details.append(Detail("Parent PID", "\(parentPID)"))
-        }
-        if let bytes = process.value.residentMemoryBytes {
-          details.append(
-            Detail(
-              "Memory at observation",
-              ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
-            )
+    let processGroups = Dictionary(
+      grouping: visibleProcessResolutions + unresolvedProcessResolutions
+    ) { resolution in
+      processGroupKey(resolution: resolution, processesByPID: processesByPID)
+    }
+    let sortedProcessGroups = processGroups.values.sorted {
+      processGroupKey(resolution: $0[0], processesByPID: processesByPID)
+        < processGroupKey(resolution: $1[0], processesByPID: processesByPID)
+    }
+    let runtimeEntities = (runtimes?.observations ?? []).map { observation in
+      let matchingProcesses = (processes?.observations ?? []).filter { process in
+        guard let executable = process.value.executablePath else { return false }
+        return URL(filePath: executable).resolvingSymlinksInPath().standardizedFileURL.path
+          == observation.value.resolvedExecutablePath
+      }
+      let memory = matchingProcesses.compactMap(\.value.residentMemoryBytes).reduce(0, +)
+      var details = [
+        Detail("Availability", "Available"),
+        Detail("Executable", observation.value.executablePath),
+        Detail("Resolved executable", observation.value.resolvedExecutablePath),
+        Detail("Active instances", "\(matchingProcesses.count)"),
+      ]
+      if let version = observation.value.version {
+        details.append(Detail("Version", version))
+      }
+      if memory > 0 {
+        details.append(
+          Detail(
+            "Active memory at observation",
+            ByteCountFormatter.string(fromByteCount: Int64(memory), countStyle: .memory)
           )
-        }
-        if let path = process.value.executablePath {
-          details.append(Detail("Executable", path))
-        }
-        return Entity(
-          id: processEntityID(process.value.pid),
-          type: .process,
-          name: process.value.name,
-          summary: "A process observed in the point-in-time snapshot.",
-          details: details
         )
       }
-    let processRelationships = visibleProcessResolutions.compactMap {
-      resolution -> Relationship? in
-      guard
+      return Entity(
+        id: EntityID("runtime-availability:\(observation.value.runtimeID)"),
+        type: .package,
+        name:
+          observation.value.kind == "toolchain"
+          ? "\(observation.value.label) Toolchain"
+          : "\(observation.value.label) Runtime",
+        summary: matchingProcesses.isEmpty
+          ? "An executable tool was observed and answered a version query; no active process was observed."
+          : "An executable tool was observed with \(matchingProcesses.count) active process instance(s).",
+        details: [Detail("Capability kind", observation.value.kind.capitalized)] + details
+      )
+    }
+    let runtimeInstallationRelationships = (runtimes?.observations ?? []).flatMap {
+      observation in
+      observation.value.packageIdentities.compactMap { identity -> Relationship? in
+        guard identity.managerID == "homebrew",
+          let installation = homebrew?.observations.first(where: {
+            inventory in
+            inventory.value.packages.contains { $0.name == identity.packageName }
+          })
+        else { return nil }
+        return Relationship(
+          id: RelationshipID(
+            "package-capability:\(identity.managerID):\(identity.packageName):\(observation.value.runtimeID)"
+          ),
+          source: homebrewPackageEntityID(
+            prefix: installation.value.prefix,
+            name: identity.packageName
+          ),
+          target: EntityID("runtime-availability:\(observation.value.runtimeID)"),
+          type: .provides,
+          confidence: .confirmed,
+          explanation:
+            "The observed package identity is configured as providing this executable capability.",
+          evidence: [
+            Evidence(
+              id: "\(observation.id.rawValue):package-identity",
+              kind: .derived,
+              summary:
+                "\(identity.packageName) was observed in Homebrew and its configured executable was available.",
+              source: "Runtime definition manifest and read-only software inventories",
+              observationID: observation.id,
+              observedAt: observation.observedAt,
+              ruleID: "declared-package-capability-identity",
+              ruleVersion: RuntimeCollector.version
+            )
+          ]
+        )
+      }
+    }
+    let processEntities = sortedProcessGroups.compactMap { resolutions -> Entity? in
+      guard let firstResolution = resolutions.first,
+        let firstProcess = processesByPID[firstResolution.value.processID]
+      else { return nil }
+      let sorted = resolutions.sorted { $0.value.processID < $1.value.processID }
+      let partition = EntityInstancePartition(
+        detailsByInstance: sorted.compactMap { resolution in
+          guard let process = processesByPID[resolution.value.processID] else { return nil }
+          return (
+            id: "Process \(process.value.pid)",
+            details: processDetails(process: process.value, resolution: resolution.value)
+          )
+        }
+      )
+      return Entity(
+        id: processEntityID(
+          resolution: firstResolution,
+          process: firstProcess.value
+        ),
+        type: .process,
+        name: firstProcess.value.name,
+        summary: sorted.count == 1
+          ? "A process observed in the point-in-time snapshot."
+          : "\(sorted.count) instances of this process were observed in the point-in-time snapshot.",
+        details: partition.sharedDetails,
+        instances: sorted.count > 1 ? partition.instances : []
+      )
+    }
+    let processRelationships = sortedProcessGroups.compactMap {
+      resolutions -> Relationship? in
+      guard let resolution = resolutions.first,
         let applicationPath = resolution.value.applicationPaths.first,
         let applicationID = applicationIDsByPath[applicationPath],
         let process = processesByPID[resolution.value.processID],
         let confidence = resolution.value.confidence,
         let strategyID = resolution.value.strategyID
-      else {
-        return nil
+      else { return nil }
+      let processID = processEntityID(resolution: resolution, process: process.value)
+      let observedEvidence = resolutions.compactMap { item -> Evidence? in
+        guard let observedProcess = processesByPID[item.value.processID] else { return nil }
+        return Evidence(
+          id: "\(item.id.rawValue):process",
+          kind: .observed,
+          summary:
+            "Process \(observedProcess.value.pid) and its executable path were present in one point-in-time snapshot.",
+          source: "Read-only process snapshot",
+          observationID: observedProcess.id,
+          observedAt: observedProcess.observedAt
+        )
       }
       return Relationship(
-        id: RelationshipID("application-process:\(applicationID.rawValue):\(process.value.pid)"),
+        id: RelationshipID("application-process:\(applicationID.rawValue):\(processID.rawValue)"),
         source: applicationID,
-        target: processEntityID(process.value.pid),
+        target: processID,
         type: .launches,
         confidence: confidence,
         explanation:
           confidence == .confirmed
           ? "The observed executable exactly matches the application's main executable."
           : "The observed executable is contained inside the application bundle.",
-        evidence: [
-          Evidence(
-            id: "\(resolution.id.rawValue):process",
-            kind: .observed,
-            summary: "The process and executable path were present in one point-in-time snapshot.",
-            source: "Read-only process snapshot",
-            observationID: process.id,
-            observedAt: process.observedAt
-          ),
+        evidence: observedEvidence + [
           Evidence(
             id: "\(resolution.id.rawValue):resolution",
             kind: .derived,
@@ -242,7 +379,7 @@ public struct ApplicationGraphProjector: Sendable {
             observedAt: resolution.observedAt,
             ruleID: strategyID,
             ruleVersion: ProcessApplicationResolver.version
-          ),
+          )
         ]
       )
     }
@@ -320,6 +457,219 @@ public struct ApplicationGraphProjector: Sendable {
         ]
       )
     }
+    let homebrewManagerEntities =
+      (homebrew?.observations.first).map { observation in
+        [
+          Entity(
+            id: homebrewManagerEntityID(observation.value.prefix),
+            type: .packageManager,
+            name: "Homebrew",
+            summary: "A Homebrew installation observed through its configured Cellar.",
+            details: [
+              Detail("Prefix", observation.value.prefix),
+              Detail("Cellar", observation.value.cellarPath),
+              Detail("Installed formulae", "\(observation.value.packages.count)"),
+            ]
+          )
+        ]
+      } ?? []
+    let homebrewPackageEntities = (homebrew?.observations ?? []).flatMap { observation in
+      observation.value.packages.map { package in
+        Entity(
+          id: homebrewPackageEntityID(prefix: observation.value.prefix, name: package.name),
+          type: .package,
+          name: package.name,
+          summary: "A formula installed in the observed Homebrew Cellar.",
+          details: [
+            Detail("Package manager", "Homebrew"),
+            Detail("Installed versions", package.versions.joined(separator: ", ")),
+            Detail("Cellar", observation.value.cellarPath),
+          ]
+        )
+      }
+    }
+    let homebrewPackageRelationships = (homebrew?.observations ?? []).flatMap { observation in
+      observation.value.packages.map { package in
+        Relationship(
+          id: RelationshipID(
+            "homebrew-package:\(observation.value.prefix):\(package.name)"
+          ),
+          source: homebrewManagerEntityID(observation.value.prefix),
+          target: homebrewPackageEntityID(
+            prefix: observation.value.prefix,
+            name: package.name
+          ),
+          type: .owns,
+          confidence: .confirmed,
+          explanation: "Homebrew's Cellar contains this installed formula.",
+          evidence: [
+            Evidence(
+              id: "\(observation.id.rawValue):\(package.name)",
+              kind: .observed,
+              summary: "A versioned formula directory was present in the Homebrew Cellar.",
+              source: "Read-only Homebrew Cellar inventory",
+              observationID: observation.id,
+              observedAt: observation.observedAt
+            )
+          ]
+        )
+      }
+    }
+    let homebrewApplicationRelationships: [Relationship] =
+      (homebrew?.observations.count == 1)
+      ? applicationEntities.compactMap { application in
+        guard
+          application.details.contains(where: {
+            $0.label == "Homebrew cask" && $0.value == "Present"
+          }),
+          let observation = homebrew?.observations.first
+        else { return nil }
+        return Relationship(
+          id: RelationshipID("homebrew-application:\(application.id.rawValue)"),
+          source: homebrewManagerEntityID(observation.value.prefix),
+          target: application.id,
+          type: .owns,
+          confidence: .confirmed,
+          explanation: "The application bundle resolves into Homebrew's configured Caskroom.",
+          evidence: [
+            Evidence(
+              id: "homebrew-cask:\(application.id.rawValue)",
+              kind: .derived,
+              summary: "The resolved application path is inside a configured Homebrew Caskroom.",
+              source: "Homebrew provenance adapter",
+              ruleID: "resolved-caskroom-path",
+              ruleVersion: ApplicationProvenanceCollector.version
+            )
+          ]
+        )
+      } : []
+    let ecosystemManagerEntities = (packageEcosystems?.observations ?? []).map { observation in
+      Entity(
+        id: packageManagerEntityID(observation.value.managerID),
+        type: .packageManager,
+        name: observation.value.managerLabel,
+        summary: "A package manager with installed packages observed in configured roots.",
+        details: [Detail("Installed packages", "\(observation.value.packages.count)")]
+      )
+    }
+    let ecosystemPackageEntities = (packageEcosystems?.observations ?? []).flatMap {
+      observation in
+      observation.value.packages.map { package in
+        Entity(
+          id: ecosystemPackageEntityID(
+            managerID: observation.value.managerID,
+            package: package
+          ),
+          type: .package,
+          name: package.name,
+          summary: "An installed package observed in a configured package-manager root.",
+          details: [
+            Detail("Package manager", observation.value.managerLabel),
+            Detail("Version", package.version ?? "Unavailable"),
+            Detail("Path", package.path),
+          ]
+        )
+      }
+    }
+    let ecosystemRelationships = (packageEcosystems?.observations ?? []).flatMap {
+      observation in
+      observation.value.packages.map { package in
+        Relationship(
+          id: RelationshipID(
+            "ecosystem-package:\(observation.value.managerID):\(package.path)"
+          ),
+          source: packageManagerEntityID(observation.value.managerID),
+          target: ecosystemPackageEntityID(
+            managerID: observation.value.managerID,
+            package: package
+          ),
+          type: .owns,
+          confidence: .confirmed,
+          explanation: "The package was present in this manager's configured installation root.",
+          evidence: [
+            Evidence(
+              id: "\(observation.id.rawValue):\(package.path)",
+              kind: .observed,
+              summary: "Installed-package metadata was present in the configured root.",
+              source: "Read-only package ecosystem inventory",
+              observationID: observation.id,
+              observedAt: observation.observedAt
+            )
+          ]
+        )
+      }
+    }
+    let runtimeExecutablePaths = Set(
+      (runtimes?.observations ?? []).flatMap {
+        [$0.value.executablePath, $0.value.resolvedExecutablePath]
+      })
+    let commandGroups = Dictionary(
+      grouping: commandLineSoftware?.observations ?? [],
+      by: \.value.resolvedExecutablePath
+    )
+    let commandLineEntities = commandGroups.compactMap {
+      resolvedPath, observations
+        -> Entity? in
+      guard !runtimeExecutablePaths.contains(resolvedPath),
+        let first = observations.sorted(by: {
+          $0.value.executablePath < $1.value.executablePath
+        }).first
+      else { return nil }
+      let names = observations.map(\.value.name).sorted()
+      var details = [
+        Detail("Inventory classification", "Unclassified command-line software"),
+        Detail("Executable", first.value.executablePath),
+        Detail("Resolved executable", resolvedPath),
+        Detail("Discovered from", first.value.sourceLabel),
+      ]
+      if names.count > 1 {
+        details.append(Detail("Command aliases", names.joined(separator: ", ")))
+      }
+      if let packageName = observations.compactMap(\.value.packageName).first {
+        details.append(Detail("Package", packageName))
+      }
+      return Entity(
+        id: commandLineSoftwareEntityID(resolvedPath),
+        type: .package,
+        name: first.value.name,
+        summary:
+          "An executable discovered in a configured command directory; its capability is not yet classified.",
+        details: details
+      )
+    }.sorted { $0.name < $1.name }
+    let commandLineRelationships = commandGroups.compactMap {
+      resolvedPath, observations
+        -> Relationship? in
+      guard !runtimeExecutablePaths.contains(resolvedPath),
+        let packageObservation = observations.first(where: {
+          $0.value.packageManagerID == "homebrew" && $0.value.packageName != nil
+        }),
+        let packageName = packageObservation.value.packageName,
+        let installation = homebrew?.observations.first(where: {
+          $0.value.packages.contains { $0.name == packageName }
+        })
+      else { return nil }
+      return Relationship(
+        id: RelationshipID("package-command:homebrew:\(packageName):\(resolvedPath)"),
+        source: homebrewPackageEntityID(prefix: installation.value.prefix, name: packageName),
+        target: commandLineSoftwareEntityID(resolvedPath),
+        type: .provides,
+        confidence: .confirmed,
+        explanation: "The executable resolves inside this observed Homebrew formula.",
+        evidence: [
+          Evidence(
+            id: "\(packageObservation.id.rawValue):package-path",
+            kind: .derived,
+            summary: "The executable symlink resolves inside the formula's Cellar directory.",
+            source: "Read-only command directory and Homebrew Cellar inventories",
+            observationID: packageObservation.id,
+            observedAt: packageObservation.observedAt,
+            ruleID: "homebrew-cellar-path-ownership",
+            ruleVersion: CommandLineSoftwareCollector.version
+          )
+        ]
+      )
+    }
     let completedAt = [
       output.run.completedAt,
       signatures?.run.completedAt,
@@ -330,6 +680,10 @@ public struct ApplicationGraphProjector: Sendable {
       processResolutions?.run.completedAt,
       persistence?.run.completedAt,
       persistenceResolutions?.run.completedAt,
+      homebrew?.run.completedAt,
+      runtimes?.run.completedAt,
+      packageEcosystems?.run.completedAt,
+      commandLineSoftware?.run.completedAt,
     ]
     .compactMap { $0 }
     .max()
@@ -344,6 +698,10 @@ public struct ApplicationGraphProjector: Sendable {
         processResolutions?.run.startedAt,
         persistence?.run.startedAt,
         persistenceResolutions?.run.startedAt,
+        homebrew?.run.startedAt,
+        runtimes?.run.startedAt,
+        packageEcosystems?.run.startedAt,
+        commandLineSoftware?.run.startedAt,
       ].compactMap { $0 }.min() ?? output.run.startedAt
     var collectorRuns = [output.run]
     if let signatures {
@@ -370,6 +728,21 @@ public struct ApplicationGraphProjector: Sendable {
     if let persistenceResolutions {
       collectorRuns.append(persistenceResolutions.run)
     }
+    if let homebrew {
+      collectorRuns.append(homebrew.run)
+    }
+    if let runtimes {
+      collectorRuns.append(runtimes.run)
+    }
+    if let packageEcosystems {
+      collectorRuns.append(packageEcosystems.run)
+    }
+    if let commandLineSoftware {
+      collectorRuns.append(commandLineSoftware.run)
+    }
+    let concreteManagerIDs = Set(
+      (homebrewManagerEntities + ecosystemManagerEntities).map(\.id)
+    )
     let graph = SystemGraph(
       metadata: FixtureMetadata(
         id: "live-applications-\(scanID.rawValue)",
@@ -379,8 +752,18 @@ public struct ApplicationGraphProjector: Sendable {
       ),
       entities:
         applicationEntities + processEntities + persistenceEntities + locationEntities
-        + rebuildableDataEntities,
-      relationships: processRelationships + persistenceRelationships + relationships
+        + rebuildableDataEntities
+        + rebuildableManagerEntities.values.filter {
+          !concreteManagerIDs.contains($0.id)
+        }
+        + homebrewManagerEntities + homebrewPackageEntities + runtimeEntities
+        + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities,
+      relationships:
+        processRelationships + persistenceRelationships + relationships
+        + rebuildableManagerRelationships + homebrewPackageRelationships
+        + homebrewApplicationRelationships
+        + ecosystemRelationships + runtimeInstallationRelationships
+        + commandLineRelationships
     )
     return GraphSnapshot(
       graph: graph,
@@ -439,8 +822,53 @@ public struct ApplicationGraphProjector: Sendable {
     .map { $0 }
   }
 
-  private func processEntityID(_ pid: Int32) -> EntityID {
-    EntityID("process:pid:\(pid)")
+  private func processDetails(
+    process: ProcessValue,
+    resolution: ProcessApplicationResolutionValue
+  ) -> [Detail] {
+    var details = [
+      Detail("PID", "\(process.pid)"),
+      Detail("Application resolution", resolution.state.rawValue.capitalized),
+    ]
+    if let parentPID = process.parentPID {
+      details.append(Detail("Parent PID", "\(parentPID)"))
+    }
+    if let bytes = process.residentMemoryBytes {
+      details.append(
+        Detail(
+          "Memory at observation",
+          ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .memory)
+        )
+      )
+    }
+    if let path = process.executablePath {
+      details.append(Detail("Executable", path))
+    }
+    return details
+  }
+
+  private func processGroupKey(
+    resolution: CollectedObservation<ProcessApplicationResolutionValue>,
+    processesByPID: [Int32: CollectedObservation<ProcessValue>]
+  ) -> String {
+    guard let process = processesByPID[resolution.value.processID] else {
+      return "missing:\(resolution.value.processID)"
+    }
+    let owner = resolution.value.applicationPaths.first ?? "unresolved"
+    let executable = process.value.executablePath ?? "name:\(process.value.name)"
+    return "\(owner)|\(executable)"
+  }
+
+  private func processEntityID(
+    resolution: CollectedObservation<ProcessApplicationResolutionValue>,
+    process: ProcessValue
+  ) -> EntityID {
+    let owner = resolution.value.applicationPaths.first ?? "unresolved"
+    let identity = process.executablePath ?? process.name
+    let raw =
+      "\(owner)|\(identity)"
+      .addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "\(process.pid)"
+    return EntityID("process:group:\(raw)")
   }
 
   private func persistenceEntityID(_ path: String) -> EntityID {
@@ -449,6 +877,32 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func rebuildableDataEntityID(_ path: String) -> EntityID {
     EntityID("file:rebuildable-data:\(path)")
+  }
+
+  private func homebrewManagerEntityID(_ prefix: String) -> EntityID {
+    packageManagerEntityID("homebrew")
+  }
+
+  private func packageManagerEntityID(_ id: String) -> EntityID {
+    EntityID("package-manager:\(id)")
+  }
+
+  private func ecosystemPackageEntityID(
+    managerID: String,
+    package: ManagedPackageValue
+  ) -> EntityID {
+    EntityID("package:\(managerID):\(package.path)")
+  }
+
+  private func commandLineSoftwareEntityID(_ resolvedPath: String) -> EntityID {
+    let encoded =
+      resolvedPath.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
+      ?? resolvedPath
+    return EntityID("command-line-software:\(encoded)")
+  }
+
+  private func homebrewPackageEntityID(prefix: String, name: String) -> EntityID {
+    EntityID("package:homebrew:\(prefix):\(name)")
   }
 
   private func preferredPresentAssociations(

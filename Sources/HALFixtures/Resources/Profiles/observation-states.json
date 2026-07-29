@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "observation-states",
   "name": "Observation State Reference",
   "summary": "Deterministic synthetic examples of incomplete, unavailable, uncertain, stale, and negative evidence.",

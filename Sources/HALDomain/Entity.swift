@@ -46,7 +46,12 @@ public struct Entity: Identifiable, Hashable, Codable, Sendable {
   public let name: String
   public let summary: String
   public let details: [Detail]
+  public let instances: [EntityInstance]
   public let presentation: EntityPresentation?
+
+  private enum CodingKeys: String, CodingKey {
+    case id, type, name, summary, details, instances, presentation
+  }
 
   public init(
     id: EntityID,
@@ -54,6 +59,7 @@ public struct Entity: Identifiable, Hashable, Codable, Sendable {
     name: String,
     summary: String,
     details: [Detail] = [],
+    instances: [EntityInstance] = [],
     presentation: EntityPresentation? = nil
   ) {
     self.id = id
@@ -61,7 +67,22 @@ public struct Entity: Identifiable, Hashable, Codable, Sendable {
     self.name = name
     self.summary = summary
     self.details = details
+    self.instances = instances
     self.presentation = presentation
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(EntityID.self, forKey: .id)
+    type = try container.decode(EntityType.self, forKey: .type)
+    name = try container.decode(String.self, forKey: .name)
+    summary = try container.decode(String.self, forKey: .summary)
+    details = try container.decode([Detail].self, forKey: .details)
+    instances = try container.decodeIfPresent([EntityInstance].self, forKey: .instances) ?? []
+    presentation = try container.decodeIfPresent(
+      EntityPresentation.self,
+      forKey: .presentation
+    )
   }
 }
 
@@ -103,5 +124,46 @@ public struct Detail: Identifiable, Hashable, Codable, Sendable {
   public init(_ label: String, _ value: String) {
     self.label = label
     self.value = value
+  }
+}
+
+/// One observed instance of a logical entity, containing only attributes whose
+/// values are not shared by every instance.
+public struct EntityInstance: Identifiable, Hashable, Codable, Sendable {
+  public let id: String
+  public let details: [Detail]
+
+  public init(id: String, details: [Detail]) {
+    self.id = id
+    self.details = details
+  }
+}
+
+public struct EntityInstancePartition: Hashable, Sendable {
+  public let sharedDetails: [Detail]
+  public let instances: [EntityInstance]
+
+  public init(detailsByInstance: [(id: String, details: [Detail])]) {
+    guard let first = detailsByInstance.first else {
+      sharedDetails = []
+      instances = []
+      return
+    }
+
+    let labels = Set(detailsByInstance.flatMap { $0.details.map(\.label) })
+    let sharedLabels = labels.filter { label in
+      let values = detailsByInstance.map { instance in
+        instance.details.first { $0.label == label }?.value
+      }
+      return values.allSatisfy { $0 != nil } && Set(values.compactMap { $0 }).count == 1
+    }
+
+    sharedDetails = first.details.filter { sharedLabels.contains($0.label) }
+    instances = detailsByInstance.map { instance in
+      EntityInstance(
+        id: instance.id,
+        details: instance.details.filter { !sharedLabels.contains($0.label) }
+      )
+    }
   }
 }

@@ -16,7 +16,10 @@ struct SystemProfileSchemaTests {
           type: .application,
           name: "A",
           summary: "A",
-          details: [Detail("Z detail", "2"), Detail("A detail", "1")]
+          details: [Detail("Z detail", "2"), Detail("A detail", "1")],
+          instances: [
+            EntityInstance(id: "Instance 1", details: [Detail("PID", "42")])
+          ]
         ),
       ],
       relationships: [
@@ -43,6 +46,7 @@ struct SystemProfileSchemaTests {
     #expect(decoded.metadata.version == SystemProfileSchema.currentVersion)
     #expect(decoded.metadata.id == graph.metadata.id)
     #expect(decoded.entities.map(\.id) == ["a", "z"])
+    #expect(decoded.entity("a")?.instances.first?.details == [Detail("PID", "42")])
     #expect(decoded.relationships.map(\.id) == ["edge"])
 
     let text = try #require(String(data: first, encoding: .utf8))
@@ -59,7 +63,7 @@ struct SystemProfileSchemaTests {
     let data = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "id": "profile",
         "name": "Profile",
         "summary": "Summary",
@@ -131,7 +135,7 @@ struct SystemProfileSchemaTests {
     let data = Data(
       """
       {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "id": "profile",
         "name": "Profile",
         "summary": "Summary",

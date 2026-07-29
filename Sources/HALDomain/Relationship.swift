@@ -2,6 +2,7 @@ import Foundation
 
 public enum RelationshipType: String, CaseIterable, Codable, Sendable {
   case owns
+  case provides
   case launches
   case readsWrites = "reads and writes"
   case persistsThrough = "persists through"

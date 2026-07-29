@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hal.local/schemas/runtimes/v2",
+  "title": "HAL runtime definitions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runtimes"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "runtimes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "kind", "packageIdentities", "executableCandidates", "versionArguments"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["runtime", "compiler", "toolchain"] },
+          "packageIdentities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["managerID", "packageName"],
+              "properties": {
+                "managerID": { "type": "string", "minLength": 1 },
+                "packageName": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "executableCandidates": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "scope"],
+              "properties": {
+                "path": { "type": "string", "minLength": 1 },
+                "scope": { "enum": ["system", "user"] }
+              }
+            }
+          },
+          "versionArguments": {
+            "type": "array",
+            "maxItems": 4,
+            "items": { "type": "string", "maxLength": 64 }
+          }
+        }
+      }
+    }
+  }
+}

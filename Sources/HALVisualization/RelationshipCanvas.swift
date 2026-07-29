@@ -1,3 +1,4 @@
+import AppKit
 import HALDomain
 import SwiftUI
 
@@ -65,12 +66,26 @@ public struct RelationshipCanvas: View {
         interactionLegend
       }
       .clipped()
-      .onAppear { fitGraph(in: proxy.size) }
+      .onAppear {
+        fitGraph(in: proxy.size)
+        focusIfRequested(in: proxy.size)
+      }
       .onChange(of: graph.metadata.id) { _, _ in fitGraph(in: proxy.size) }
       .onChange(of: proxy.size) { _, newSize in fitGraph(in: newSize) }
       .accessibilityElement(children: .contain)
       .accessibilityLabel("Relationship map")
     }
+  }
+
+  private func focusIfRequested(in viewport: CGSize) {
+    guard let focusedEntity, let point = layout.positions[focusedEntity] else { return }
+    scale = max(scale, 0.9)
+    lastScale = scale
+    offset = CGSize(
+      width: viewport.width / 2 - point.x * scale,
+      height: viewport.height / 2 - point.y * scale
+    )
+    lastOffset = offset
   }
 
   private var canvas: some View {
@@ -180,8 +195,20 @@ public struct RelationshipCanvas: View {
     } label: {
       VStack(alignment: .leading, spacing: 6) {
         HStack(spacing: 6) {
-          Image(systemName: symbol(for: entity.type))
-            .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
+          if entity.type == .application,
+            let path = entity.details.first(where: { $0.label == "Path" })?.value
+          {
+            Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+              .resizable()
+              .scaledToFit()
+              .frame(
+                width: EntityVisualStyle.nodeIconSize,
+                height: EntityVisualStyle.nodeIconSize
+              )
+          } else {
+            Image(systemName: symbol(for: entity.type))
+              .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
+          }
           Text(entity.type.label.dropLast(entity.type == .persistence ? 0 : 1).description)
             .font(.caption.weight(.semibold))
         }
@@ -212,6 +239,12 @@ public struct RelationshipCanvas: View {
     )
     .accessibilityLabel("\(entity.name), \(entity.type.label)")
     .accessibilityHint("Select to inspect relationships and evidence")
+    .contextMenu {
+      Button("Copy Name") {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(entity.name, forType: .string)
+      }
+    }
   }
 
   private func relationshipButton(_ relationship: Relationship) -> some View {
@@ -241,6 +274,12 @@ public struct RelationshipCanvas: View {
         Image(systemName: "minus.magnifyingglass")
       }
       .accessibilityLabel("Zoom out")
+      .disabled(scale <= configuration.minimumScale)
+      .keyboardShortcut("-", modifiers: .command)
+      Text("\(Int((scale * 100).rounded()))%")
+        .font(.callout.monospacedDigit())
+        .frame(minWidth: 48)
+        .accessibilityLabel("Zoom \(Int((scale * 100).rounded())) percent")
       Button {
         fitGraph(in: viewportSize)
       } label: {
@@ -253,6 +292,8 @@ public struct RelationshipCanvas: View {
         Image(systemName: "plus.magnifyingglass")
       }
       .accessibilityLabel("Zoom in")
+      .disabled(scale >= configuration.maximumScale)
+      .keyboardShortcut("+", modifiers: .command)
     }
     .buttonStyle(.bordered)
     .padding(10)

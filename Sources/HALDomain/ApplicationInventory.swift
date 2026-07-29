@@ -66,6 +66,7 @@ public struct ApplicationSignatureValue: Hashable, Codable, Sendable {
 public enum ApplicationProvenanceKind: String, Hashable, Codable, Sendable {
   case appStoreReceipt
   case downloadOrigin
+  case homebrewCask
 }
 
 public enum ApplicationProvenanceStatus: String, Hashable, Codable, Sendable {

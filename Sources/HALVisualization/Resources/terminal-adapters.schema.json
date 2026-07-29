@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hal.local/schemas/terminal-adapters-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "adapters"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "adapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "displayName", "bundleIdentifier", "strategy"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "displayName": { "type": "string", "minLength": 1 },
+          "bundleIdentifier": { "type": "string", "minLength": 3 },
+          "strategy": { "enum": ["workspace-open"] }
+        }
+      }
+    }
+  }
+}

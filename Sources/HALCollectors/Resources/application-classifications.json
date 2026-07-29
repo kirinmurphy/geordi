@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "allApplicationsLabel": "All Applications",
   "defaultCategoryID": "user-installed",
   "categories": [
@@ -13,30 +13,68 @@
       "pathPrefixes": [
         { "path": "/System/Applications/Utilities", "scope": "system" },
         { "path": "/System/Library/CoreServices", "scope": "system" }
-      ]
+      ],
+      "detailRules": []
     },
     {
       "id": "bundled-software",
       "label": "Bundled Software",
       "summary": "Applications included in macOS system locations.",
-      "priority": 200,
+      "priority": 290,
       "isFallback": false,
       "platformBinaryWhenKnown": true,
       "pathPrefixes": [
-        { "path": "/System/Applications", "scope": "system" }
-      ]
+        { "path": "/System/Applications", "scope": "system" },
+        { "path": "/Applications", "scope": "system" }
+      ],
+      "detailRules": []
+    },
+    {
+      "id": "homebrew-cask",
+      "label": "Homebrew Casks",
+      "summary": "Application bundles whose resolved path is inside a configured Homebrew Caskroom.",
+      "priority": 280,
+      "isFallback": false,
+      "platformBinaryWhenKnown": null,
+      "pathPrefixes": [],
+      "detailRules": [{ "label": "Homebrew cask", "equals": "Present", "excludes": [] }]
+    },
+    {
+      "id": "app-store",
+      "label": "App Store",
+      "summary": "Applications with an observed Mac App Store receipt.",
+      "priority": 270,
+      "isFallback": false,
+      "platformBinaryWhenKnown": null,
+      "pathPrefixes": [],
+      "detailRules": [{ "label": "App Store receipt", "equals": "Present", "excludes": [] }]
+    },
+    {
+      "id": "downloaded",
+      "label": "Downloaded",
+      "summary": "Applications with observed filesystem download-origin metadata.",
+      "priority": 260,
+      "isFallback": false,
+      "platformBinaryWhenKnown": null,
+      "pathPrefixes": [],
+      "detailRules": [{
+        "label": "Download origin",
+        "equals": null,
+        "excludes": ["Not observed", "Unavailable — metadata could not be read"]
+      }]
     },
     {
       "id": "user-installed",
-      "label": "User Installed",
-      "summary": "Apps outside macOS system locations; this does not prove who installed them.",
+      "label": "Application Folders",
+      "summary": "Apps found in standard application folders without stronger installation-source evidence.",
       "priority": 100,
       "isFallback": false,
       "platformBinaryWhenKnown": false,
       "pathPrefixes": [
         { "path": "/Applications", "scope": "system" },
         { "path": "$USER_HOME/Applications", "scope": "user" }
-      ]
+      ],
+      "detailRules": []
     },
     {
       "id": "other",
@@ -45,7 +83,8 @@
       "priority": 0,
       "isFallback": true,
       "platformBinaryWhenKnown": null,
-      "pathPrefixes": []
+      "pathPrefixes": [],
+      "detailRules": []
     }
   ]
 }

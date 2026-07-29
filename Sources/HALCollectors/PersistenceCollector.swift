@@ -3,7 +3,7 @@ import HALDomain
 
 public struct PersistenceCollector: Sendable {
   public static let id: CollectorID = "persistence-declarations"
-  public static let version = 1
+  public static let version = 2
 
   private let roots: [PersistenceSearchRoot]
   private let clock: any HALClock
@@ -35,7 +35,7 @@ public struct PersistenceCollector: Sendable {
         collectorID: Self.id,
         collectorVersion: Self.version,
         availability: .available,
-        state: issues.contains { $0.severity == .error } ? .partial : .complete,
+        state: issues.contains { $0.severity != .information } ? .partial : .complete,
         startedAt: startedAt,
         completedAt: clock.now(),
         scope: roots.map(\.url.path),
@@ -103,12 +103,31 @@ public struct PersistenceCollector: Sendable {
             value: value
           )
         )
+      } catch PersistenceCollectorError.emptyPlaceholder {
+        issues.append(
+          issue(
+            id: "empty-persistence-placeholder-\(file.lastPathComponent)",
+            summary: "HAL ignored an empty persistence placeholder.",
+            path: file.path,
+            severity: .information
+          )
+        )
+      } catch PersistenceCollectorError.missingLabel {
+        issues.append(
+          issue(
+            id: "missing-persistence-label-\(file.lastPathComponent)",
+            summary: "A persistence property list did not declare a launchd label.",
+            path: file.path,
+            severity: .warning
+          )
+        )
       } catch {
         issues.append(
           issue(
-            id: "invalid-persistence-declaration-\(file.lastPathComponent)",
-            summary: "HAL could not parse a persistence declaration.",
-            path: file.path
+            id: "malformed-persistence-declaration-\(file.lastPathComponent)",
+            summary: "HAL could not decode a persistence property list.",
+            path: file.path,
+            severity: .warning
           )
         )
       }
@@ -126,10 +145,12 @@ public struct PersistenceCollector: Sendable {
         options: [],
         format: nil
       ) as? [String: Any],
-      let label = dictionary["Label"] as? String,
-      !label.isEmpty
+      !dictionary.isEmpty
     else {
-      throw PersistenceCollectorError.invalidDeclaration
+      throw PersistenceCollectorError.emptyPlaceholder
+    }
+    guard let label = dictionary["Label"] as? String, !label.isEmpty else {
+      throw PersistenceCollectorError.missingLabel
     }
     let program =
       dictionary["Program"] as? String
@@ -147,10 +168,15 @@ public struct PersistenceCollector: Sendable {
     )
   }
 
-  private func issue(id: String, summary: String, path: String) -> CollectionIssue {
+  private func issue(
+    id: String,
+    summary: String,
+    path: String,
+    severity: CollectionIssue.Severity = .error
+  ) -> CollectionIssue {
     CollectionIssue(
       id: id,
-      severity: .error,
+      severity: severity,
       summary: summary,
       affectedScope: path
     )
@@ -158,5 +184,6 @@ public struct PersistenceCollector: Sendable {
 }
 
 public enum PersistenceCollectorError: Error, Equatable, Sendable {
-  case invalidDeclaration
+  case emptyPlaceholder
+  case missingLabel
 }
