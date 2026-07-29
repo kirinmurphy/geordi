@@ -10,6 +10,8 @@
     {"id":"package-manager","displayTerm":"Package manager","description":"Software that installs and tracks other software packages.","aliases":["Package Managers"],"contexts":["overview","inspector"]},
     {"id":"runtime","displayTerm":"Runtime","description":"Software that executes programs written for a language or platform.","aliases":["Runtimes & Developer Tools"],"contexts":["overview","inspector"]},
     {"id":"toolchain","displayTerm":"Toolchain","description":"A coordinated set of tools used to build or run software.","aliases":[],"contexts":["inspector"]},
+    {"id":"bundle-identifier","displayTerm":"Bundle identifier","description":"The reverse-domain identifier an application bundle declares so macOS and other software can distinguish it from other applications.","aliases":[],"contexts":["inspector"]},
+    {"id":"application-bundle","displayTerm":"Application bundle","description":"A macOS directory with a defined internal structure that Finder presents as a single application.","aliases":["Application bundles"],"contexts":["overview","inspector"]},
     {"id":"rebuildable","displayTerm":"Rebuildable","description":"Data whose owning tool can recreate it; this is not permission to delete it.","aliases":["Rebuildability","Reclaimable Data"],"contexts":["overview","inspector"]},
     {"id":"persistence","displayTerm":"Persistence","description":"A declaration that may start software automatically.","aliases":["Startup declaration"],"contexts":["inspector"]},
     {"id":"observed-evidence","displayTerm":"Observed","description":"A fact HAL directly read from an allowed source.","aliases":["OBSERVED FACT"],"contexts":["evidence"]},

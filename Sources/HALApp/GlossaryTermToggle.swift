@@ -13,11 +13,13 @@ struct GlossaryTermToggle: View {
       hoverTask?.cancel()
       presented.toggle()
     } label: {
-      HStack(spacing: 3) {
-        Text(label)
-        Image(systemName: "questionmark.circle")
+      HStack(spacing: 4) {
+        Image(systemName: "book.closed")
           .font(.caption2)
+        Text(label)
+          .underline()
       }
+      .foregroundStyle(.primary)
     }
     .buttonStyle(.plain)
     .onHover { hovering in

@@ -11,6 +11,8 @@ struct ExplorationConfigurationTests {
     let glossary = try Glossary.bundled()
     #expect(glossary.hoverDelayMilliseconds == 700)
     #expect(glossary.term(matchingExactAlias: "PID")?.id == "pid")
+    #expect(glossary.term(matchingExactAlias: "Bundle identifier")?.id == "bundle-identifier")
+    #expect(glossary.term(matchingExactAlias: "Application bundles")?.id == "application-bundle")
     #expect(glossary.term(matchingExactAlias: "process id") == nil)
 
     let invalid = """

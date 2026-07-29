@@ -224,7 +224,6 @@ struct InspectorView: View {
               term: term,
               delayMilliseconds: glossary?.hoverDelayMilliseconds ?? 700
             )
-            .foregroundStyle(.secondary)
             .gridColumnAlignment(.trailing)
           } else {
             Text(detail.label)
