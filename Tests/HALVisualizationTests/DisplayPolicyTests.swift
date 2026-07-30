@@ -8,8 +8,59 @@ struct DisplayPolicyTests {
   @Test("Bundled policy is schema validated")
   func bundledPolicy() throws {
     let policy = try DisplayPolicy.bundled()
-    #expect(policy.schemaVersion == 1)
+    #expect(policy.schemaVersion == 2)
     #expect(policy.context("applicationDetail")?.nodeBudget == 12)
+  }
+
+  @Test("Presenter retains a configured provenance chain")
+  func provenanceChain() {
+    let app = Entity(id: "app", type: .application, name: "Warp", summary: "App")
+    let package = Entity(id: "cask", type: .package, name: "warp", summary: "Cask")
+    let manager = Entity(
+      id: "homebrew", type: .packageManager, name: "Homebrew", summary: "Manager")
+    let edges = [
+      Relationship(
+        id: "cask-app",
+        source: package.id,
+        target: app.id,
+        type: .owns,
+        confidence: .confirmed,
+        explanation: "The cask installs the application.",
+        evidence: []
+      ),
+      Relationship(
+        id: "manager-cask",
+        source: manager.id,
+        target: package.id,
+        type: .owns,
+        confidence: .confirmed,
+        explanation: "Homebrew owns the cask.",
+        evidence: []
+      ),
+    ]
+    let source = SystemGraph(
+      metadata: FixtureMetadata(id: "test", name: "Test", summary: "Test"),
+      entities: [app, package, manager],
+      relationships: edges
+    )
+    let policy = DisplayContextPolicy(
+      id: "test",
+      nodeBudget: 4,
+      relationships: [
+        RelationshipDisplayRule(
+          type: .owns,
+          priority: 100,
+          minimumConfidence: .possible,
+          traversalDepth: 2
+        )
+      ]
+    )
+
+    let result = DisplayPolicyPresenter().present(source, centeredOn: app.id, policy: policy)
+
+    #expect(result.entity(package.id) != nil)
+    #expect(result.entity(manager.id) != nil)
+    #expect(Set(result.relationships.map(\.id)) == Set(edges.map(\.id)))
   }
 
   @Test(

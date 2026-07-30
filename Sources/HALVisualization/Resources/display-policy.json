@@ -1,10 +1,16 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "contexts": [
     {
       "id": "applicationDetail",
       "nodeBudget": 12,
       "relationships": [
+        {
+          "type": "owns",
+          "priority": 110,
+          "minimumConfidence": "possible",
+          "traversalDepth": 2
+        },
         {
           "type": "launches",
           "priority": 100,

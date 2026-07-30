@@ -163,6 +163,19 @@ The App Store is also exposed as a manifest-selected Software Source with
 clickable application children. Package-manager applications and packages
 remain distinct owned entity types.
 
+Filesystem story sections now render only path ancestors as folders. The final
+path component remains the observed entity leaf, so an application such as
+`/Applications/Warp.app` is not represented as a synthetic `Warp.app` folder
+containing a second Warp item. A single connector canvas draws each row's
+continuous ancestor trunks and branch, stopping each trunk at its last
+descendant.
+
+Application evidence maps now use display-policy schema version 2. A
+relationship rule may request a bounded traversal depth; the application
+policy uses two ownership hops so confirmed provenance such as
+Homebrew → cask → application remains visible as its real chain. This does not
+flatten provenance into an invented direct relationship.
+
 The completed refinement boundary passed strict formatting, 140 tests across
 27 suites, all seven synthetic-profile validations, Debug build, native bundle
 packaging, and UI bundle smoke validation. The verified build was installed at

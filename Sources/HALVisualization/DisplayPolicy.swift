@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct DisplayPolicy: Codable, Hashable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
 
   public let schemaVersion: Int
   public let contexts: [DisplayContextPolicy]
@@ -72,19 +72,22 @@ public struct RelationshipDisplayRule: Codable, Hashable, Sendable {
   public let minimumConfidence: Confidence
   public let groupAfter: Int?
   public let groupLabel: String?
+  public let traversalDepth: Int?
 
   public init(
     type: RelationshipType,
     priority: Int,
     minimumConfidence: Confidence,
     groupAfter: Int? = nil,
-    groupLabel: String? = nil
+    groupLabel: String? = nil,
+    traversalDepth: Int = 1
   ) {
     self.type = type
     self.priority = priority
     self.minimumConfidence = minimumConfidence
     self.groupAfter = groupAfter
     self.groupLabel = groupLabel
+    self.traversalDepth = traversalDepth
   }
 }
 
@@ -168,6 +171,44 @@ public struct DisplayPolicyPresenter: Sendable {
           relationships.append(candidate.0)
           remaining -= 1
         }
+      }
+    }
+
+    // Some provenance is a chain rather than a direct edge (for example
+    // Homebrew → cask → application). A policy can retain that real chain
+    // without fabricating a flattened relationship.
+    var includedEntityIDs = Set(entities.map(\.id))
+    var includedRelationshipIDs = Set(relationships.map(\.id))
+    for rule in policy.relationships.sorted(by: { $0.priority > $1.priority })
+    where (rule.traversalDepth ?? 1) > 1 && remaining > 0 {
+      var frontier: Set<EntityID> = [center]
+      var visited: Set<EntityID> = [center]
+      for _ in 1...(rule.traversalDepth ?? 1) where remaining > 0 {
+        let candidates = graph.relationships
+          .filter {
+            $0.type == rule.type
+              && meetsFloor($0.confidence, floor: rule.minimumConfidence)
+              && (frontier.contains($0.source) || frontier.contains($0.target))
+          }
+          .sorted { $0.id.rawValue < $1.id.rawValue }
+        var nextFrontier = Set<EntityID>()
+        for relationship in candidates where remaining > 0 {
+          let counterpartID =
+            frontier.contains(relationship.source) ? relationship.target : relationship.source
+          guard !visited.contains(counterpartID) else { continue }
+          visited.insert(counterpartID)
+          nextFrontier.insert(counterpartID)
+          guard !includedEntityIDs.contains(counterpartID), let entity = graph.entity(counterpartID)
+          else { continue }
+          entities.append(entity)
+          includedEntityIDs.insert(counterpartID)
+          if includedRelationshipIDs.insert(relationship.id).inserted {
+            relationships.append(relationship)
+          }
+          remaining -= 1
+        }
+        frontier = nextFrontier
+        if frontier.isEmpty { break }
       }
     }
     return SystemGraph(

@@ -28,7 +28,13 @@ struct ApplicationStoryFilesystemTree: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       ForEach(roots) { node in
-        ApplicationStoryTreeBranch(node: node, depth: 0, inspect: inspect)
+        ApplicationStoryTreeBranch(
+          node: node,
+          ancestorContinuations: [],
+          isLast: true,
+          isRoot: true,
+          inspect: inspect
+        )
       }
     }
     .padding(.vertical, 6)
@@ -56,7 +62,11 @@ private struct ApplicationStoryTreeNode: Identifiable {
       }
       var cursor = root
       var accumulated = ""
-      for component in URL(filePath: path).standardizedFileURL.pathComponents.dropFirst() {
+      // The entity represents the final path component. Only its ancestors are folders
+      // in this presentation; otherwise `/Applications/Warp.app` incorrectly renders
+      // as a Warp.app folder containing another Warp item.
+      for component in URL(filePath: path).standardizedFileURL.pathComponents.dropFirst().dropLast()
+      {
         accumulated += "/\(component)"
         if cursor.children[component] == nil {
           cursor.children[component] = BuilderNode(label: component, fullPath: accumulated)
@@ -98,13 +108,25 @@ private struct ApplicationStoryTreeNode: Identifiable {
 
 private struct ApplicationStoryTreeBranch: View {
   let node: ApplicationStoryTreeNode
-  let depth: Int
+  let ancestorContinuations: [Bool]
+  let isLast: Bool
+  let isRoot: Bool
   let inspect: (Entity) -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(spacing: 8) {
-        treeGuide
+        if isRoot {
+          Image(systemName: "circle.fill")
+            .font(.system(size: 7, weight: .semibold))
+            .foregroundStyle(.tertiary)
+            .frame(width: 18)
+        } else {
+          ApplicationStoryTreeConnector(
+            ancestorContinuations: ancestorContinuations,
+            isLast: isLast
+          )
+        }
         Image(systemName: "folder.fill")
           .font(.system(size: 17, weight: .semibold))
           .foregroundStyle(.blue)
@@ -116,50 +138,43 @@ private struct ApplicationStoryTreeBranch: View {
       .padding(.horizontal, 12)
       .padding(.vertical, 7)
 
-      ForEach(node.items) { item in
-        ApplicationStoryTreeLeaf(item: item, depth: depth + 1, inspect: inspect)
+      ForEach(Array(node.items.enumerated()), id: \.element.id) { index, item in
+        ApplicationStoryTreeLeaf(
+          item: item,
+          ancestorContinuations: childAncestorContinuations,
+          isLast: index == node.items.count - 1 && node.children.isEmpty,
+          inspect: inspect
+        )
       }
-      ForEach(node.children) { child in
-        ApplicationStoryTreeBranch(node: child, depth: depth + 1, inspect: inspect)
+      ForEach(Array(node.children.enumerated()), id: \.element.id) { index, child in
+        ApplicationStoryTreeBranch(
+          node: child,
+          ancestorContinuations: childAncestorContinuations,
+          isLast: index == node.children.count - 1,
+          isRoot: false,
+          inspect: inspect
+        )
       }
     }
   }
 
-  private var treeGuide: some View {
-    HStack(spacing: 0) {
-      ForEach(0..<depth, id: \.self) { _ in
-        Rectangle()
-          .fill(Color.secondary.opacity(0.2))
-          .frame(width: 1)
-          .frame(width: 20)
-      }
-      Image(systemName: depth == 0 ? "circle.fill" : "arrow.turn.down.right")
-        .font(.system(size: 10, weight: .semibold))
-        .foregroundStyle(.tertiary)
-        .frame(width: 18)
-    }
+  private var childAncestorContinuations: [Bool] {
+    isRoot ? [] : ancestorContinuations + [!isLast]
   }
 }
 
 private struct ApplicationStoryTreeLeaf: View {
   let item: ApplicationStoryTreeItem
-  let depth: Int
+  let ancestorContinuations: [Bool]
+  let isLast: Bool
   let inspect: (Entity) -> Void
 
   var body: some View {
     HStack(alignment: .top, spacing: 10) {
-      HStack(spacing: 0) {
-        ForEach(0..<depth, id: \.self) { _ in
-          Rectangle()
-            .fill(Color.secondary.opacity(0.2))
-            .frame(width: 1)
-            .frame(width: 20)
-        }
-        Image(systemName: "arrow.turn.down.right")
-          .font(.system(size: 10, weight: .semibold))
-          .foregroundStyle(.tertiary)
-          .frame(width: 18)
-      }
+      ApplicationStoryTreeConnector(
+        ancestorContinuations: ancestorContinuations,
+        isLast: isLast
+      )
       Image(systemName: EntityVisualStyle.symbol(for: item.entity.type))
         .font(.system(size: 19, weight: .semibold))
         .foregroundStyle(EntityVisualStyle.color(for: item.entity.type))
@@ -200,5 +215,44 @@ private struct ApplicationStoryTreeLeaf: View {
     return summaries.isEmpty
       ? "HAL retained no supporting evidence details."
       : summaries.prefix(2).joined(separator: " ")
+  }
+}
+
+/// Draws the complete tree prefix in one canvas so trunks and branches share
+/// endpoints instead of being assembled from disconnected symbols.
+private struct ApplicationStoryTreeConnector: View {
+  let ancestorContinuations: [Bool]
+  let isLast: Bool
+
+  private let columnWidth: CGFloat = 20
+
+  var body: some View {
+    Canvas { context, size in
+      var path = Path()
+      let midpoint = size.height / 2
+
+      for (column, continues) in ancestorContinuations.enumerated() where continues {
+        let x = (CGFloat(column) * columnWidth) + (columnWidth / 2)
+        path.move(to: CGPoint(x: x, y: 0))
+        path.addLine(to: CGPoint(x: x, y: size.height))
+      }
+
+      let branchX =
+        (CGFloat(ancestorContinuations.count) * columnWidth) + (columnWidth / 2)
+      path.move(to: CGPoint(x: branchX, y: 0))
+      path.addLine(to: CGPoint(x: branchX, y: midpoint))
+      path.addLine(to: CGPoint(x: size.width, y: midpoint))
+      if !isLast {
+        path.move(to: CGPoint(x: branchX, y: midpoint))
+        path.addLine(to: CGPoint(x: branchX, y: size.height))
+      }
+
+      context.stroke(
+        path,
+        with: .color(.secondary.opacity(0.34)),
+        style: StrokeStyle(lineWidth: 1, lineCap: .square, lineJoin: .miter)
+      )
+    }
+    .frame(width: CGFloat(ancestorContinuations.count + 1) * columnWidth)
   }
 }
