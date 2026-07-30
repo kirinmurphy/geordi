@@ -1180,13 +1180,13 @@ public struct ApplicationGraphProjector: Sendable {
       let tolerance = TimeInterval(value.setupToleranceSeconds ?? 0)
       let timing =
         bundleCreatedAt <= setupCompletedAt.addingTimeInterval(tolerance)
-        ? "Present at setup" : "Added after setup"
+        ? "Predates setup marker" : "Added after setup"
       details.append(Detail("Installation timing", timing))
       details.append(
         Detail(
           "Timing evidence",
-          timing == "Present at setup"
-            ? "Bundle existed when Mac setup completed"
+          timing == "Predates setup marker"
+            ? "Bundle creation date predates this Mac's setup marker; migration or restoration may preserve that date"
             : "Bundle was created after Mac setup completed"
         ))
     } else {

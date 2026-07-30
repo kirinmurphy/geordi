@@ -176,6 +176,21 @@ policy uses two ownership hops so confirmed provenance such as
 Homebrew → cask → application remains visible as its real chain. This does not
 flatten provenance into an invented direct relationship.
 
+Dense relationship groups now retain the stable identifiers of their members
+as display-only metadata. Group nodes use a stacked-card treatment, and their
+inspector replaces generic technical details with a top-level **Includes**
+section. Each member uses its entity icon and color and can be opened to reset
+the map around that real entity; grouping therefore reduces height without
+making the underlying nodes inaccessible.
+
+Application classification schema version 9 separates matching priority from
+manifest-defined display order. User-installed applications consequently lead
+both the homepage filter and App Store source groups. App Store receipt remains
+management provenance, not evidence that a third-party application was bundled.
+Bundle dates older than `.AppleSetupDone` are described as **Predates setup
+marker**, because migration or restoration can preserve a date older than the
+current Mac setup marker.
+
 The completed refinement boundary passed strict formatting, 140 tests across
 27 suites, all seven synthetic-profile validations, Debug build, native bundle
 packaging, and UI bundle smoke validation. The verified build was installed at

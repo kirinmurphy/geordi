@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "allApplicationsLabel": "All",
   "defaultCategoryID": "user-installed",
   "categories": [
@@ -7,6 +7,7 @@
       "id": "system-utilities",
       "kind": "scope",
       "label": "System Utilities",
+      "displayOrder": 30,
       "summary": "Utilities and supporting apps included with macOS.",
       "priority": 300,
       "isFallback": false,
@@ -24,6 +25,7 @@
       "kind": "scope",
       "label": "Bundled Software",
       "filterLabel": "Bundled",
+      "displayOrder": 20,
       "summary": "Applications in macOS system locations or observed on this Mac at setup.",
       "priority": 290,
       "isFallback": false,
@@ -40,7 +42,7 @@
         },
         {
           "label": "Installation timing",
-          "equals": "Present at setup",
+          "equals": "Predates setup marker",
           "startsWith": null,
           "excludes": []
         },
@@ -119,6 +121,7 @@
       "id": "installation-timing-unknown",
       "kind": "scope",
       "label": "Installation Timing Unknown",
+      "displayOrder": 40,
       "summary": "Applications for which setup-time filesystem evidence was unavailable.",
       "priority": 200,
       "isFallback": false,
@@ -138,6 +141,7 @@
       "kind": "scope",
       "label": "User-installed Applications",
       "filterLabel": "User Installed",
+      "displayOrder": 10,
       "summary": "Applications added to standard application folders beyond the software included with macOS.",
       "priority": 100,
       "isFallback": false,
@@ -154,6 +158,7 @@
       "id": "other",
       "kind": "scope",
       "label": "Other / Unclassified",
+      "displayOrder": 50,
       "summary": "Applications whose location does not match a known software category.",
       "priority": 0,
       "isFallback": true,

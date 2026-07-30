@@ -187,10 +187,17 @@ final class AppModel {
         ).id
       }
     )
-    return applicationClassifications.categories.filter {
-      $0.kind == .scope
-        && (observedCategoryIDs.contains($0.id) || $0.id == selectedApplicationCategoryID)
-    }
+    return applicationClassifications.categories
+      .filter {
+        $0.kind == .scope
+          && (observedCategoryIDs.contains($0.id) || $0.id == selectedApplicationCategoryID)
+      }
+      .sorted {
+        if $0.displayOrder != $1.displayOrder {
+          return ($0.displayOrder ?? .max) < ($1.displayOrder ?? .max)
+        }
+        return $0.label < $1.label
+      }
   }
 
   func applications(in categoryID: String?) -> [Entity] {
@@ -224,12 +231,15 @@ final class AppModel {
         details: application.details
       )
     else { return nil }
-    if source.id == "app-store",
-      let timing = application.details.first(where: { $0.label == "Installation timing" })?.value
-    {
-      return timing == "Present at setup"
+    if source.id == "app-store" {
+      let category = applicationClassifications.category(
+        forApplicationPath: path,
+        platformBinary: platformBinaryEvidence(for: application),
+        details: application.details
+      )
+      return category.id == "bundled-software"
         ? "Present at setup · App Store managed"
-        : "\(timing) · App Store managed"
+        : "App Store managed"
     }
     return source.label
   }

@@ -196,6 +196,51 @@ struct AppModelCollectionTests {
     #expect(model.applicationSourceLabel(linked.graph.entity("warp")!) == "Homebrew Casks")
   }
 
+  @Test("App Store management does not turn a third-party app into bundled software")
+  func thirdPartyAppStoreApplicationStaysUserInstalled() throws {
+    let date = Date(timeIntervalSince1970: 1_700_000_000)
+    let nord = Entity(
+      id: "nord",
+      type: .application,
+      name: "NordVPN",
+      summary: "Application",
+      details: [
+        Detail("Path", "/Applications/NordVPN.app"),
+        Detail("Bundle identifier", "com.nordvpn.NordVPN"),
+        Detail("Platform binary", "No"),
+        Detail("App Store receipt", "Present"),
+        Detail("Installation timing", "Predates setup marker"),
+      ]
+    )
+    let linked = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "nord", name: "Nord", summary: "Nord"),
+        entities: [nord],
+        relationships: []
+      ),
+      scan: ScanContext(
+        id: "nord",
+        environment: .liveReadOnly,
+        startedAt: date,
+        completedAt: date
+      )
+    )
+    let store = try temporaryStore(containing: linked)
+    defer { try? FileManager.default.removeItem(at: store.root.deletingLastPathComponent()) }
+    let model = AppModel(
+      configuration: .phaseZero,
+      applicationClassifications: try ApplicationClassificationConfiguration.bundled(),
+      syntheticProvider: StaticProvider(snapshot(id: "synthetic", entityName: "Fictional")),
+      preferences: MemoryPreferences(mode: .linkedMac),
+      userDataStore: store,
+      liveSnapshot: { linked }
+    )
+
+    #expect(model.applications(in: "user-installed").map(\.id) == [nord.id])
+    #expect(model.applications(in: "bundled-software").isEmpty)
+    #expect(model.applicationSourceLabel(nord) == "App Store managed")
+  }
+
   @Test("Linked storage and performance views use collected entity types")
   func linkedDestinationScopes() throws {
     let date = Date(timeIntervalSince1970: 1_700_000_000)

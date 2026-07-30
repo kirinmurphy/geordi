@@ -73,10 +73,6 @@ struct ApplicationStoryView: View {
             .textSelection(.enabled)
           statusBadge
         }
-        Text(application.summary)
-          .font(.halSubsection)
-          .foregroundStyle(.secondary)
-          .textSelection(.enabled)
       }
       Spacer()
       if model.isSynthetic {

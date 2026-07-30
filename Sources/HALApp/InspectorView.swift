@@ -5,8 +5,10 @@ import SwiftUI
 
 struct InspectorView: View {
   let graph: SystemGraph
+  let sourceGraph: SystemGraph
   let selection: GraphSelection?
   let onShowEntityTypeInfo: (EntityType) -> Void
+  let onOpenEntity: (Entity) -> Void
   private let glossary = try? Glossary.bundled()
   private let displayProfile = try? InspectorDisplayProfile.bundled()
 
@@ -38,7 +40,8 @@ struct InspectorView: View {
   }
 
   private func entityView(_ entity: Entity) -> some View {
-    VStack(alignment: .leading, spacing: 18) {
+    let isDisplayGroup = DisplayGroupMetadata.isGroup(entity)
+    return VStack(alignment: .leading, spacing: 18) {
       HStack(spacing: 6) {
         HStack(spacing: 6) {
           Image(systemName: EntityVisualStyle.symbol(for: entity.type))
@@ -58,8 +61,12 @@ struct InspectorView: View {
         .accessibilityLabel("About \(entity.type.label)")
       }
       Text(entity.name).font(.halTitle.bold())
-      Text(entity.summary).font(.halSubsection)
-      if !entity.details.isEmpty || !entity.instances.isEmpty {
+      if entity.type != .application || isDisplayGroup {
+        Text(entity.summary).font(.halSubsection)
+      }
+      if isDisplayGroup {
+        includedEntities(entity)
+      } else if !entity.details.isEmpty || !entity.instances.isEmpty {
         Divider()
         if entity.type == .application {
           applicationEvidenceSummary(entity)
@@ -81,7 +88,9 @@ struct InspectorView: View {
           }
         }
       }
-      exploreFurther(entity)
+      if !isDisplayGroup {
+        exploreFurther(entity)
+      }
       Divider()
       let upstream = graph.relationships(connectedTo: entity.id).filter {
         $0.target == entity.id
@@ -104,6 +113,50 @@ struct InspectorView: View {
           selectedEntity: entity,
           isUpstream: false
         )
+      }
+    }
+  }
+
+  private func includedEntities(_ group: Entity) -> some View {
+    let members = DisplayGroupMetadata.memberIDs(in: group).compactMap(sourceGraph.entity)
+    return VStack(alignment: .leading, spacing: 10) {
+      Text("Includes")
+        .font(.halRowTitle)
+      ForEach(members) { member in
+        Button {
+          onOpenEntity(member)
+        } label: {
+          HStack(spacing: 10) {
+            Image(systemName: EntityVisualStyle.symbol(for: member.type))
+              .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
+              .foregroundStyle(EntityVisualStyle.color(for: member.type))
+              .frame(width: 26)
+            VStack(alignment: .leading, spacing: 2) {
+              Text(member.name)
+                .font(.halSecondary.bold())
+              Text(member.type.label)
+                .font(.halSmall)
+                .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+              .font(.halSmall.bold())
+              .foregroundStyle(.secondary)
+          }
+          .padding(10)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .contentShape(Rectangle())
+          .background(
+            EntityVisualStyle.color(for: member.type).opacity(0.08),
+            in: RoundedRectangle(cornerRadius: 12)
+          )
+          .overlay {
+            RoundedRectangle(cornerRadius: 12)
+              .stroke(EntityVisualStyle.color(for: member.type).opacity(0.45))
+          }
+        }
+        .buttonStyle(.plain)
+        .help("Open \(member.name)")
       }
     }
   }

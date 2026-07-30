@@ -10,7 +10,7 @@ struct ApplicationClassificationConfigurationTests {
     let configuration = try ApplicationClassificationConfiguration.bundled()
     let home = URL(filePath: "/Users/example", directoryHint: .isDirectory)
 
-    #expect(configuration.schemaVersion == 8)
+    #expect(configuration.schemaVersion == 9)
     #expect(configuration.allApplicationsLabel == "All")
     #expect(configuration.defaultCategoryID == "user-installed")
     #expect(
@@ -20,6 +20,15 @@ struct ApplicationClassificationConfigurationTests {
     #expect(
       configuration.categories.first { $0.id == "bundled-software" }?.filterLabel
         == "Bundled"
+    )
+    let orderedScopeIDs =
+      configuration.categories
+      .filter { $0.kind == .scope }
+      .sorted { ($0.displayOrder ?? .max) < ($1.displayOrder ?? .max) }
+      .map(\.id)
+    #expect(
+      Array(orderedScopeIDs.prefix(3))
+        == ["user-installed", "bundled-software", "system-utilities"]
     )
     #expect(
       configuration.category(
@@ -114,7 +123,7 @@ struct ApplicationClassificationConfigurationTests {
         details: [
           Detail("Bundle identifier", "com.apple.Keynote"),
           Detail("App Store receipt", "Present"),
-          Detail("Installation timing", "Present at setup"),
+          Detail("Installation timing", "Predates setup marker"),
         ],
         userHome: home
       ).id == "bundled-software"
@@ -135,7 +144,7 @@ struct ApplicationClassificationConfigurationTests {
         forApplicationPath: "/Applications/Warp.app",
         platformBinary: false,
         details: [
-          Detail("Installation timing", "Present at setup"),
+          Detail("Installation timing", "Predates setup marker"),
           Detail("Installed with", "Homebrew cask warp"),
         ],
         userHome: home
@@ -148,7 +157,7 @@ struct ApplicationClassificationConfigurationTests {
         details: [
           Detail("Bundle identifier", "com.nordvpn.NordVPN"),
           Detail("App Store receipt", "Present"),
-          Detail("Installation timing", "Present at setup"),
+          Detail("Installation timing", "Predates setup marker"),
         ],
         userHome: home
       ).id == "user-installed"
@@ -160,7 +169,7 @@ struct ApplicationClassificationConfigurationTests {
         details: [
           Detail("Bundle identifier", "com.apple.dt.Xcode"),
           Detail("App Store receipt", "Present"),
-          Detail("Installation timing", "Present at setup"),
+          Detail("Installation timing", "Predates setup marker"),
         ],
         userHome: home
       ).id == "user-installed"
@@ -180,7 +189,7 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 8,
+        "schemaVersion": 9,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
@@ -215,7 +224,7 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 8,
+        "schemaVersion": 9,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{

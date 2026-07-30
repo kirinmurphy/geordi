@@ -92,7 +92,10 @@ struct DisplayPolicyTests {
     #expect(result.entities.count == 3)
     #expect(result.relationships.count == 2)
     #expect(result.entity("process") != nil)
-    #expect(result.entities.contains { $0.name == "2 support locations" })
+    let group = result.entities.first { $0.name == "2 support locations" }
+    #expect(group != nil)
+    #expect(group.map(DisplayGroupMetadata.isGroup) == true)
+    #expect(group.map { Set(DisplayGroupMetadata.memberIDs(in: $0)) } == Set(["file-a", "file-b"]))
     #expect(result.entity("weak-file") == nil)
   }
 

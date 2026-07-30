@@ -589,6 +589,7 @@ private struct OverviewView: View {
   @State private var guidedProofPresented = false
   @State private var expandedSoftwareGroups = Set<String>()
   @State private var hoveredSoftwareGroupID: String?
+  @State private var applicationFilterPresented = false
 
   var body: some View {
     ScrollView {
@@ -814,22 +815,8 @@ private struct OverviewView: View {
         Image(systemName: "macwindow.on.rectangle")
         Text("Applications:")
         if !model.isSynthetic, let configuration = model.applicationClassifications {
-          Menu {
-            Button(configuration.allApplicationsLabel) {
-              model.selectedApplicationCategoryID = nil
-            }
-            Divider()
-            ForEach(model.applicationCategoryOptions) { category in
-              Button {
-                model.selectedApplicationCategoryID = category.id
-              } label: {
-                if model.selectedApplicationCategoryID == category.id {
-                  Label(category.filterLabel ?? category.label, systemImage: "checkmark")
-                } else {
-                  Text(category.filterLabel ?? category.label)
-                }
-              }
-            }
+          Button {
+            applicationFilterPresented.toggle()
           } label: {
             HStack(spacing: 5) {
               Text(selectedApplicationCategoryLabel)
@@ -839,9 +826,25 @@ private struct OverviewView: View {
                 .font(.system(size: 14, weight: .bold))
             }
           }
-          .menuIndicator(.hidden)
-          .menuStyle(.borderlessButton)
+          .buttonStyle(.plain)
           .fixedSize()
+          .popover(isPresented: $applicationFilterPresented, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 2) {
+              ForEach(model.applicationCategoryOptions) { category in
+                applicationFilterOption(
+                  category.filterLabel ?? category.label,
+                  categoryID: category.id
+                )
+              }
+              Divider()
+              applicationFilterOption(
+                configuration.allApplicationsLabel,
+                categoryID: nil
+              )
+            }
+            .padding(8)
+            .frame(minWidth: 220)
+          }
           .accessibilityLabel("Application filter: \(selectedApplicationCategoryLabel)")
         } else {
           Text("User installed").underline()
@@ -952,7 +955,12 @@ private struct OverviewView: View {
     }
     return classifications.categories
       .filter { $0.kind == .scope }
-      .sorted { $0.priority > $1.priority }
+      .sorted {
+        if $0.displayOrder != $1.displayOrder {
+          return ($0.displayOrder ?? .max) < ($1.displayOrder ?? .max)
+        }
+        return $0.label < $1.label
+      }
       .compactMap { category in
         guard let members = grouped[category.id], !members.isEmpty else { return nil }
         return SoftwareApplicationGroup(
@@ -962,6 +970,25 @@ private struct OverviewView: View {
           applications: members
         )
       }
+  }
+
+  private func applicationFilterOption(_ label: String, categoryID: String?) -> some View {
+    Button {
+      model.selectedApplicationCategoryID = categoryID
+      applicationFilterPresented = false
+    } label: {
+      HStack {
+        Text(label)
+        Spacer()
+        if model.selectedApplicationCategoryID == categoryID {
+          Image(systemName: "checkmark")
+        }
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .padding(.horizontal, 10)
+    .padding(.vertical, 7)
   }
 
   @ViewBuilder
@@ -2300,8 +2327,10 @@ struct AtlasDetailView: View {
   private var inspector: some View {
     InspectorView(
       graph: model.presentedGraph,
+      sourceGraph: model.fixture,
       selection: model.selection,
-      onShowEntityTypeInfo: { model.entityTypeReferencePresented = $0 }
+      onShowEntityTypeInfo: { model.entityTypeReferencePresented = $0 },
+      onOpenEntity: model.focus
     )
   }
 
@@ -2415,9 +2444,15 @@ private struct SearchField: View {
               } label: {
                 VStack(alignment: .leading) {
                   Text(entity.name)
-                  Text(entity.summary)
-                    .font(.halSmall)
-                    .foregroundStyle(.secondary)
+                  if let distinguishingDetail = entity.details.first?.value {
+                    Text(distinguishingDetail)
+                      .font(.halSmall)
+                      .foregroundStyle(.secondary)
+                  } else if entity.type != .application {
+                    Text(entity.summary)
+                      .font(.halSmall)
+                      .foregroundStyle(.secondary)
+                  }
                 }
               }
               .buttonStyle(.plain)

@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 8
+  public static let currentVersion = 9
 
   public let schemaVersion: Int
   public let allApplicationsLabel: String
@@ -166,6 +166,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
   public let kind: Kind
   public let label: String
   public let filterLabel: String?
+  public let displayOrder: Int?
   public let summary: String
   public let priority: Int
   public let isFallback: Bool
@@ -180,6 +181,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     kind: Kind = .scope,
     label: String,
     filterLabel: String? = nil,
+    displayOrder: Int? = nil,
     summary: String,
     priority: Int,
     isFallback: Bool,
@@ -193,6 +195,7 @@ public struct ApplicationClassificationCategory: Codable, Hashable, Sendable, Id
     self.kind = kind
     self.label = label
     self.filterLabel = filterLabel
+    self.displayOrder = displayOrder
     self.summary = summary
     self.priority = priority
     self.isFallback = isFallback

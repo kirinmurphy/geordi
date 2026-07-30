@@ -209,12 +209,16 @@ public struct RelationshipCanvas: View {
   private func node(_ entity: Entity) -> some View {
     let selected = selection?.value == .entity(entity.id)
     let relevant = selection == nil || highlightedEntities.contains(entity.id)
+    let isGroup = DisplayGroupMetadata.isGroup(entity)
     return Button {
       selection = GraphSelection(.entity(entity.id))
     } label: {
       VStack(alignment: .leading, spacing: 6) {
         HStack(spacing: 6) {
-          if entity.type == .application,
+          if isGroup {
+            Image(systemName: "square.stack.3d.up.fill")
+              .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
+          } else if entity.type == .application,
             let path = entity.details.first(where: { $0.label == "Path" })?.value
           {
             Image(nsImage: NSWorkspace.shared.icon(forFile: path))
@@ -228,8 +232,12 @@ public struct RelationshipCanvas: View {
             Image(systemName: symbol(for: entity.type))
               .font(.system(size: EntityVisualStyle.nodeIconSize, weight: .semibold))
           }
-          Text(entity.type.label.dropLast(entity.type == .persistence ? 0 : 1).description)
-            .font(.caption.weight(.semibold))
+          Text(
+            isGroup
+              ? "GROUPED \(entity.type.label.uppercased())"
+              : entity.type.label.dropLast(entity.type == .persistence ? 0 : 1).description
+          )
+          .font(.caption.weight(.semibold))
         }
         .foregroundStyle(EntityVisualStyle.color(for: entity.type))
         Text(entity.name)
@@ -239,7 +247,20 @@ public struct RelationshipCanvas: View {
       }
       .padding(12)
       .frame(width: configuration.nodeWidth, height: configuration.nodeHeight, alignment: .leading)
-      .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+      .background {
+        ZStack {
+          if isGroup {
+            RoundedRectangle(cornerRadius: 14)
+              .fill(EntityVisualStyle.color(for: entity.type).opacity(0.12))
+              .offset(x: 7, y: 7)
+            RoundedRectangle(cornerRadius: 14)
+              .fill(EntityVisualStyle.color(for: entity.type).opacity(0.09))
+              .offset(x: 3.5, y: 3.5)
+          }
+          RoundedRectangle(cornerRadius: 14)
+            .fill(.regularMaterial)
+        }
+      }
       .overlay {
         RoundedRectangle(cornerRadius: 14)
           .stroke(

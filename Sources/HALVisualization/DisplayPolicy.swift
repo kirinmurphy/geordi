@@ -2,6 +2,21 @@ import Foundation
 import HALDomain
 import HALManifestKit
 
+public enum DisplayGroupMetadata {
+  public static let entityIDPrefix = "display-group:"
+  public static let memberIDsLabel = "Grouped entity IDs"
+
+  public static func isGroup(_ entity: Entity) -> Bool {
+    entity.id.rawValue.hasPrefix(entityIDPrefix)
+  }
+
+  public static func memberIDs(in entity: Entity) -> [EntityID] {
+    entity.details.first { $0.label == memberIDsLabel }?.value
+      .split(separator: "\n")
+      .map { EntityID(String($0)) } ?? []
+  }
+}
+
 public struct DisplayPolicy: Codable, Hashable, Sendable {
   public static let currentVersion = 2
 
@@ -143,9 +158,13 @@ public struct DisplayPolicyPresenter: Sendable {
             id: groupID,
             type: members[0].type,
             name: "\(members.count) \(label)",
-            summary:
-              "A presentation group; the individual observations remain available in technical details.",
-            details: [Detail("Includes", members.map(\.name).sorted().joined(separator: ", "))]
+            summary: "\(members.count) nodes grouped to keep this map readable.",
+            details: [
+              Detail(
+                DisplayGroupMetadata.memberIDsLabel,
+                members.map(\.id.rawValue).sorted().joined(separator: "\n")
+              )
+            ]
           )
         )
         let first = candidates[0].0

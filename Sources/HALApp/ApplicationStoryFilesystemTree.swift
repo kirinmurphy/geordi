@@ -180,9 +180,15 @@ private struct ApplicationStoryTreeLeaf: View {
       VStack(alignment: .leading, spacing: 4) {
         Text(item.entity.name)
           .font(.halRowTitle)
-        Text(item.relationship?.explanation ?? item.entity.summary)
-          .foregroundStyle(.secondary)
-          .textSelection(.enabled)
+        if let explanation = item.relationship?.explanation {
+          Text(explanation)
+            .foregroundStyle(.secondary)
+            .textSelection(.enabled)
+        } else if item.entity.type != .application {
+          Text(item.entity.summary)
+            .foregroundStyle(.secondary)
+            .textSelection(.enabled)
+        }
         if let relationship = item.relationship {
           Text("Why HAL connects these: \(evidenceExplanation(relationship))")
             .font(.halSmall)
