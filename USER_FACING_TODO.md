@@ -22,8 +22,9 @@ filesystem scanning.
   an honest unknown state.
 - [x] Represent App Store-managed applications as a Software Source alongside
   package managers, without conflating applications and packages.
-- [x] Give every “What do you want to understand?” choice a destination that
-  explains that question instead of sending several choices to the same page.
+- [ ] Give every “What do you want to understand?” choice a destination that
+  explains that question instead of routing aggregate questions to unbounded
+  type-filtered relationship maps.
 - [x] Keep high-fan-out relationship maps readable by grouping or summarizing
   large repeated branches without hiding the full evidence.
 - [x] Apply a glossary-aware tooltip treatment to domain language, beginning
@@ -31,6 +32,49 @@ filesystem scanning.
 - [x] Implement the deterministic first slice of the shell/PATH visualizer
   described in `SHELL_PATH_VISUALIZER_PLAN.md`, with explicit uncertainty and
   no implicit collection of shell-file contents.
+
+## Priority 1 — Replace aggregate “everything graphs” with question-shaped views
+
+Current audit:
+
+- **Understand an application** should begin with an application browser and
+  open an individual Application Story. The complete application graph is not
+  an adequate application picker.
+- **See what starts automatically** should organize declarations by owning
+  application and unresolved status, then offer a bounded relationship view
+  for one selection.
+- **Explore reclaimable data** can retain the graph where a centered storage
+  concept groups repeated data nodes, but the live view needs the same
+  deterministic grouping behavior as the synthetic example.
+- **Browse command-line tools** should begin with structured source,
+  installation-reason, runtime, shell-framework, and unclassified-command
+  groups. It should not render every package and process in one graph.
+- **Visualize shell PATH** and **Understand where software lives** already use
+  purpose-built visualizations and are appropriate starting surfaces.
+
+Implementation direction:
+
+1. Add a versioned, validated exploration-context manifest. Each context
+   declares its question, supported entity/relationship types, grouping detail,
+   initial presentation kind, and bounded drill-in behavior.
+2. Support purpose-built list/tree summaries as well as centered relationship
+   maps. Do not manufacture a graph center in view code.
+3. Reuse the display-policy grouping presenter for centered maps, with group
+   definitions selected by the exploration manifest.
+4. Keep every row and group connected to the underlying entity IDs so users can
+   open the same evidence panel and bounded relationship universe.
+5. Add deterministic tests proving that shuffled source observations yield the
+   same context sections, member order, and graph projection.
+
+Acceptance criteria:
+
+- no question card initially renders a graph whose height scales directly with
+  every entity of a broad type;
+- each destination visibly answers the wording on its card before requiring a
+  node selection;
+- expanding a group or opening an entity preserves all underlying evidence;
+- the same captured observations and manifest version produce identical
+  sections, ordering, and group membership.
 
 ## Priority 1 — Explain shell frameworks installed outside package managers
 

@@ -4,11 +4,11 @@ import SwiftUI
 
 public enum HALTypeSize {
   public static let sm: CGFloat = 14
-  public static let base: CGFloat = 16
-  public static let large: CGFloat = 18
-  public static let xl: CGFloat = 22
-  public static let twoXL: CGFloat = 28
-  public static let display: CGFloat = 34
+  public static let base: CGFloat = 15
+  public static let large: CGFloat = 17
+  public static let xl: CGFloat = 20
+  public static let twoXL: CGFloat = 26
+  public static let display: CGFloat = 32
 }
 
 public enum HALIconSize {
@@ -26,6 +26,7 @@ public struct RelationshipCanvas: View {
   @Binding public var focusedEntity: EntityID?
   private let configuration: LayoutConfiguration
   private let isReadOnlyPreview: Bool
+  private let centerEntityID: EntityID?
   private let onRecenterEntity: ((Entity) -> Void)?
 
   @State private var scale = 1.0
@@ -42,6 +43,7 @@ public struct RelationshipCanvas: View {
     focusedEntity: Binding<EntityID?>,
     configuration: LayoutConfiguration,
     isReadOnlyPreview: Bool = false,
+    centerEntityID: EntityID? = nil,
     onRecenterEntity: ((Entity) -> Void)? = nil
   ) {
     self.graph = graph
@@ -51,6 +53,7 @@ public struct RelationshipCanvas: View {
     _focusedEntity = focusedEntity
     self.configuration = configuration
     self.isReadOnlyPreview = isReadOnlyPreview
+    self.centerEntityID = centerEntityID
     self.onRecenterEntity = onRecenterEntity
   }
 
@@ -296,18 +299,28 @@ public struct RelationshipCanvas: View {
         focusedEntity = entity.id
       }
     )
-    .overlay(alignment: .bottomTrailing) {
-      if !isReadOnlyPreview, !isGroup, let onRecenterEntity {
-        Label("See all", systemImage: "scope")
+    .overlay(alignment: .bottom) {
+      if !isReadOnlyPreview, selected, !isGroup, entity.id != centerEntityID,
+        let onRecenterEntity
+      {
+        Text("See all connections")
           .font(.system(size: HALTypeSize.sm, weight: .semibold))
-          .padding(.horizontal, 7)
-          .padding(.vertical, 4)
-          .background(.thickMaterial, in: Capsule())
-          .overlay {
-            Capsule().stroke(EntityVisualStyle.color(for: entity.type).opacity(0.45))
+          .foregroundStyle(EntityVisualStyle.color(for: entity.type))
+          .frame(width: configuration.nodeWidth, height: 30)
+          .background(.thickMaterial)
+          .overlay(alignment: .top) {
+            Rectangle()
+              .fill(EntityVisualStyle.color(for: entity.type).opacity(0.45))
+              .frame(height: 1)
           }
-          .padding(6)
-          .contentShape(Capsule())
+          .clipShape(
+            .rect(
+              bottomLeadingRadius: 14,
+              bottomTrailingRadius: 14
+            )
+          )
+          .offset(y: 30)
+          .contentShape(Rectangle())
           .onTapGesture {
             onRecenterEntity(entity)
           }

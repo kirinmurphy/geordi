@@ -2430,8 +2430,14 @@ struct AtlasDetailView: View {
         set: { model.focusedEntity = $0 }
       ),
       configuration: model.configuration.layout,
+      centerEntityID: centerEntityID,
       onRecenterEntity: model.focus
     )
+  }
+
+  private var centerEntityID: EntityID? {
+    guard case .entity(let id) = model.destination else { return nil }
+    return id
   }
 
   private var inspector: some View {
