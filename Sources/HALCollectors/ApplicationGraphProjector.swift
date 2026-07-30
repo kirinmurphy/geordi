@@ -475,19 +475,36 @@ public struct ApplicationGraphProjector: Sendable {
         ($0.value.declarationPath, $0)
       }
     )
-    let matchedPersistence = (persistenceResolutions?.observations ?? []).filter {
-      $0.value.state == .matched && $0.value.applicationPaths.count == 1
-    }
-    let persistenceEntities = matchedPersistence.compactMap { resolution -> Entity? in
-      guard let declaration = declarationsByPath[resolution.value.declarationPath] else {
-        return nil
+    let resolutionsByPath = Dictionary(
+      uniqueKeysWithValues: (persistenceResolutions?.observations ?? []).map {
+        ($0.value.declarationPath, $0)
       }
+    )
+    let persistenceEntities = declarationsByPath.values.sorted {
+      $0.value.declarationPath < $1.value.declarationPath
+    }.map { declaration in
+      let resolution = resolutionsByPath[declaration.value.declarationPath]
+      let ownership =
+        switch resolution?.value.state {
+        case .matched: "Matched to one application"
+        case .ambiguous: "Ambiguous"
+        case .unmatched: "Unresolved"
+        case .inaccessible: "Unavailable"
+        case nil: "Not evaluated"
+        }
       var details = [
         Detail("Declaration", declaration.value.declarationPath),
         Detail(
           "Type",
           declaration.value.kind == .launchAgent ? "Launch agent" : "Launch daemon"
         ),
+        Detail(
+          "Scope",
+          declaration.value.scope == .user ? "User session" : "System-wide"
+        ),
+        Detail("Ownership", ownership),
+        Detail("Loaded state", "Not observed"),
+        Detail("Running state", "Not directly observed for this declaration"),
         Detail("Run at load", declaration.value.runAtLoad ? "Yes" : "No"),
         Detail("Keep alive", declaration.value.keepAlive ? "Yes" : "No"),
       ]
@@ -502,9 +519,13 @@ public struct ApplicationGraphProjector: Sendable {
         details: details
       )
     }
-    let persistenceRelationships = matchedPersistence.compactMap {
+    let persistenceRelationships = (persistenceResolutions?.observations ?? []).sorted {
+      $0.value.declarationPath < $1.value.declarationPath
+    }.compactMap {
       resolution -> Relationship? in
       guard
+        resolution.value.state == .matched,
+        resolution.value.applicationPaths.count == 1,
         let applicationPath = resolution.value.applicationPaths.first,
         let applicationID = applicationIDsByPath[applicationPath],
         let declaration = declarationsByPath[resolution.value.declarationPath],

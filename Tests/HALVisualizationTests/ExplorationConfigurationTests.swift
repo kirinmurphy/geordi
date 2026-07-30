@@ -56,6 +56,19 @@ struct ExplorationConfigurationTests {
       first.sections.flatMap(\.groups).flatMap(\.entityIDs).allSatisfy {
         graph.entity($0) != nil
       })
+    #expect(
+      Set(
+        first.sections.first { $0.id == "launch-agents" }?
+          .groups.flatMap(\.entityIDs) ?? []
+      ) == Set(["persistence.chatgpt", "persistence.docker"])
+    )
+    #expect(first.unassignedEntityIDs.isEmpty)
+
+    let atlas = presenter.present(graph: FixtureCatalog.atlasMac, context: context)
+    #expect(
+      atlas.sections.first { $0.id == "launch-daemons" }?
+        .groups.flatMap(\.entityIDs) == ["persistence.cutline"]
+    )
   }
 
   @Test("Exploration empty and unresolved states preserve entity IDs")

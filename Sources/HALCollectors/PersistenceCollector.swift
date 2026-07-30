@@ -86,7 +86,7 @@ public struct PersistenceCollector: Sendable {
     for file in files.sorted(by: { $0.path < $1.path })
     where file.pathExtension.caseInsensitiveCompare("plist") == .orderedSame {
       do {
-        let value = try declaration(at: file, kind: root.kind)
+        let value = try declaration(at: file, kind: root.kind, scope: root.scope)
         observations.append(
           CollectedObservation(
             id: ObservationID("persistence:\(file.standardizedFileURL.path)"),
@@ -136,7 +136,8 @@ public struct PersistenceCollector: Sendable {
 
   private func declaration(
     at url: URL,
-    kind: PersistenceDeclarationKind
+    kind: PersistenceDeclarationKind,
+    scope: PersistenceDeclarationScope
   ) throws -> PersistenceDeclarationValue {
     let data = try Data(contentsOf: url, options: .mappedIfSafe)
     guard
@@ -161,6 +162,7 @@ public struct PersistenceCollector: Sendable {
     return PersistenceDeclarationValue(
       declarationPath: url.standardizedFileURL.path,
       kind: kind,
+      scope: scope,
       label: label,
       programPath: program,
       runAtLoad: dictionary["RunAtLoad"] as? Bool ?? false,

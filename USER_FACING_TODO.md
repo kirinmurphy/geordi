@@ -85,6 +85,53 @@ Acceptance criteria:
 - the same captured observations and manifest version produce identical
   sections, ordering, and group membership.
 
+## Priority 1 — Explain background services and daemons
+
+Roadmap: `DAEMON_EXPLAINER_PLAN.md`
+
+Implementation status: Slice 1 completed. Live normalization now preserves
+every valid retained declaration, including unresolved ownership, with its
+configured scope and kind. The startup browser separates unresolved items,
+LaunchDaemons, and LaunchAgents; matched sections are grouped by owning
+software. Loaded and running state remain explicitly unobserved rather than
+being inferred from configuration.
+
+Current gap:
+
+- HAL reads bounded LaunchAgent and LaunchDaemon declarations, but the live
+  graph currently projects only declarations resolved to one application;
+- declaration configuration is not the same as loaded or running state;
+- users cannot yet see user-session agents, system-wide agents, daemons,
+  unresolved ownership, and observed activity in one purpose-built explanation;
+  and
+- absence from a point-in-time process sample cannot prove inactivity.
+
+Completed first slice:
+
+1. Project every retained valid declaration, including unmatched declarations.
+2. Preserve its manifest-defined scope and kind.
+3. Add a deterministic declaration browser grouped by agent/daemon, scope,
+   owner, and unresolved status.
+4. Explain retained activation policy as configuration rather than activity.
+5. Keep loaded and declaration-specific running state explicitly unavailable
+   until dedicated read-only observations exist.
+
+Next implementation slice:
+
+1. Review a bounded, timeout-limited loaded-service observation source.
+2. Add a versioned identity-matching strategy manifest.
+3. Correlate exact declaration executable identity to existing point-in-time
+   process observations without treating absence as inactivity.
+
+Acceptance criteria:
+
+- every retained declaration remains reachable;
+- agents, daemons, owners, and unresolved declarations are visibly distinct;
+- configured, loaded, and running remain separate states;
+- every current-activity claim has captured point-in-time evidence;
+- shuffled equivalent observations produce identical output; and
+- the first slice performs no service mutation or privileged collection.
+
 ## Priority 1 — Explain shell frameworks installed outside package managers
 
 Implementation status: completed in the current development boundary; linked

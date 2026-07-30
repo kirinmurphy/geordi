@@ -5,9 +5,15 @@ public enum PersistenceDeclarationKind: String, Hashable, Codable, Sendable {
   case launchDaemon
 }
 
+public enum PersistenceDeclarationScope: String, Hashable, Codable, Sendable {
+  case system
+  case user
+}
+
 public struct PersistenceDeclarationValue: Hashable, Codable, Sendable {
   public let declarationPath: String
   public let kind: PersistenceDeclarationKind
+  public let scope: PersistenceDeclarationScope
   public let label: String
   public let programPath: String?
   public let runAtLoad: Bool
@@ -16,6 +22,7 @@ public struct PersistenceDeclarationValue: Hashable, Codable, Sendable {
   public init(
     declarationPath: String,
     kind: PersistenceDeclarationKind,
+    scope: PersistenceDeclarationScope,
     label: String,
     programPath: String? = nil,
     runAtLoad: Bool,
@@ -23,6 +30,7 @@ public struct PersistenceDeclarationValue: Hashable, Codable, Sendable {
   ) {
     self.declarationPath = declarationPath
     self.kind = kind
+    self.scope = scope
     self.label = label
     self.programPath = programPath
     self.runAtLoad = runAtLoad

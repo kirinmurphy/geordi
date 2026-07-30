@@ -13,6 +13,13 @@ struct PersistenceCollectorConfigurationTests {
 
     #expect(roots.count == 3)
     #expect(roots.contains { $0.url.path == "/Users/tester/Library/LaunchAgents" })
+    #expect(
+      roots.contains {
+        $0.url.path == "/Library/LaunchDaemons"
+          && $0.kind == .launchDaemon
+          && $0.scope == .system
+      }
+    )
     #expect(!roots.contains { $0.url.path.hasPrefix("/System/Library") })
   }
 

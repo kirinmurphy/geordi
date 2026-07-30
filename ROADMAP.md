@@ -33,6 +33,44 @@ measurement, telemetry, cleanup, or privileged collection in this phase.
 
 Detailed plan: `NEXT_PRODUCT_VALIDATION_PLAN.md`
 
+## Major roadmap initiative — Background services and daemons
+
+### Outcome
+
+A purpose-built explanation of which background services are configured on
+this Mac, which are currently observed acting, what software owns them, why
+macOS may start them, and where HAL lacks enough evidence to decide.
+
+This extends Milestone 3 without waiting for full historical persistence
+tracking. The first useful slice is point-in-time and read-only.
+
+Detailed plan: `DAEMON_EXPLAINER_PLAN.md`
+
+### Product questions
+
+- What is the difference between a LaunchAgent, LaunchDaemon, login item,
+  helper, and ordinary running process?
+- Which declarations are configured for a user session versus the whole
+  system?
+- Which declaration fields ask for launch-at-load, restart, or another
+  activation condition?
+- Is a declared executable currently observed as a process?
+- Which application, package, or signed software identity owns the declaration
+  and executable?
+- Which declarations are unresolved, unreadable, inactive, or ambiguous?
+
+### Exit test
+
+A user can choose an unfamiliar daemon and explain its configured role, current
+observed activity, owner, evidence, and uncertainty without reading a raw
+property list or mistaking configuration for proof that it is running.
+
+### Safety boundary
+
+The explainer is observational. It does not unload, disable, edit, delete, or
+approve a service. Any future control requires a separately reviewed lifecycle,
+authorization, recovery, and system-integrity plan.
+
 ## Milestone 0: repository and interactive concept
 
 ### Outcome
@@ -132,6 +170,8 @@ A comprehensible history of installed software and startup behavior.
 - Application installation, update, and removal changes
 - Orphaned persistence findings
 - Notification history
+- Purpose-built background-services and daemon explanation
+- Explicit separation of declared, loaded, and currently running states
 
 ### Exit test
 

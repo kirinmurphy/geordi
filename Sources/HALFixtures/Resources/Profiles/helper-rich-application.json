@@ -49,7 +49,18 @@
     },
     {
       "details" : [
-
+        {
+          "label" : "Type",
+          "value" : "Launch agent"
+        },
+        {
+          "label" : "Scope",
+          "value" : "User session"
+        },
+        {
+          "label" : "Ownership",
+          "value" : "Matched to one application"
+        }
       ],
       "id" : "persistence.forge",
       "name" : "Forge login helper",

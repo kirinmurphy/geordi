@@ -282,7 +282,18 @@
     },
     {
       "details" : [
-
+        {
+          "label" : "Type",
+          "value" : "Launch agent"
+        },
+        {
+          "label" : "Scope",
+          "value" : "User session"
+        },
+        {
+          "label" : "Ownership",
+          "value" : "Matched to one application"
+        }
       ],
       "id" : "persistence.cloudline",
       "name" : "Cloudline login item",
@@ -291,7 +302,18 @@
     },
     {
       "details" : [
-
+        {
+          "label" : "Type",
+          "value" : "Launch daemon"
+        },
+        {
+          "label" : "Scope",
+          "value" : "System-wide"
+        },
+        {
+          "label" : "Ownership",
+          "value" : "Matched to one application"
+        }
       ],
       "id" : "persistence.cutline",
       "name" : "Cutline update helper",

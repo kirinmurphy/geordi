@@ -34,6 +34,7 @@ struct PersistenceCollectorTests {
 
     let value = try #require(output.observations.first?.value)
     #expect(value.label == "com.example.helper")
+    #expect(value.scope == .user)
     #expect(value.programPath == "/Applications/Example.app/Contents/Helpers/Helper")
     #expect(value.runAtLoad)
     #expect(value.keepAlive)
@@ -156,9 +157,16 @@ struct PersistenceCollectorTests {
     #expect(resolutions.observations.first?.value.confidence == .high)
   }
 
-  @Test("Projection shows only matched declarations with evidence")
+  @Test("Projection preserves matched and unresolved declarations with evidence")
   func projection() throws {
     let root = try temporaryDirectory()
+    try writePlist(
+      [
+        "Label": "com.unresolved.helper",
+        "Program": "/Library/PrivilegedHelperTools/com.unresolved.helper",
+      ],
+      to: root.appending(path: "unresolved.plist")
+    )
     try writePlist(
       [
         "Label": "com.example.helper",
@@ -200,7 +208,12 @@ struct PersistenceCollectorTests {
     )
 
     try snapshot.graph.validate()
-    #expect(snapshot.graph.entities.filter { $0.type == .persistence }.count == 1)
+    let persistence = snapshot.graph.entities.filter { $0.type == .persistence }
+    #expect(persistence.count == 2)
+    #expect(
+      persistence.first { $0.name == "com.unresolved.helper" }?
+        .details.first { $0.label == "Ownership" }?.value == "Unresolved"
+    )
     #expect(snapshot.graph.relationships.first?.type == .persistsThrough)
     #expect(snapshot.graph.relationships.first?.evidence.count == 2)
   }

@@ -217,8 +217,18 @@ struct ExplorationBrowserView: View {
 
   private func entitySubtitle(_ entity: Entity) -> String {
     if entity.type == .persistence {
-      let state = entity.details.first { $0.label == "State" }?.value
-      return ["Startup declaration", state].compactMap { $0 }.joined(separator: " · ")
+      let type = entity.details.first { $0.label == "Type" }?.value ?? "Startup declaration"
+      let scope = entity.details.first { $0.label == "Scope" }?.value
+      let ownership = entity.details.first { $0.label == "Ownership" }?.value
+      let activation = [
+        entity.details.first { $0.label == "Run at load" }?.value == "Yes"
+          ? "run at load configured" : nil,
+        entity.details.first { $0.label == "Keep alive" }?.value == "Yes"
+          ? "restart policy configured" : nil,
+      ].compactMap { $0 }.joined(separator: ", ")
+      return [type, scope, ownership, activation.isEmpty ? nil : activation]
+        .compactMap { $0 }
+        .joined(separator: " · ")
     }
     if let path = entity.details.first(where: {
       ["Path", "Location", "Executable", "Declaration"].contains($0.label)

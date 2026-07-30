@@ -75,21 +75,16 @@ public struct PersistenceCollectorConfiguration: Codable, Hashable, Sendable {
 }
 
 public struct PersistenceRootConfiguration: Codable, Hashable, Sendable {
-  public enum Scope: String, Codable, Hashable, Sendable {
-    case system
-    case user
-  }
-
   public let id: String
   public let path: String
   public let kind: PersistenceDeclarationKind
-  public let scope: Scope
+  public let scope: PersistenceDeclarationScope
 
   public init(
     id: String,
     path: String,
     kind: PersistenceDeclarationKind,
-    scope: Scope
+    scope: PersistenceDeclarationScope
   ) {
     self.id = id
     self.path = path
@@ -115,7 +110,7 @@ public struct PersistenceRootConfiguration: Codable, Hashable, Sendable {
         throw PersistenceCollectorConfigurationError.invalidPath(id)
       }
     }
-    return PersistenceSearchRoot(id: id, url: url, kind: kind)
+    return PersistenceSearchRoot(id: id, url: url, kind: kind, scope: scope)
   }
 }
 
@@ -123,11 +118,18 @@ public struct PersistenceSearchRoot: Hashable, Sendable {
   public let id: String
   public let url: URL
   public let kind: PersistenceDeclarationKind
+  public let scope: PersistenceDeclarationScope
 
-  public init(id: String, url: URL, kind: PersistenceDeclarationKind) {
+  public init(
+    id: String,
+    url: URL,
+    kind: PersistenceDeclarationKind,
+    scope: PersistenceDeclarationScope = .user
+  ) {
     self.id = id
     self.url = url
     self.kind = kind
+    self.scope = scope
   }
 }
 

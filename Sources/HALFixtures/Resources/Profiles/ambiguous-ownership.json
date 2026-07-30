@@ -27,6 +27,18 @@
         {
           "label" : "Why unresolved",
           "value" : "Two durable identities agree equally"
+        },
+        {
+          "label" : "Type",
+          "value" : "Launch daemon"
+        },
+        {
+          "label" : "Scope",
+          "value" : "System-wide"
+        },
+        {
+          "label" : "Ownership",
+          "value" : "Ambiguous"
         }
       ],
       "id" : "persistence.shared",

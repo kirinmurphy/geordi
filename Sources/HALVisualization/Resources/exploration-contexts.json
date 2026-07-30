@@ -33,21 +33,34 @@
       "supportedRelationshipTypes": ["persists through", "launches"],
       "sections": [
         {
-          "id": "owned-declarations",
-          "title": "Declarations with an observed owner",
-          "explanation": "A declaration may ask macOS to start software; it is not a running process.",
+          "id": "unresolved-declarations",
+          "title": "Unresolved declarations",
+          "explanation": "HAL could not connect these declarations to one software entity. They remain visible and navigable.",
+          "entityTypes": ["persistence"],
+          "grouping": "detail",
+          "detailLabel": "Type",
+          "relationshipTypes": ["persists through"],
+          "unresolved": true
+        },
+        {
+          "id": "launch-daemons",
+          "title": "LaunchDaemons by owning software",
+          "explanation": "System-wide declarations may ask macOS to start background software. Configuration does not prove that a daemon is loaded or running.",
           "entityTypes": ["persistence"],
           "grouping": "relationshipOwner",
+          "detailLabel": "Type",
+          "detailValues": ["Launch daemon"],
           "relationshipTypes": ["persists through"]
         },
         {
-          "id": "unresolved-declarations",
-          "title": "Unresolved declarations",
-          "explanation": "HAL could not connect these declarations to one software entity.",
+          "id": "launch-agents",
+          "title": "LaunchAgents by owning software",
+          "explanation": "User-session and system-wide agent declarations are distinct from currently running processes.",
           "entityTypes": ["persistence"],
-          "grouping": "flat",
-          "relationshipTypes": ["persists through"],
-          "unresolved": true
+          "grouping": "relationshipOwner",
+          "detailLabel": "Type",
+          "detailValues": ["Launch agent"],
+          "relationshipTypes": ["persists through"]
         }
       ],
       "drillIn": "boundedRelationships",

@@ -507,7 +507,18 @@
     },
     {
       "details" : [
-
+        {
+          "label" : "Type",
+          "value" : "Launch agent"
+        },
+        {
+          "label" : "Scope",
+          "value" : "User session"
+        },
+        {
+          "label" : "Ownership",
+          "value" : "Matched to one application"
+        }
       ],
       "id" : "persistence.docker",
       "name" : "Docker login item",
@@ -516,7 +527,18 @@
     },
     {
       "details" : [
-
+        {
+          "label" : "Type",
+          "value" : "Launch agent"
+        },
+        {
+          "label" : "Scope",
+          "value" : "User session"
+        },
+        {
+          "label" : "Ownership",
+          "value" : "Matched to one application"
+        }
       ],
       "id" : "persistence.chatgpt",
       "name" : "ChatGPT login item",
