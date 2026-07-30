@@ -644,7 +644,18 @@ private struct OverviewView: View {
           ) {
             ForEach(packageManagers) { manager in
               let applications = managedItems(for: manager, type: .application)
+              let applicationGroups = classifiedApplicationGroups(applications)
               let packages = managedItems(for: manager, type: .package)
+              let requestedPackages = packages.filter {
+                detail("Installation reason", in: $0) == "Installed on request"
+              }
+              let dependencyPackages = packages.filter {
+                detail("Installation reason", in: $0) == "Installed as a dependency"
+              }
+              let unclassifiedPackages = packages.filter {
+                detail("Installation reason", in: $0) == nil
+                  || detail("Installation reason", in: $0) == "Not recorded"
+              }
               InventoryRow(
                 symbol: "shippingbox",
                 tint: EntityVisualStyle.color(for: .packageManager),
@@ -652,44 +663,45 @@ private struct OverviewView: View {
                 trailing: "\(applications.count + packages.count) managed"
               ) { model.focus(manager) }
               if !applications.isEmpty {
-                softwareDisclosureRow(
-                  id: "\(manager.id.rawValue):applications",
-                  title: applications.count == 1 ? "1 app" : "\(applications.count) apps",
-                  symbol: "app",
-                  tint: .blue
-                ) {
-                  ForEach(applications) { application in
-                    InventoryRow(
-                      symbol: "app",
-                      tint: EntityVisualStyle.color(for: .application),
-                      title: application.name,
-                      trailing: "",
-                      applicationPath: detail("Path", in: application),
-                      compact: true
-                    ) { model.focus(application) }
-                    .padding(.leading, 44)
+                ForEach(applicationGroups) { group in
+                  softwareDisclosureRow(
+                    id: "\(manager.id.rawValue):applications:\(group.id)",
+                    title: "\(group.applications.count) \(group.label)",
+                    symbol: "app",
+                    tint: group.tint
+                  ) {
+                    ForEach(group.applications) { application in
+                      InventoryRow(
+                        symbol: "app",
+                        tint: EntityVisualStyle.color(for: .application),
+                        title: application.name,
+                        trailing: "",
+                        applicationPath: detail("Path", in: application),
+                        compact: true
+                      ) { model.focus(application) }
+                      .padding(.leading, 44)
+                    }
                   }
                 }
               }
-              if !packages.isEmpty {
-                softwareDisclosureRow(
-                  id: "\(manager.id.rawValue):packages",
-                  title: packages.count == 1 ? "1 package" : "\(packages.count) packages",
-                  symbol: "cube.box",
-                  tint: .purple
-                ) {
-                  ForEach(packages) { package in
-                    InventoryRow(
-                      symbol: "cube.box",
-                      tint: EntityVisualStyle.color(for: .package),
-                      title: package.name,
-                      trailing: "",
-                      compact: true
-                    ) { model.focus(package) }
-                    .padding(.leading, 44)
-                  }
-                }
-              }
+              softwarePackageGroup(
+                manager: manager,
+                id: "requested-packages",
+                title: "User-installed packages",
+                packages: requestedPackages
+              )
+              softwarePackageGroup(
+                manager: manager,
+                id: "dependency-packages",
+                title: "Dependencies",
+                packages: dependencyPackages
+              )
+              softwarePackageGroup(
+                manager: manager,
+                id: "packages",
+                title: "Packages",
+                packages: unclassifiedPackages
+              )
             }
             ForEach(softwareSourceCategories) { source in
               let sourceApplications = applications(from: source)
@@ -699,7 +711,7 @@ private struct OverviewView: View {
                 title: source.label,
                 trailing: "\(sourceApplications.count) applications"
               ) { model.navigate(to: .applications) }
-              ForEach(appStoreApplicationGroups(sourceApplications), id: \.id) { group in
+              ForEach(classifiedApplicationGroups(sourceApplications), id: \.id) { group in
                 softwareDisclosureRow(
                   id: "\(source.id):\(group.id)",
                   title: "\(group.applications.count) \(group.label)",
@@ -744,31 +756,32 @@ private struct OverviewView: View {
 
         if !commandLineSoftware.isEmpty {
           inventorySection(
-            title: "Other Command-Line Software",
+            title: "Command-Line Inventory",
             subtitle:
-              "\(commandLineSoftware.count) executable tools observed but not capability-classified",
+              "Executable commands organized by their observed installation location",
             symbol: "terminal"
           ) {
             TextField("Search commands", text: $commandSearch)
               .textFieldStyle(.roundedBorder)
               .accessibilityLabel("Search command-line software")
-            if systemCommandCount > 0 {
-              Text("\(systemCommandCount) macOS system commands grouped")
-                .font(.halSecondary.weight(.semibold))
-                .foregroundStyle(.secondary)
-            }
-            DisclosureGroup("Show all discovered commands") {
-              ForEach(Array(filteredCommandLineSoftware.enumerated()), id: \.element.id) {
-                index, software in
-                if index > 0 { Divider() }
-                InventoryRow(
-                  symbol: "terminal",
-                  tint: .secondary,
-                  title: software.name,
-                  trailing: detail("Package", in: software) ?? "Unclassified"
-                ) { model.focus(software) }
+            ForEach(commandLineSourceGroups) { group in
+              softwareDisclosureRow(
+                id: "command-line:\(group.id)",
+                title: "\(group.items.count) \(group.label.lowercased())",
+                symbol: group.symbol,
+                tint: .secondary
+              ) {
+                ForEach(group.items) { software in
+                  InventoryRow(
+                    symbol: "terminal",
+                    tint: .secondary,
+                    title: software.name,
+                    trailing: detail("Executable", in: software) ?? "",
+                    compact: true
+                  ) { model.focus(software) }
+                  .padding(.leading, 44)
+                }
               }
-              .padding(.top, 8)
             }
           }
         }
@@ -831,16 +844,20 @@ private struct OverviewView: View {
           .popover(isPresented: $applicationFilterPresented, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
               ForEach(model.applicationCategoryOptions) { category in
-                applicationFilterOption(
-                  category.filterLabel ?? category.label,
-                  categoryID: category.id
-                )
+                ApplicationFilterOption(
+                  label: category.filterLabel ?? category.label,
+                  isSelected: model.selectedApplicationCategoryID == category.id
+                ) {
+                  selectApplicationCategory(category.id)
+                }
               }
               Divider()
-              applicationFilterOption(
-                configuration.allApplicationsLabel,
-                categoryID: nil
-              )
+              ApplicationFilterOption(
+                label: configuration.allApplicationsLabel,
+                isSelected: model.selectedApplicationCategoryID == nil
+              ) {
+                selectApplicationCategory(nil)
+              }
             }
             .padding(8)
             .frame(minWidth: 220)
@@ -917,8 +934,11 @@ private struct OverviewView: View {
     guard !model.isSynthetic, let configuration = model.applicationClassifications else {
       return []
     }
-    return configuration.categories.filter {
-      $0.kind == .source && $0.showsInSoftwareSources
+    return configuration.categories.filter { source in
+      source.kind == .source && source.showsInSoftwareSources
+        && !packageManagers.contains {
+          $0.id.rawValue == "package-manager:\(source.id)"
+        }
     }
   }
 
@@ -941,10 +961,21 @@ private struct OverviewView: View {
     }
   }
 
-  private func appStoreApplicationGroups(
+  private func classifiedApplicationGroups(
     _ applications: [Entity]
   ) -> [SoftwareApplicationGroup] {
-    guard let classifications = model.applicationClassifications else { return [] }
+    guard let classifications = model.applicationClassifications else {
+      return applications.isEmpty
+        ? []
+        : [
+          SoftwareApplicationGroup(
+            id: "applications",
+            label: applications.count == 1 ? "app" : "apps",
+            tint: EntityVisualStyle.color(for: .application),
+            applications: applications
+          )
+        ]
+    }
     let grouped = Dictionary(grouping: applications) { application in
       guard let path = detail("Path", in: application) else { return "other" }
       return classifications.category(
@@ -972,23 +1003,39 @@ private struct OverviewView: View {
       }
   }
 
-  private func applicationFilterOption(_ label: String, categoryID: String?) -> some View {
-    Button {
-      model.selectedApplicationCategoryID = categoryID
-      applicationFilterPresented = false
-    } label: {
-      HStack {
-        Text(label)
-        Spacer()
-        if model.selectedApplicationCategoryID == categoryID {
-          Image(systemName: "checkmark")
+  private func selectApplicationCategory(_ categoryID: String?) {
+    model.selectedApplicationCategoryID = categoryID
+    applicationFilterPresented = false
+  }
+
+  @ViewBuilder
+  private func softwarePackageGroup(
+    manager: Entity,
+    id: String,
+    title: String,
+    packages: [Entity]
+  ) -> some View {
+    if !packages.isEmpty {
+      softwareDisclosureRow(
+        id: "\(manager.id.rawValue):\(id)",
+        title: "\(packages.count) \(title.lowercased())",
+        symbol: "cube.box",
+        tint: .purple
+      ) {
+        ForEach(packages) { package in
+          InventoryRow(
+            symbol: "cube.box",
+            tint: EntityVisualStyle.color(for: .package),
+            title: package.name,
+            trailing: detail("Runtime dependencies", in: package).map {
+              "Uses \($0)"
+            } ?? "",
+            compact: true
+          ) { model.focus(package) }
+          .padding(.leading, 44)
         }
       }
-      .contentShape(Rectangle())
     }
-    .buttonStyle(.plain)
-    .padding(.horizontal, 10)
-    .padding(.vertical, 7)
   }
 
   @ViewBuilder
@@ -1124,10 +1171,28 @@ private struct OverviewView: View {
     }
   }
 
-  private var systemCommandCount: Int {
-    commandLineSoftware.filter {
-      detail("Discovered from", in: $0) == "macOS system executable directory"
-    }.count
+  private struct CommandLineSourceGroup: Identifiable {
+    let id: String
+    let label: String
+    let symbol: String
+    let items: [Entity]
+  }
+
+  private var commandLineSourceGroups: [CommandLineSourceGroup] {
+    Dictionary(grouping: filteredCommandLineSoftware) {
+      detail("Discovered from", in: $0) ?? "Other command location"
+    }
+    .map { label, items in
+      let isSystem = label.localizedCaseInsensitiveContains("macOS system")
+      let isUser = label.localizedCaseInsensitiveContains("user")
+      return CommandLineSourceGroup(
+        id: label,
+        label: label,
+        symbol: isSystem ? "apple.logo" : (isUser ? "person.crop.circle" : "externaldrive"),
+        items: items
+      )
+    }
+    .sorted { $0.label < $1.label }
   }
 
   private func foundationTrailingDetail(_ entity: Entity) -> String {
@@ -1621,6 +1686,44 @@ struct AppButtonStyle: ButtonStyle {
   }
 }
 
+private struct ApplicationFilterOption: View {
+  let label: String
+  let isSelected: Bool
+  let action: () -> Void
+  @State private var isHovering = false
+
+  var body: some View {
+    Button(action: action) {
+      HStack {
+        Text(label)
+          .font(.halSecondary.weight(isSelected ? .bold : .regular))
+        Spacer()
+        if isSelected {
+          Image(systemName: "checkmark")
+            .font(.halSmall.bold())
+        }
+      }
+      .padding(.horizontal, 10)
+      .padding(.vertical, 8)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
+      .background(
+        !isSelected && isHovering ? Color.accentColor.opacity(0.13) : .clear,
+        in: RoundedRectangle(cornerRadius: 7)
+      )
+    }
+    .buttonStyle(.plain)
+    .onHover { hovering in
+      isHovering = hovering
+      if !isSelected && hovering {
+        NSCursor.pointingHand.set()
+      } else {
+        NSCursor.arrow.set()
+      }
+    }
+  }
+}
+
 private struct InventoryRow: View {
   let symbol: String
   let tint: Color
@@ -1639,12 +1742,18 @@ private struct InventoryRow: View {
           Image(nsImage: NSWorkspace.shared.icon(forFile: applicationPath))
             .resizable()
             .scaledToFit()
-            .frame(width: compact ? 28 : 34, height: compact ? 28 : 34)
+            .frame(
+              width: compact ? HALIconSize.base : HALIconSize.large,
+              height: compact ? HALIconSize.base : HALIconSize.large
+            )
         } else {
           Image(systemName: symbol)
-            .font(.halSubsection)
+            .font(.system(size: HALIconSize.base, weight: .semibold))
             .foregroundStyle(tint)
-            .frame(width: compact ? 28 : 34, height: compact ? 28 : 34)
+            .frame(
+              width: compact ? HALIconSize.base : HALIconSize.large,
+              height: compact ? HALIconSize.base : HALIconSize.large
+            )
             .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
         }
         VStack(alignment: .leading, spacing: 3) {
@@ -2320,7 +2429,8 @@ struct AtlasDetailView: View {
         get: { model.focusedEntity },
         set: { model.focusedEntity = $0 }
       ),
-      configuration: model.configuration.layout
+      configuration: model.configuration.layout,
+      onRecenterEntity: model.focus
     )
   }
 
@@ -2330,7 +2440,11 @@ struct AtlasDetailView: View {
       sourceGraph: model.fixture,
       selection: model.selection,
       onShowEntityTypeInfo: { model.entityTypeReferencePresented = $0 },
-      onOpenEntity: model.focus
+      onOpenEntity: model.focus,
+      canGoBack: model.canGoBackInGraphHistory,
+      canGoForward: model.canGoForwardInGraphHistory,
+      onGoBack: model.goBackInGraphHistory,
+      onGoForward: model.goForwardInGraphHistory
     )
   }
 

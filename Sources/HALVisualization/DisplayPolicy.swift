@@ -18,7 +18,7 @@ public enum DisplayGroupMetadata {
 }
 
 public struct DisplayPolicy: Codable, Hashable, Sendable {
-  public static let currentVersion = 2
+  public static let currentVersion = 3
 
   public let schemaVersion: Int
   public let contexts: [DisplayContextPolicy]
@@ -87,6 +87,7 @@ public struct RelationshipDisplayRule: Codable, Hashable, Sendable {
   public let minimumConfidence: Confidence
   public let groupAfter: Int?
   public let groupLabel: String?
+  public let groupByDetailLabel: String?
   public let traversalDepth: Int?
 
   public init(
@@ -95,6 +96,7 @@ public struct RelationshipDisplayRule: Codable, Hashable, Sendable {
     minimumConfidence: Confidence,
     groupAfter: Int? = nil,
     groupLabel: String? = nil,
+    groupByDetailLabel: String? = nil,
     traversalDepth: Int = 1
   ) {
     self.type = type
@@ -102,6 +104,7 @@ public struct RelationshipDisplayRule: Codable, Hashable, Sendable {
     self.minimumConfidence = minimumConfidence
     self.groupAfter = groupAfter
     self.groupLabel = groupLabel
+    self.groupByDetailLabel = groupByDetailLabel
     self.traversalDepth = traversalDepth
   }
 }
@@ -149,38 +152,54 @@ public struct DisplayPolicyPresenter: Sendable {
         continue
       }
       if let threshold = rule.groupAfter, candidates.count >= threshold {
-        let members = candidates.compactMap { counterpart(for: $0.0, center: center, graph: graph) }
-        guard !members.isEmpty else { continue }
-        let groupID = EntityID("display-group:\(center.rawValue):\(rule.type.rawValue)")
-        let label = rule.groupLabel ?? rule.type.rawValue
-        entities.append(
-          Entity(
-            id: groupID,
-            type: members[0].type,
-            name: "\(members.count) \(label)",
-            summary: "\(members.count) nodes grouped to keep this map readable.",
-            details: [
-              Detail(
-                DisplayGroupMetadata.memberIDsLabel,
-                members.map(\.id.rawValue).sorted().joined(separator: "\n")
-              )
-            ]
+        let partitions = Dictionary(grouping: candidates) { candidate in
+          guard let detailLabel = rule.groupByDetailLabel else {
+            return rule.groupLabel ?? rule.type.rawValue
+          }
+          return counterpart(for: candidate.0, center: center, graph: graph)?
+            .details.first { $0.label == detailLabel }?.value
+            ?? rule.groupLabel ?? rule.type.rawValue
+        }
+        for label in partitions.keys.sorted().prefix(remaining) {
+          guard let partition = partitions[label] else { continue }
+          let members = partition.compactMap {
+            counterpart(for: $0.0, center: center, graph: graph)
+          }
+          guard !members.isEmpty else { continue }
+          let groupKey =
+            label.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? label
+          let groupID = EntityID(
+            "display-group:\(center.rawValue):\(rule.type.rawValue):\(groupKey)"
           )
-        )
-        let first = candidates[0].0
-        relationships.append(
-          Relationship(
-            id: RelationshipID("display-group:\(first.id.rawValue)"),
-            source: first.source == center ? center : groupID,
-            target: first.source == center ? groupID : center,
-            type: first.type,
-            confidence: candidates.map(\.0.confidence).min() ?? first.confidence,
-            explanation:
-              "\(members.count) similar relationships are grouped to keep this map readable.",
-            evidence: candidates.flatMap(\.0.evidence)
+          entities.append(
+            Entity(
+              id: groupID,
+              type: members[0].type,
+              name: "\(members.count) \(label)",
+              summary: "\(members.count) nodes grouped to keep this map readable.",
+              details: [
+                Detail(
+                  DisplayGroupMetadata.memberIDsLabel,
+                  members.map(\.id.rawValue).sorted().joined(separator: "\n")
+                )
+              ]
+            )
           )
-        )
-        remaining -= 1
+          let first = partition[0].0
+          relationships.append(
+            Relationship(
+              id: RelationshipID("display-group:\(first.id.rawValue)"),
+              source: first.source == center ? center : groupID,
+              target: first.source == center ? groupID : center,
+              type: first.type,
+              confidence: partition.map(\.0.confidence).min() ?? first.confidence,
+              explanation:
+                "\(members.count) similar relationships are grouped to keep this map readable.",
+              evidence: partition.flatMap(\.0.evidence)
+            )
+          )
+          remaining -= 1
+        }
       } else {
         for candidate in candidates.prefix(remaining) {
           guard let entity = counterpart(for: candidate.0, center: center, graph: graph) else {

@@ -50,6 +50,16 @@ struct HomebrewCollectorTests {
       at: cellar.appending(path: "node/22.1.0", directoryHint: .isDirectory),
       withIntermediateDirectories: true
     )
+    try Data(
+      """
+      {"installed_on_request":true,"runtime_dependencies":[{"full_name":"wget"}]}
+      """.utf8
+    ).write(to: cellar.appending(path: "node/22.1.0/INSTALL_RECEIPT.json"))
+    try Data(
+      """
+      {"installed_on_request":false,"runtime_dependencies":[]}
+      """.utf8
+    ).write(to: cellar.appending(path: "wget/1.2.3/INSTALL_RECEIPT.json"))
     defer { try? FileManager.default.removeItem(at: root) }
 
     let output = HomebrewCollector(
@@ -68,8 +78,17 @@ struct HomebrewCollectorTests {
     #expect(output.run.state == .complete)
     #expect(
       output.observations.first?.value.packages == [
-        HomebrewPackageValue(name: "node", versions: ["22.1.0"]),
-        HomebrewPackageValue(name: "wget", versions: ["1.2.3"]),
+        HomebrewPackageValue(
+          name: "node",
+          versions: ["22.1.0"],
+          installedOnRequest: true,
+          runtimeDependencies: ["wget"]
+        ),
+        HomebrewPackageValue(
+          name: "wget",
+          versions: ["1.2.3"],
+          installedOnRequest: false
+        ),
       ])
   }
 
@@ -272,5 +291,77 @@ struct HomebrewCollectorTests {
     #expect(snapshot.graph.entities.contains { $0.type == .package && $0.name == "wget" })
     #expect(snapshot.graph.relationships.first?.type == .owns)
     #expect(snapshot.graph.relationships.first?.confidence == .confirmed)
+  }
+
+  @Test("Projection preserves receipt-backed dependency relationships")
+  func dependencyProjection() throws {
+    let inventory = CollectedObservation(
+      id: ObservationID("homebrew"),
+      scanID: ScanID("scan"),
+      collectorID: HomebrewCollector.id,
+      schemaVersion: HomebrewCollector.version,
+      observedAt: timestamp,
+      subject: SubjectIdentity(
+        primary: IdentityClaim(kind: .canonicalPath, value: "/opt/homebrew")
+      ),
+      value: HomebrewInventoryValue(
+        prefix: "/opt/homebrew",
+        cellarPath: "/opt/homebrew/Cellar",
+        packages: [
+          HomebrewPackageValue(
+            name: "tmux",
+            versions: ["3.7"],
+            installedOnRequest: true,
+            runtimeDependencies: ["libevent"]
+          ),
+          HomebrewPackageValue(
+            name: "libevent",
+            versions: ["2.1"],
+            installedOnRequest: false
+          ),
+        ]
+      )
+    )
+    let applications = CollectorOutput<ApplicationBundleValue>(
+      run: CollectorRun(
+        collectorID: ApplicationBundleCollector.id,
+        collectorVersion: 1,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: []
+    )
+    let homebrew = CollectorOutput(
+      run: CollectorRun(
+        collectorID: HomebrewCollector.id,
+        collectorVersion: HomebrewCollector.version,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: [inventory]
+    )
+
+    let graph = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: applications,
+      homebrew: homebrew
+    ).graph
+
+    #expect(
+      graph.entity("package:homebrew:/opt/homebrew:tmux")?.details.contains {
+        $0.label == "Installation reason" && $0.value == "Installed on request"
+      } == true
+    )
+    #expect(
+      graph.relationships.contains {
+        $0.source == "package:homebrew:/opt/homebrew:tmux"
+          && $0.target == "package:homebrew:/opt/homebrew:libevent"
+          && $0.type == .consumes
+      }
+    )
   }
 }

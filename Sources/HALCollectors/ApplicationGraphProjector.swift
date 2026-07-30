@@ -21,7 +21,8 @@ public struct ApplicationGraphProjector: Sendable {
     runtimes: CollectorOutput<RuntimeValue>? = nil,
     packageEcosystems: CollectorOutput<PackageEcosystemInventoryValue>? = nil,
     commandLineSoftware: CollectorOutput<CommandLineSoftwareValue>? = nil,
-    shellFrameworks: CollectorOutput<ShellFrameworkValue>? = nil
+    shellFrameworks: CollectorOutput<ShellFrameworkValue>? = nil,
+    applicationClassifications: ApplicationClassificationConfiguration? = nil
   ) -> GraphSnapshot {
     let signaturesByPath = Dictionary(
       uniqueKeysWithValues: (signatures?.observations ?? []).map {
@@ -68,6 +69,14 @@ public struct ApplicationGraphProjector: Sendable {
           Detail("Installed with", "Homebrew cask \(match.cask.token)")
         )
       }
+      if let applicationClassifications {
+        let category = applicationClassifications.category(
+          forApplicationPath: value.path,
+          platformBinary: signaturesByPath[value.path]?.platformBinary,
+          details: applicationDetails
+        )
+        applicationDetails.append(Detail("Display group", category.label))
+      }
       return Entity(
         id: entityID(for: observation),
         type: .application,
@@ -81,6 +90,51 @@ public struct ApplicationGraphProjector: Sendable {
         ($0.value.path, entityID(for: $0))
       }
     )
+    let appStoreApplications = output.observations.filter { application in
+      provenanceByPath[application.value.path]?.facts.contains {
+        $0.kind == .appStoreReceipt && $0.status == .present
+      } == true
+    }
+    let appStoreManagerEntities: [Entity] =
+      appStoreApplications.isEmpty
+      ? []
+      : [
+        Entity(
+          id: "package-manager:app-store",
+          type: .packageManager,
+          name: "App Store",
+          summary: "Applications managed through observed Mac App Store receipts.",
+          details: [
+            Detail("Installed applications", "\(appStoreApplications.count)"),
+            Detail("Ownership evidence", "Application bundle receipts"),
+          ]
+        )
+      ]
+    let appStoreRelationships = appStoreApplications.compactMap { application -> Relationship? in
+      guard
+        let provenanceObservation = provenance?.observations.first(where: {
+          $0.value.applicationPath == application.value.path
+        })
+      else { return nil }
+      return Relationship(
+        id: RelationshipID("app-store-application:\(entityID(for: application).rawValue)"),
+        source: "package-manager:app-store",
+        target: entityID(for: application),
+        type: .owns,
+        confidence: .confirmed,
+        explanation: "The application bundle contains a Mac App Store receipt.",
+        evidence: [
+          Evidence(
+            id: "\(provenanceObservation.id.rawValue):app-store-ownership",
+            kind: .observed,
+            summary: "A receipt file was present at the declared Mac App Store receipt location.",
+            source: "Read-only application bundle receipt location",
+            observationID: provenanceObservation.id,
+            observedAt: provenanceObservation.observedAt
+          )
+        ]
+      )
+    }
     let presentAssociations = preferredPresentAssociations(
       associatedLocations?.observations ?? []
     )
@@ -288,13 +342,16 @@ public struct ApplicationGraphProjector: Sendable {
           )
         )
       }
+      let entityName =
+        switch observation.value.kind {
+        case "toolchain": "\(observation.value.label) Toolchain"
+        case "compiler": observation.value.label
+        default: "\(observation.value.label) Runtime"
+        }
       return Entity(
         id: EntityID("runtime-availability:\(observation.value.runtimeID)"),
         type: .package,
-        name:
-          observation.value.kind == "toolchain"
-          ? "\(observation.value.label) Toolchain"
-          : "\(observation.value.label) Runtime",
+        name: entityName,
         summary: matchingProcesses.isEmpty
           ? "An executable tool was observed and answered a version query; no active process was observed."
           : "An executable tool was observed with \(matchingProcesses.count) active process instance(s).",
@@ -507,16 +564,46 @@ public struct ApplicationGraphProjector: Sendable {
       } ?? []
     let homebrewPackageEntities = (homebrew?.observations ?? []).flatMap { observation in
       observation.value.packages.map { package in
-        Entity(
+        let installationReason =
+          switch package.installedOnRequest {
+          case true: "Installed on request"
+          case false: "Installed as a dependency"
+          case nil: "Not recorded"
+          }
+        var details = [
+          Detail("Package manager", "Homebrew"),
+          Detail("Installed versions", package.versions.joined(separator: ", ")),
+          Detail("Cellar", observation.value.cellarPath),
+        ]
+        details.append(
+          Detail(
+            "Installation reason",
+            installationReason
+          )
+        )
+        if !package.runtimeDependencies.isEmpty {
+          details.append(
+            Detail("Runtime dependencies", package.runtimeDependencies.joined(separator: ", "))
+          )
+        }
+        let displayGroup =
+          switch package.installedOnRequest {
+          case true: "User-installed packages"
+          case false: "Dependencies"
+          case nil: "Packages"
+          }
+        details.append(
+          Detail(
+            "Display group",
+            displayGroup
+          )
+        )
+        return Entity(
           id: homebrewPackageEntityID(prefix: observation.value.prefix, name: package.name),
           type: .package,
           name: package.name,
           summary: "A formula installed in the observed Homebrew Cellar.",
-          details: [
-            Detail("Package manager", "Homebrew"),
-            Detail("Installed versions", package.versions.joined(separator: ", ")),
-            Detail("Cellar", observation.value.cellarPath),
-          ]
+          details: details
         )
       }
     }
@@ -545,6 +632,42 @@ public struct ApplicationGraphProjector: Sendable {
             )
           ]
         )
+      }
+    }
+    let homebrewDependencyRelationships = (homebrew?.observations ?? []).flatMap { observation in
+      let installedNames = Set(observation.value.packages.map(\.name))
+      return observation.value.packages.flatMap { package in
+        package.runtimeDependencies.compactMap { dependency -> Relationship? in
+          guard installedNames.contains(dependency) else { return nil }
+          return Relationship(
+            id: RelationshipID(
+              "homebrew-runtime-dependency:\(observation.value.prefix):\(package.name):\(dependency)"
+            ),
+            source: homebrewPackageEntityID(
+              prefix: observation.value.prefix,
+              name: package.name
+            ),
+            target: homebrewPackageEntityID(
+              prefix: observation.value.prefix,
+              name: dependency
+            ),
+            type: .consumes,
+            confidence: .confirmed,
+            explanation:
+              "\(package.name) declares \(dependency) as an installed runtime dependency.",
+            evidence: [
+              Evidence(
+                id: "\(observation.id.rawValue):dependency:\(package.name):\(dependency)",
+                kind: .observed,
+                summary:
+                  "The installed formula receipt lists \(dependency) in runtime_dependencies.",
+                source: "Read-only Homebrew INSTALL_RECEIPT.json",
+                observationID: observation.id,
+                observedAt: observation.observedAt
+              )
+            ]
+          )
+        }
       }
     }
     let homebrewCaskEntities = (homebrew?.observations ?? []).flatMap { observation in
@@ -920,7 +1043,7 @@ public struct ApplicationGraphProjector: Sendable {
       collectorRuns.append(shellFrameworks.run)
     }
     let concreteManagerIDs = Set(
-      (homebrewManagerEntities + ecosystemManagerEntities).map(\.id)
+      (homebrewManagerEntities + ecosystemManagerEntities + appStoreManagerEntities).map(\.id)
     )
     let graph = SystemGraph(
       metadata: FixtureMetadata(
@@ -935,13 +1058,16 @@ public struct ApplicationGraphProjector: Sendable {
         + rebuildableManagerEntities.values.filter {
           !concreteManagerIDs.contains($0.id)
         }
-        + homebrewManagerEntities + homebrewPackageEntities + homebrewCaskEntities + runtimeEntities
+        + homebrewManagerEntities + appStoreManagerEntities + homebrewPackageEntities
+        + homebrewCaskEntities + runtimeEntities
         + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities
         + shellFrameworkEntities + shellProcessEntities,
       relationships:
         processRelationships + persistenceRelationships + relationships
         + rebuildableManagerRelationships + homebrewPackageRelationships
+        + homebrewDependencyRelationships
         + homebrewCaskRelationships + homebrewApplicationRelationships
+        + appStoreRelationships
         + ecosystemRelationships + runtimeInstallationRelationships
         + commandLineRelationships + shellProcessRelationships
     )

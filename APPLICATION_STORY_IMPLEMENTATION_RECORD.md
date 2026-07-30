@@ -191,6 +191,39 @@ Bundle dates older than `.AppleSetupDone` are described as **Predates setup
 marker**, because migration or restoration can preserve a date older than the
 current Mac setup marker.
 
+## July 30 software-architecture refinement
+
+HAL now requires a successful, timeout-bounded version response before
+presenting an executable as an installed runtime. This prevents Apple's
+`/usr/bin/java` and `/usr/bin/javac` launcher stubs from appearing as available
+Java installations when they report that no Java runtime exists.
+
+Homebrew formula inventory remains filesystem-only and now reads bounded local
+`INSTALL_RECEIPT.json` files. The receipt's `installed_on_request` property
+separates **User-installed packages** from **Dependencies**, while
+`runtime_dependencies` creates confirmed package-to-dependency relationships.
+These are Homebrew receipt claims, not LLM classifications and not a claim that
+dependency formulae were bundled with Homebrew itself.
+
+The semantic graph columns moved to a versioned, validated manifest. The former
+Software column is split into **Applications & Frameworks** and **Packages &
+Developer Tools** without inventing new entity types. Dense ownership grouping
+can use a manifest-selected entity detail, allowing Homebrew and App Store
+views to group nodes by the same categories shown on the homepage.
+
+Changing the graph's center is now a separate lifecycle action from selecting a
+node in the current graph. Nodes offer **See all** to redraw around that entity,
+and the inspector retains back/forward history for those universe changes.
+
+The application Origin Story presents its ordinary application path as a
+compact path-action row. Separate provenance artifacts, such as Homebrew
+Caskroom nodes, retain the filesystem tree treatment.
+
+HAL's shared visual scale now defines `sm`, `base`, `large`, `xl`, and `2xl`
+text sizes plus small, base, large, and extra-large icon sizes. The minimum text
+role increased to 14 points, homepage list icons use the larger shared base
+scale, and generic application nodes use the idiomatic multiple-window symbol.
+
 The completed refinement boundary passed strict formatting, 140 tests across
 27 suites, all seven synthetic-profile validations, Debug build, native bundle
 packaging, and UI bundle smoke validation. The verified build was installed at

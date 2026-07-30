@@ -34,6 +34,8 @@ struct HALApp: App {
           let commandLineSoftwareConfiguration =
             try CommandLineSoftwareConfiguration.bundled()
           let shellFrameworkConfiguration = try ShellFrameworkConfiguration.bundled()
+          let applicationClassifications =
+            try ApplicationClassificationConfiguration.bundled()
           return try ApplicationInventorySnapshotProvider(
             scanID: ScanID("live-\(UUID().uuidString)"),
             configuration: collectorConfiguration,
@@ -46,7 +48,8 @@ struct HALApp: App {
             runtimeConfiguration: runtimeConfiguration,
             packageEcosystemConfiguration: packageEcosystemConfiguration,
             commandLineSoftwareConfiguration: commandLineSoftwareConfiguration,
-            shellFrameworkConfiguration: shellFrameworkConfiguration
+            shellFrameworkConfiguration: shellFrameworkConfiguration,
+            applicationClassifications: applicationClassifications
           ).snapshot()
         }
       )
@@ -132,6 +135,8 @@ final class AppModel {
   var referencePresented = false
   var entityTypeReferencePresented: EntityType?
   var selectedApplicationCategoryID: String?
+  private(set) var graphHistory: [EntityID] = []
+  private(set) var graphHistoryIndex = -1
 
   init(
     configuration: AppConfiguration,
@@ -560,6 +565,13 @@ final class AppModel {
 
   func navigate(to destination: Destination) {
     self.destination = destination
+    if case .entity = destination {
+      // Entity lifecycle history is recorded by focus(_:), where the concrete
+      // entity and its visible relationship types are both available.
+    } else {
+      graphHistory = []
+      graphHistoryIndex = -1
+    }
     switch destination {
     case .overview:
       selection = nil
@@ -581,6 +593,44 @@ final class AppModel {
   }
 
   func focus(_ entity: Entity) {
+    if graphHistoryIndex < graphHistory.count - 1 {
+      graphHistory.removeSubrange((graphHistoryIndex + 1)..<graphHistory.count)
+    }
+    if graphHistory.last != entity.id {
+      graphHistory.append(entity.id)
+    }
+    graphHistoryIndex = graphHistory.count - 1
+    showEntityUniverse(entity)
+  }
+
+  var canGoBackInGraphHistory: Bool {
+    graphHistoryIndex > 0
+  }
+
+  var canGoForwardInGraphHistory: Bool {
+    graphHistoryIndex >= 0 && graphHistoryIndex < graphHistory.count - 1
+  }
+
+  func goBackInGraphHistory() {
+    guard canGoBackInGraphHistory else { return }
+    graphHistoryIndex -= 1
+    showHistoricalEntity()
+  }
+
+  func goForwardInGraphHistory() {
+    guard canGoForwardInGraphHistory else { return }
+    graphHistoryIndex += 1
+    showHistoricalEntity()
+  }
+
+  private func showHistoricalEntity() {
+    guard graphHistory.indices.contains(graphHistoryIndex),
+      let entity = fixture.entity(graphHistory[graphHistoryIndex])
+    else { return }
+    showEntityUniverse(entity)
+  }
+
+  private func showEntityUniverse(_ entity: Entity) {
     visibleTypes.insert(entity.type)
     if entity.type == .packageManager {
       let connectedTypes = fixture.relationships(connectedTo: entity.id).compactMap {

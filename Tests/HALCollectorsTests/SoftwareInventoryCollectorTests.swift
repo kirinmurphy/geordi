@@ -13,6 +13,43 @@ struct SoftwareInventoryCollectorTests {
     #expect(ecosystems.ecosystems.map(\.id) == ["npm", "pypi"])
   }
 
+  @Test("Executable stubs that fail version queries are not installed runtimes")
+  func failedVersionQueryIsUnavailable() throws {
+    let home = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let executable = home.appending(path: ".local/bin/java")
+    try FileManager.default.createDirectory(
+      at: executable.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
+    try Data("#!/bin/sh\nexit 1\n".utf8).write(to: executable)
+    try FileManager.default.setAttributes(
+      [.posixPermissions: 0o755],
+      ofItemAtPath: executable.path
+    )
+    defer { try? FileManager.default.removeItem(at: home) }
+    let configuration = RuntimeCollectorConfiguration(
+      runtimes: [
+        RuntimeDefinition(
+          id: "java",
+          label: "Java",
+          kind: .runtime,
+          executableCandidates: [
+            RuntimeExecutableCandidate(path: "$USER_HOME/.local/bin/java", scope: .user)
+          ],
+          versionArguments: ["-version"]
+        )
+      ]
+    )
+
+    let output = RuntimeCollector(
+      configuration: configuration,
+      userHome: home
+    ).collect(scanID: "scan")
+
+    #expect(output.observations.isEmpty)
+  }
+
   @Test("npm packages are derived from package metadata")
   func npmPackages() throws {
     let home = FileManager.default.temporaryDirectory

@@ -9,12 +9,33 @@ struct InspectorView: View {
   let selection: GraphSelection?
   let onShowEntityTypeInfo: (EntityType) -> Void
   let onOpenEntity: (Entity) -> Void
+  let canGoBack: Bool
+  let canGoForward: Bool
+  let onGoBack: () -> Void
+  let onGoForward: () -> Void
   private let glossary = try? Glossary.bundled()
   private let displayProfile = try? InspectorDisplayProfile.bundled()
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 18) {
+        HStack(spacing: 8) {
+          Button(action: onGoBack) {
+            Image(systemName: "chevron.left")
+          }
+          .disabled(!canGoBack)
+          .help("Previous relationship-map view")
+          Button(action: onGoForward) {
+            Image(systemName: "chevron.right")
+          }
+          .disabled(!canGoForward)
+          .help("Next relationship-map view")
+          Text("Map history")
+            .font(.halSmall.weight(.semibold))
+            .foregroundStyle(.secondary)
+          Spacer()
+        }
+        .buttonStyle(.bordered)
         if let selection {
           switch selection.value {
           case .entity(let id):

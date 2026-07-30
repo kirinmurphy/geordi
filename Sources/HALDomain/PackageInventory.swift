@@ -3,10 +3,32 @@ import Foundation
 public struct HomebrewPackageValue: Hashable, Codable, Sendable {
   public let name: String
   public let versions: [String]
+  public let installedOnRequest: Bool?
+  public let runtimeDependencies: [String]
 
-  public init(name: String, versions: [String]) {
+  public init(
+    name: String,
+    versions: [String],
+    installedOnRequest: Bool? = nil,
+    runtimeDependencies: [String] = []
+  ) {
     self.name = name
     self.versions = versions
+    self.installedOnRequest = installedOnRequest
+    self.runtimeDependencies = runtimeDependencies
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case name, versions, installedOnRequest, runtimeDependencies
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    name = try container.decode(String.self, forKey: .name)
+    versions = try container.decode([String].self, forKey: .versions)
+    installedOnRequest = try container.decodeIfPresent(Bool.self, forKey: .installedOnRequest)
+    runtimeDependencies =
+      try container.decodeIfPresent([String].self, forKey: .runtimeDependencies) ?? []
   }
 }
 

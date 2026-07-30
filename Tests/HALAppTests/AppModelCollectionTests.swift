@@ -241,6 +241,41 @@ struct AppModelCollectionTests {
     #expect(model.applicationSourceLabel(nord) == "App Store managed")
   }
 
+  @Test("Relationship-map universe navigation preserves back and forward history")
+  func graphUniverseHistory() {
+    let unused = snapshot(id: "unused", entityName: "Unused")
+    let model = makeModel(preferences: MemoryPreferences()) { unused }
+    let first = Entity(id: "first", type: .packageManager, name: "Homebrew", summary: "Manager")
+    let second = Entity(id: "second", type: .package, name: "Go", summary: "Package")
+    model.fixture = SystemGraph(
+      metadata: FixtureMetadata(id: "history", name: "History", summary: "History"),
+      entities: [first, second],
+      relationships: [
+        Relationship(
+          id: "owns",
+          source: first.id,
+          target: second.id,
+          type: .owns,
+          confidence: .confirmed,
+          explanation: "Homebrew owns Go.",
+          evidence: []
+        )
+      ]
+    )
+
+    model.focus(first)
+    model.focus(second)
+    #expect(model.destination == .entity(second.id))
+    #expect(model.canGoBackInGraphHistory)
+
+    model.goBackInGraphHistory()
+    #expect(model.destination == .entity(first.id))
+    #expect(model.canGoForwardInGraphHistory)
+
+    model.goForwardInGraphHistory()
+    #expect(model.destination == .entity(second.id))
+  }
+
   @Test("Linked storage and performance views use collected entity types")
   func linkedDestinationScopes() throws {
     let date = Date(timeIntervalSince1970: 1_700_000_000)

@@ -134,26 +134,42 @@ struct ApplicationStoryView: View {
         calmEmpty("HAL does not have enough retained evidence to name an installation source.")
       } else {
         ForEach(orderedProvenance) { detail in
-          HStack(alignment: .firstTextBaseline) {
-            Text(detail.label)
-              .foregroundStyle(.secondary)
-            Spacer()
+          originRow(label: detail.label) {
             Text(detail.value)
               .fontWeight(.semibold)
               .textSelection(.enabled)
           }
-          .padding(12)
-          .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
         }
       }
-      ApplicationStoryFilesystemTree(
-        items: [ApplicationStoryTreeItem(entity: application)]
-          + story.owners.map {
+      if let path = application.details.first(where: { $0.label == "Path" })?.value {
+        originRow(label: "File path") {
+          PathActionMenu(path: path)
+            .fontWeight(.semibold)
+        }
+      }
+      if !story.owners.isEmpty {
+        ApplicationStoryFilesystemTree(
+          items: story.owners.map {
             ApplicationStoryTreeItem(entity: $0.entity, relationship: $0.relationship)
           },
-        inspect: model.focus
-      )
+          inspect: model.focus
+        )
+      }
     }
+  }
+
+  private func originRow<Content: View>(
+    label: String,
+    @ViewBuilder content: () -> Content
+  ) -> some View {
+    HStack(alignment: .firstTextBaseline) {
+      Text(label)
+        .foregroundStyle(.secondary)
+      Spacer()
+      content()
+    }
+    .padding(12)
+    .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
   }
 
   private var orderedProvenance: [Detail] {

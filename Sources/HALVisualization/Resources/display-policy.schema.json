@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/display-policy-v2.json",
+  "$id": "https://hal.local/schemas/display-policy-v3.json",
   "title": "HAL display policy",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "contexts"],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "contexts": {
       "type": "array",
       "minItems": 1,
@@ -45,6 +45,7 @@
         },
         "groupAfter": { "type": "integer", "minimum": 2 },
         "groupLabel": { "type": "string", "minLength": 1 },
+        "groupByDetailLabel": { "type": "string", "minLength": 1 },
         "traversalDepth": { "type": "integer", "minimum": 1, "maximum": 4 }
       },
       "dependentRequired": {

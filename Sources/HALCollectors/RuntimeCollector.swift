@@ -52,11 +52,32 @@ public struct RuntimeDefinition: Codable, Hashable, Sendable, Identifiable {
   public let packageIdentities: [RuntimePackageIdentity]
   public let executableCandidates: [RuntimeExecutableCandidate]
   public let versionArguments: [String]
+
+  public init(
+    id: String,
+    label: String,
+    kind: Kind,
+    packageIdentities: [RuntimePackageIdentity] = [],
+    executableCandidates: [RuntimeExecutableCandidate],
+    versionArguments: [String]
+  ) {
+    self.id = id
+    self.label = label
+    self.kind = kind
+    self.packageIdentities = packageIdentities
+    self.executableCandidates = executableCandidates
+    self.versionArguments = versionArguments
+  }
 }
 
 public struct RuntimePackageIdentity: Codable, Hashable, Sendable {
   public let managerID: String
   public let packageName: String
+
+  public init(managerID: String, packageName: String) {
+    self.managerID = managerID
+    self.packageName = packageName
+  }
 }
 
 public struct RuntimeExecutableCandidate: Codable, Hashable, Sendable {
@@ -67,6 +88,11 @@ public struct RuntimeExecutableCandidate: Codable, Hashable, Sendable {
 
   public let path: String
   public let scope: Scope
+
+  public init(path: String, scope: Scope) {
+    self.path = path
+    self.scope = scope
+  }
 
   fileprivate func resolved(userHome: URL) -> URL? {
     switch scope {
@@ -129,6 +155,9 @@ public struct RuntimeCollector: Sendable {
       }).first(where: { FileManager.default.isExecutableFile(atPath: $0.path) })
     else { return nil }
     let resolved = executable.resolvingSymlinksInPath().standardizedFileURL
+    guard let version = version(executable: executable, arguments: runtime.versionArguments) else {
+      return nil
+    }
     return CollectedObservation(
       id: ObservationID("runtime:\(runtime.id):\(executable.path)"),
       scanID: scanID,
@@ -148,7 +177,7 @@ public struct RuntimeCollector: Sendable {
         },
         executablePath: executable.path,
         resolvedExecutablePath: resolved.path,
-        version: version(executable: executable, arguments: runtime.versionArguments)
+        version: version
       )
     )
   }

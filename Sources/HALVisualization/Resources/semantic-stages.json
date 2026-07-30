@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stages": [
+    {
+      "id": "context",
+      "title": "CONTEXT & SOURCES",
+      "tint": "indigo",
+      "types": ["event", "packageManager"]
+    },
+    {
+      "id": "applications",
+      "title": "APPLICATIONS & FRAMEWORKS",
+      "tint": "blue",
+      "types": ["application", "shellFramework"]
+    },
+    {
+      "id": "packages",
+      "title": "PACKAGES & DEVELOPER TOOLS",
+      "tint": "purple",
+      "types": ["package"]
+    },
+    {
+      "id": "runtime",
+      "title": "RUNTIME & STARTUP",
+      "tint": "cyan",
+      "types": ["process", "persistence"]
+    },
+    {
+      "id": "data",
+      "title": "DATA",
+      "tint": "green",
+      "types": ["file"]
+    },
+    {
+      "id": "impact",
+      "title": "IMPACT",
+      "tint": "orange",
+      "types": ["resource", "incident"]
+    }
+  ]
+}

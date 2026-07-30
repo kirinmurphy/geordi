@@ -163,6 +163,57 @@ struct ApplicationProvenanceCollectorTests {
       ])
   }
 
+  @Test("Present App Store receipts project a navigable software source")
+  func appStoreSourceProjection() {
+    let application = applicationOutput()
+    let provenance = CollectorOutput(
+      run: CollectorRun(
+        collectorID: ApplicationProvenanceCollector.id,
+        collectorVersion: ApplicationProvenanceCollector.version,
+        availability: .available,
+        state: .complete,
+        startedAt: timestamp,
+        completedAt: timestamp
+      ),
+      observations: [
+        CollectedObservation(
+          id: "provenance",
+          scanID: "scan",
+          collectorID: ApplicationProvenanceCollector.id,
+          schemaVersion: ApplicationProvenanceCollector.version,
+          observedAt: timestamp,
+          subject: application.observations[0].subject,
+          value: ApplicationProvenanceValue(
+            applicationPath: "/Applications/Example.app",
+            facts: [
+              ApplicationProvenanceFact(
+                kind: .appStoreReceipt,
+                displayLabel: "App Store receipt",
+                status: .present,
+                source: "Test"
+              )
+            ]
+          )
+        )
+      ]
+    )
+
+    let graph = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: application,
+      provenance: provenance
+    ).graph
+
+    #expect(graph.entity("package-manager:app-store")?.name == "App Store")
+    #expect(
+      graph.relationships.contains {
+        $0.source == "package-manager:app-store"
+          && $0.target == "application:bundleIdentifier:com.example.application"
+          && $0.type == .owns
+      }
+    )
+  }
+
   private func applicationOutput() -> CollectorOutput<ApplicationBundleValue> {
     let value = ApplicationBundleValue(
       path: "/Applications/Example.app",

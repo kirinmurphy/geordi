@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "contexts": [
     {
       "id": "applicationDetail",
@@ -38,7 +38,7 @@
       "id": "entityDetail",
       "nodeBudget": 16,
       "relationships": [
-        { "type": "owns", "priority": 100, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "owned items" },
+        { "type": "owns", "priority": 100, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "owned items", "groupByDetailLabel": "Display group" },
         { "type": "provides", "priority": 95, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "provided items" },
         { "type": "launches", "priority": 90, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "launched items" },
         { "type": "persists through", "priority": 85, "minimumConfidence": "possible", "groupAfter": 6, "groupLabel": "startup declarations" },

@@ -1,3 +1,4 @@
+import Foundation
 import HALDomain
 import HALFixtures
 import HALVisualization
@@ -14,6 +15,40 @@ struct VisualizationTests {
     let second = layout.layout(FixtureCatalog.helperRichApplication)
     #expect(first == second)
     #expect(first.positions.count == FixtureCatalog.helperRichApplication.entities.count)
+  }
+
+  @Test("Semantic stages are manifest-driven and schema validated")
+  func semanticStageManifest() throws {
+    let stages = try SemanticStageConfiguration.bundled()
+    #expect(stages.schemaVersion == 1)
+    #expect(
+      stages.stages.map(\.id) == [
+        "context", "applications", "packages", "runtime", "data", "impact",
+      ])
+  }
+
+  @Test("Semantic-stage manifest rejects unknown fields")
+  func semanticStageUnknownField() throws {
+    let data = Data(
+      """
+      {
+        "schemaVersion": 1,
+        "stages": [{
+          "id": "all",
+          "title": "ALL",
+          "tint": "blue",
+          "types": ["application"],
+          "unknown": true
+        }]
+      }
+      """.utf8
+    )
+    #expect(throws: SemanticStageConfigurationError.self) {
+      try SemanticStageConfiguration.decode(
+        data,
+        schema: SemanticStageConfiguration.declarativeSchemaData()
+      )
+    }
   }
 
   @Test("Semantic columns remain ordered")
@@ -34,18 +69,21 @@ struct VisualizationTests {
   func emptyStagesAreRemoved() {
     let result = SemanticLayout(configuration: configuration)
       .layout(FixtureCatalog.simpleApplication)
-    #expect(result.groups.map(\.id) == ["software", "runtime", "data", "impact"])
+    #expect(result.groups.map(\.id) == ["applications", "runtime", "data", "impact"])
     #expect(result.groups.count == 4)
     #expect(result.size.width < 950)
     #expect(result.size.height >= 220)
   }
 
-  @Test("Dense graphs collapse entity types into five structural stages")
+  @Test("Dense graphs separate applications from packages and developer tools")
   func denseGraphStages() {
     let result = SemanticLayout(configuration: configuration)
       .layout(FixtureCatalog.familiarMac)
-    #expect(result.groups.map(\.id) == ["context", "software", "runtime", "data", "impact"])
-    #expect(result.groups.count == 5)
+    #expect(
+      result.groups.map(\.id) == [
+        "context", "applications", "packages", "runtime", "data", "impact",
+      ])
+    #expect(result.groups.count == 6)
     #expect(result.positions.count == FixtureCatalog.familiarMac.entities.count)
   }
 

@@ -4,11 +4,13 @@ import HALDomain
 public struct LayoutGroup: Equatable, Sendable {
   public let id: String
   public let title: String
+  public let tint: SemanticStageDefinition.Tint
   public let frame: CGRect
 
-  public init(id: String, title: String, frame: CGRect) {
+  public init(id: String, title: String, tint: SemanticStageDefinition.Tint, frame: CGRect) {
     self.id = id
     self.title = title
+    self.tint = tint
     self.frame = frame
   }
 }
@@ -31,9 +33,17 @@ public struct LayoutResult: Equatable, Sendable {
 
 public struct SemanticLayout: Sendable {
   public let configuration: LayoutConfiguration
+  public let stageConfiguration: SemanticStageConfiguration
 
-  public init(configuration: LayoutConfiguration) {
+  public init(
+    configuration: LayoutConfiguration,
+    stageConfiguration: SemanticStageConfiguration? = nil
+  ) {
     self.configuration = configuration
+    guard let resolved = stageConfiguration ?? (try? SemanticStageConfiguration.bundled()) else {
+      preconditionFailure("Bundled semantic-stage configuration failed validation.")
+    }
+    self.stageConfiguration = resolved
   }
 
   public func layout(_ graph: SystemGraph) -> LayoutResult {
@@ -64,6 +74,7 @@ public struct SemanticLayout: Sendable {
         LayoutGroup(
           id: stage.id,
           title: stage.title,
+          tint: stage.tint,
           frame: CGRect(x: originX, y: 18, width: stageWidth, height: contentHeight - 36)
         ))
       for (rowIndex, entity) in entities.enumerated() {
@@ -89,20 +100,15 @@ public struct SemanticLayout: Sendable {
   }
 
   private var stages: [Stage] {
-    [
-      Stage(id: "context", title: "CONTEXT & SOURCES", types: [.event, .packageManager]),
-      Stage(
-        id: "software", title: "SOFTWARE",
-        types: [.application, .shellFramework, .package]),
-      Stage(id: "runtime", title: "RUNTIME & STARTUP", types: [.process, .persistence]),
-      Stage(id: "data", title: "DATA", types: [.file]),
-      Stage(id: "impact", title: "IMPACT", types: [.resource, .incident]),
-    ]
+    stageConfiguration.stages.map {
+      Stage(id: $0.id, title: $0.title, tint: $0.tint, types: Set($0.types))
+    }
   }
 
   private struct Stage: Sendable {
     let id: String
     let title: String
+    let tint: SemanticStageDefinition.Tint
     let types: Set<EntityType>
   }
 }

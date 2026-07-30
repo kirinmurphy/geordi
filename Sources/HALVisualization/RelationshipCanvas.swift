@@ -2,6 +2,22 @@ import AppKit
 import HALDomain
 import SwiftUI
 
+public enum HALTypeSize {
+  public static let sm: CGFloat = 14
+  public static let base: CGFloat = 16
+  public static let large: CGFloat = 18
+  public static let xl: CGFloat = 22
+  public static let twoXL: CGFloat = 28
+  public static let display: CGFloat = 34
+}
+
+public enum HALIconSize {
+  public static let small: CGFloat = 18
+  public static let base: CGFloat = 26
+  public static let large: CGFloat = 34
+  public static let xl: CGFloat = 44
+}
+
 public struct RelationshipCanvas: View {
   public let graph: SystemGraph
   public let layout: LayoutResult
@@ -10,6 +26,7 @@ public struct RelationshipCanvas: View {
   @Binding public var focusedEntity: EntityID?
   private let configuration: LayoutConfiguration
   private let isReadOnlyPreview: Bool
+  private let onRecenterEntity: ((Entity) -> Void)?
 
   @State private var scale = 1.0
   @State private var lastScale = 1.0
@@ -24,7 +41,8 @@ public struct RelationshipCanvas: View {
     selection: Binding<GraphSelection?>,
     focusedEntity: Binding<EntityID?>,
     configuration: LayoutConfiguration,
-    isReadOnlyPreview: Bool = false
+    isReadOnlyPreview: Bool = false,
+    onRecenterEntity: ((Entity) -> Void)? = nil
   ) {
     self.graph = graph
     self.layout = layout
@@ -33,6 +51,7 @@ public struct RelationshipCanvas: View {
     _focusedEntity = focusedEntity
     self.configuration = configuration
     self.isReadOnlyPreview = isReadOnlyPreview
+    self.onRecenterEntity = onRecenterEntity
   }
 
   public var body: some View {
@@ -128,7 +147,7 @@ public struct RelationshipCanvas: View {
     ForEach(layout.groups, id: \.id) { group in
       VStack(alignment: .leading, spacing: 0) {
         Text(group.title)
-          .font(.caption2.bold())
+          .font(.system(size: HALTypeSize.sm, weight: .bold))
           .tracking(0.7)
           .foregroundStyle(.secondary)
           .padding(.horizontal, 10)
@@ -136,10 +155,10 @@ public struct RelationshipCanvas: View {
         Spacer()
       }
       .frame(width: group.frame.width, height: group.frame.height, alignment: .topLeading)
-      .background(stageColor(group.id).opacity(0.045), in: RoundedRectangle(cornerRadius: 16))
+      .background(stageColor(group.tint).opacity(0.045), in: RoundedRectangle(cornerRadius: 16))
       .overlay {
         RoundedRectangle(cornerRadius: 16)
-          .stroke(stageColor(group.id).opacity(0.18), lineWidth: 1)
+          .stroke(stageColor(group.tint).opacity(0.18), lineWidth: 1)
       }
       .position(x: group.frame.midX, y: group.frame.midY)
       .allowsHitTesting(false)
@@ -234,14 +253,14 @@ public struct RelationshipCanvas: View {
           }
           Text(
             isGroup
-              ? "GROUPED \(entity.type.label.uppercased())"
+              ? entity.type.label.uppercased()
               : entity.type.label.dropLast(entity.type == .persistence ? 0 : 1).description
           )
-          .font(.caption.weight(.semibold))
+          .font(.system(size: HALTypeSize.sm, weight: .semibold))
         }
         .foregroundStyle(EntityVisualStyle.color(for: entity.type))
         Text(entity.name)
-          .font(.headline)
+          .font(.system(size: HALTypeSize.large, weight: .semibold))
           .lineLimit(2)
           .multilineTextAlignment(.leading)
       }
@@ -277,6 +296,24 @@ public struct RelationshipCanvas: View {
         focusedEntity = entity.id
       }
     )
+    .overlay(alignment: .bottomTrailing) {
+      if !isReadOnlyPreview, !isGroup, let onRecenterEntity {
+        Label("See all", systemImage: "scope")
+          .font(.system(size: HALTypeSize.sm, weight: .semibold))
+          .padding(.horizontal, 7)
+          .padding(.vertical, 4)
+          .background(.thickMaterial, in: Capsule())
+          .overlay {
+            Capsule().stroke(EntityVisualStyle.color(for: entity.type).opacity(0.45))
+          }
+          .padding(6)
+          .contentShape(Capsule())
+          .onTapGesture {
+            onRecenterEntity(entity)
+          }
+          .help("See all \(entity.name) connections")
+      }
+    }
     .accessibilityLabel("\(entity.name), \(entity.type.label)")
     .accessibilityHint("Select to inspect relationships and evidence")
     .contextMenu {
@@ -317,7 +354,7 @@ public struct RelationshipCanvas: View {
       .disabled(scale <= configuration.minimumScale)
       .keyboardShortcut("-", modifiers: .command)
       Text("\(Int((scale * 100).rounded()))%")
-        .font(.callout.monospacedDigit())
+        .font(.system(size: HALTypeSize.base).monospacedDigit())
         .frame(minWidth: 48)
         .accessibilityLabel("Zoom \(Int((scale * 100).rounded())) percent")
       Button {
@@ -348,7 +385,7 @@ public struct RelationshipCanvas: View {
         Label("Pinch to zoom", systemImage: "arrow.up.left.and.arrow.down.right")
         Label("Double-click to focus", systemImage: "scope")
       }
-      .font(.caption)
+      .font(.system(size: HALTypeSize.sm))
       .foregroundStyle(.secondary)
       .padding(.horizontal, 12)
       .padding(.vertical, 7)
@@ -409,14 +446,14 @@ public struct RelationshipCanvas: View {
     EntityVisualStyle.symbol(for: type)
   }
 
-  private func stageColor(_ id: String) -> Color {
-    switch id {
-    case "context": .indigo
-    case "software": .blue
-    case "runtime": .cyan
-    case "data": .green
-    case "impact": EntityVisualStyle.color(for: .incident)
-    default: .secondary
+  private func stageColor(_ tint: SemanticStageDefinition.Tint) -> Color {
+    switch tint {
+    case .indigo: .indigo
+    case .blue: .blue
+    case .purple: .purple
+    case .cyan: .cyan
+    case .green: .green
+    case .orange: .orange
     }
   }
 }
@@ -425,11 +462,11 @@ public struct RelationshipCanvas: View {
 /// Red and orange remain available exclusively for warnings, findings, and status.
 public enum EntityVisualStyle {
   /// The shared icon size for semantic nodes in maps, diagrams, and inspectors.
-  public static let nodeIconSize: CGFloat = 23
+  public static let nodeIconSize: CGFloat = HALIconSize.base
 
   public static func symbol(for type: EntityType) -> String {
     switch type {
-    case .application: "macwindow"
+    case .application: "macwindow.on.rectangle"
     case .process: "gearshape.2"
     case .file: "folder"
     case .persistence: "power"
@@ -489,7 +526,7 @@ private struct RelationshipMarker: View {
             .frame(width: 20)
         }
       }
-      .font(.caption2.weight(.semibold))
+      .font(.system(size: HALTypeSize.sm, weight: .semibold))
       .frame(height: 22)
       .background(.thickMaterial, in: Capsule())
       .overlay {

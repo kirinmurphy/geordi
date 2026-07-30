@@ -8,7 +8,7 @@ struct DisplayPolicyTests {
   @Test("Bundled policy is schema validated")
   func bundledPolicy() throws {
     let policy = try DisplayPolicy.bundled()
-    #expect(policy.schemaVersion == 2)
+    #expect(policy.schemaVersion == 3)
     #expect(policy.context("applicationDetail")?.nodeBudget == 12)
   }
 
@@ -97,6 +97,57 @@ struct DisplayPolicyTests {
     #expect(group.map(DisplayGroupMetadata.isGroup) == true)
     #expect(group.map { Set(DisplayGroupMetadata.memberIDs(in: $0)) } == Set(["file-a", "file-b"]))
     #expect(result.entity("weak-file") == nil)
+  }
+
+  @Test("Presenter partitions dense ownership using manifest-selected entity details")
+  func groupedOwnershipPartitions() {
+    let manager = Entity(id: "manager", type: .packageManager, name: "Homebrew", summary: "Manager")
+    let packages = (0..<6).map { index in
+      Entity(
+        id: EntityID("package-\(index)"),
+        type: .package,
+        name: "Package \(index)",
+        summary: "Package",
+        details: [
+          Detail("Display group", index < 2 ? "User-installed packages" : "Dependencies")
+        ]
+      )
+    }
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "groups", name: "Groups", summary: "Groups"),
+      entities: [manager] + packages,
+      relationships: packages.map {
+        Relationship(
+          id: RelationshipID("owns-\($0.id.rawValue)"),
+          source: manager.id,
+          target: $0.id,
+          type: .owns,
+          confidence: .confirmed,
+          explanation: "Owns",
+          evidence: []
+        )
+      }
+    )
+    let policy = DisplayContextPolicy(
+      id: "groups",
+      nodeBudget: 6,
+      relationships: [
+        RelationshipDisplayRule(
+          type: .owns,
+          priority: 100,
+          minimumConfidence: .possible,
+          groupAfter: 6,
+          groupLabel: "owned items",
+          groupByDetailLabel: "Display group"
+        )
+      ]
+    )
+
+    let result = DisplayPolicyPresenter().present(graph, centeredOn: manager.id, policy: policy)
+
+    #expect(result.entities.contains { $0.name == "2 User-installed packages" })
+    #expect(result.entities.contains { $0.name == "4 Dependencies" })
+    #expect(result.entities.count == 3)
   }
 
   private func graph() -> SystemGraph {

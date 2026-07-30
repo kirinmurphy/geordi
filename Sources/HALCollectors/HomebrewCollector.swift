@@ -212,8 +212,62 @@ public struct HomebrewCollector: Sendable {
         (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
       }.map(\.lastPathComponent).sorted()
       guard !versions.isEmpty else { return nil }
-      return HomebrewPackageValue(name: packageURL.lastPathComponent, versions: versions)
+      let receipts = versions.compactMap { version in
+        formulaReceipt(
+          at:
+            packageURL
+            .appending(path: version, directoryHint: .isDirectory)
+            .appending(path: "INSTALL_RECEIPT.json")
+        )
+      }
+      let installedOnRequest: Bool? =
+        receipts.contains { $0.installedOnRequest == true }
+        ? true
+        : (receipts.contains { $0.installedOnRequest != nil } ? false : nil)
+      return HomebrewPackageValue(
+        name: packageURL.lastPathComponent,
+        versions: versions,
+        installedOnRequest: installedOnRequest,
+        runtimeDependencies: Array(Set(receipts.flatMap(\.runtimeDependencies))).sorted()
+      )
     }.sorted { $0.name < $1.name }
+  }
+
+  private func formulaReceipt(at url: URL) -> FormulaReceipt? {
+    guard
+      let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+      let size = attributes[.size] as? NSNumber,
+      size.intValue <= 1_048_576,
+      let data = try? Data(contentsOf: url),
+      data.count <= 1_048_576
+    else { return nil }
+    return try? JSONDecoder().decode(FormulaReceipt.self, from: data)
+  }
+
+  private struct FormulaReceipt: Decodable {
+    let installedOnRequest: Bool?
+    let runtimeDependencies: [String]
+
+    private enum CodingKeys: String, CodingKey {
+      case installedOnRequest = "installed_on_request"
+      case runtimeDependencies = "runtime_dependencies"
+    }
+
+    private struct Dependency: Decodable {
+      let fullName: String
+
+      private enum CodingKeys: String, CodingKey {
+        case fullName = "full_name"
+      }
+    }
+
+    init(from decoder: Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      installedOnRequest = try container.decodeIfPresent(Bool.self, forKey: .installedOnRequest)
+      runtimeDependencies =
+        try container.decodeIfPresent([Dependency].self, forKey: .runtimeDependencies)?
+        .map(\.fullName) ?? []
+    }
   }
 
   private func casks(in caskroom: URL) throws -> [HomebrewCaskValue] {

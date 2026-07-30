@@ -20,6 +20,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let commandLineSoftwareCollector: CommandLineSoftwareCollector?
   public let shellFrameworkCollector: ShellFrameworkCollector?
   public let projector: ApplicationGraphProjector
+  public let applicationClassifications: ApplicationClassificationConfiguration?
 
   public init(
     scanID: ScanID,
@@ -35,6 +36,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
     commandLineSoftwareConfiguration: CommandLineSoftwareConfiguration? = nil,
     shellFrameworkConfiguration: ShellFrameworkConfiguration? = nil,
+    applicationClassifications: ApplicationClassificationConfiguration? = nil,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -87,6 +89,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     )
     maxProcessesPerApplication = processConfiguration.maxProcessesPerApplication
     self.maxUnmatchedProcesses = maxUnmatchedProcesses
+    self.applicationClassifications = applicationClassifications
     persistenceCollector = PersistenceCollector(
       roots: persistenceRoots,
       clock: clock
@@ -123,6 +126,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
     commandLineSoftwareConfiguration: CommandLineSoftwareConfiguration? = nil,
     shellFrameworkConfiguration: ShellFrameworkConfiguration? = nil,
+    applicationClassifications: ApplicationClassificationConfiguration? = nil,
     userHome: URL = FileManager.default.homeDirectoryForCurrentUser,
     signatureInspector: any CodeSignatureInspecting = SecurityCodeSignatureInspector(),
     provenanceInspector: any ApplicationProvenanceInspecting =
@@ -150,6 +154,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       packageEcosystemConfiguration: packageEcosystemConfiguration,
       commandLineSoftwareConfiguration: commandLineSoftwareConfiguration,
       shellFrameworkConfiguration: shellFrameworkConfiguration,
+      applicationClassifications: applicationClassifications,
       userHome: userHome,
       signatureInspector: signatureInspector,
       provenanceInspector: provenanceInspector,
@@ -212,7 +217,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       runtimes: runtimes,
       packageEcosystems: packageEcosystems,
       commandLineSoftware: commandLineSoftware,
-      shellFrameworks: shellFrameworks
+      shellFrameworks: shellFrameworks,
+      applicationClassifications: applicationClassifications
     )
   }
 }
