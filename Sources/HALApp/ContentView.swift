@@ -1155,11 +1155,6 @@ private struct OverviewView: View {
           .foregroundStyle(tint)
         Spacer()
         headerAccessory()
-        if let subtitle {
-          Text(subtitle)
-            .font(.halSecondary)
-            .foregroundStyle(.secondary)
-        }
         if let headerActionTitle, let headerAction {
           Button(action: headerAction) {
             Text(headerActionTitle)

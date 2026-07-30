@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://hal.local/schemas/application-classifications/v6",
+  "$id": "https://hal.local/schemas/application-classifications/v7",
   "title": "HAL application classifications",
   "type": "object",
   "additionalProperties": false,
@@ -11,7 +11,7 @@
     "categories"
   ],
   "properties": {
-    "schemaVersion": { "const": 6 },
+    "schemaVersion": { "const": 7 },
     "allApplicationsLabel": { "type": "string", "minLength": 1 },
     "defaultCategoryID": { "type": "string", "minLength": 1 },
     "categories": {
@@ -64,6 +64,12 @@
                 "label": { "type": "string", "minLength": 1 },
                 "equals": { "type": ["string", "null"] },
                 "startsWith": { "type": ["string", "null"] },
+                "oneOfValues": {
+                  "type": ["array", "null"],
+                  "items": { "type": "string", "minLength": 1 },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
                 "excludes": {
                   "type": "array",
                   "items": { "type": "string" }

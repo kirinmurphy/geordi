@@ -3,7 +3,7 @@ import HALDomain
 import HALManifestKit
 
 public struct ApplicationClassificationConfiguration: Codable, Hashable, Sendable {
-  public static let currentVersion = 6
+  public static let currentVersion = 7
 
   public let schemaVersion: Int
   public let allApplicationsLabel: String
@@ -205,17 +205,20 @@ public struct ApplicationClassificationDetailRule: Codable, Hashable, Sendable {
   public let label: String
   public let equals: String?
   public let startsWith: String?
+  public let oneOfValues: [String]?
   public let excludes: [String]
 
   public init(
     label: String,
     equals: String? = nil,
     startsWith: String? = nil,
+    oneOfValues: [String]? = nil,
     excludes: [String] = []
   ) {
     self.label = label
     self.equals = equals
     self.startsWith = startsWith
+    self.oneOfValues = oneOfValues
     self.excludes = excludes
   }
 
@@ -225,6 +228,7 @@ public struct ApplicationClassificationDetailRule: Codable, Hashable, Sendable {
     }
     if let equals, value != equals { return false }
     if let startsWith, !value.hasPrefix(startsWith) { return false }
+    if let oneOfValues, !oneOfValues.contains(value) { return false }
     return !excludes.contains(value)
   }
 }

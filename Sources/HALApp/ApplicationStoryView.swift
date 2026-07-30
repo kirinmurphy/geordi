@@ -32,8 +32,9 @@ struct ApplicationStoryView: View {
       }
     } else {
       ScrollView {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 34) {
           storyHeader
+          exploreSection
           originSection
           storySection(
             title: "Why it may be active",
@@ -48,7 +49,6 @@ struct ApplicationStoryView: View {
             connections: story.associatedItems
           )
           unknownSection
-          exploreSection
         }
         .padding(28)
         .frame(maxWidth: 980)
@@ -131,24 +131,13 @@ struct ApplicationStoryView: View {
     }
   }
 
-  private func evidenceExplanation(_ relationship: Relationship) -> String {
-    let summaries = relationship.evidence.map(\.summary)
-    guard !summaries.isEmpty else {
-      return "HAL retained no supporting evidence details."
-    }
-    return summaries.prefix(2).joined(separator: " ")
-  }
-
   private var originSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      sectionTitle("Where it came from", symbol: "arrow.down.to.line.compact")
+    VStack(alignment: .leading, spacing: 14) {
+      sectionTitle("Origin story", symbol: "arrow.down.to.line.compact")
       if story.provenance.isEmpty && story.owners.isEmpty {
         calmEmpty("HAL does not have enough retained evidence to name an installation source.")
       } else {
-        if let owner = story.owners.first {
-          connectionRow(owner)
-        }
-        ForEach(story.provenance) { detail in
+        ForEach(orderedProvenance) { detail in
           HStack(alignment: .firstTextBaseline) {
             Text(detail.label)
               .foregroundStyle(.secondary)
@@ -161,16 +150,21 @@ struct ApplicationStoryView: View {
           .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
         }
       }
-      if let path = application.details.first(where: { $0.label == "Path" })?.value {
-        HStack(alignment: .firstTextBaseline) {
-          Text("Application path")
-            .foregroundStyle(.secondary)
-          Spacer()
-          PathActionMenu(path: path)
-        }
-        .padding(12)
-        .background(.secondary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10))
-      }
+      ApplicationStoryFilesystemTree(
+        items: [ApplicationStoryTreeItem(entity: application)]
+          + story.owners.map {
+            ApplicationStoryTreeItem(entity: $0.entity, relationship: $0.relationship)
+          },
+        inspect: model.focus
+      )
+    }
+  }
+
+  private var orderedProvenance: [Detail] {
+    story.provenance.sorted {
+      let left = $0.label == "Installed with" || $0.label == "Installation source"
+      let right = $1.label == "Installed with" || $1.label == "Installation source"
+      return left && !right
     }
   }
 
@@ -180,42 +174,19 @@ struct ApplicationStoryView: View {
     emptyMessage: String,
     connections: [ApplicationStoryModel.Connection]
   ) -> some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: 14) {
       sectionTitle(title, symbol: symbol)
       if connections.isEmpty {
         calmEmpty(emptyMessage)
       } else {
-        ForEach(connections) { connectionRow($0) }
+        ApplicationStoryFilesystemTree(
+          items: connections.map {
+            ApplicationStoryTreeItem(entity: $0.entity, relationship: $0.relationship)
+          },
+          inspect: model.focus
+        )
       }
     }
-  }
-
-  private func connectionRow(_ connection: ApplicationStoryModel.Connection) -> some View {
-    HStack(alignment: .top, spacing: 12) {
-      Image(systemName: EntityVisualStyle.symbol(for: connection.entity.type))
-        .foregroundStyle(EntityVisualStyle.color(for: connection.entity.type))
-        .frame(width: 24)
-      VStack(alignment: .leading, spacing: 4) {
-        Text(connection.entity.name)
-          .font(.halRowTitle)
-        Text(connection.relationship.explanation)
-          .foregroundStyle(.secondary)
-          .textSelection(.enabled)
-        Text(
-          "Why HAL connects these: \(evidenceExplanation(connection.relationship))"
-        )
-        .font(.halSmall)
-        .foregroundStyle(
-          connection.relationship.confidence == .ambiguous ? Color.orange : Color.secondary
-        )
-        .textSelection(.enabled)
-      }
-      Spacer()
-      Button("Inspect") { model.focus(connection.entity) }
-        .buttonStyle(.bordered)
-    }
-    .padding(14)
-    .background(.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
   }
 
   private var unknownSection: some View {

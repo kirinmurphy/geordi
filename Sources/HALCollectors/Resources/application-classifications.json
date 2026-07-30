@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "allApplicationsLabel": "All Applications",
   "defaultCategoryID": "user-installed",
   "categories": [
@@ -41,6 +41,19 @@
           "label": "Installation timing",
           "equals": "Present at setup",
           "startsWith": null,
+          "excludes": []
+        },
+        {
+          "label": "Bundle identifier",
+          "equals": null,
+          "startsWith": null,
+          "oneOfValues": [
+            "com.apple.garageband10",
+            "com.apple.iMovieApp",
+            "com.apple.Keynote",
+            "com.apple.Numbers",
+            "com.apple.Pages"
+          ],
           "excludes": []
         }
       ],

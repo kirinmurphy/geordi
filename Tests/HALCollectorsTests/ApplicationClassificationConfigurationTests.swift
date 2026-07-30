@@ -133,6 +133,30 @@ struct ApplicationClassificationConfigurationTests {
     )
     #expect(
       configuration.category(
+        forApplicationPath: "/Applications/NordVPN.app",
+        platformBinary: false,
+        details: [
+          Detail("Bundle identifier", "com.nordvpn.NordVPN"),
+          Detail("App Store receipt", "Present"),
+          Detail("Installation timing", "Present at setup"),
+        ],
+        userHome: home
+      ).id == "user-installed"
+    )
+    #expect(
+      configuration.category(
+        forApplicationPath: "/Applications/Xcode.app",
+        platformBinary: false,
+        details: [
+          Detail("Bundle identifier", "com.apple.dt.Xcode"),
+          Detail("App Store receipt", "Present"),
+          Detail("Installation timing", "Present at setup"),
+        ],
+        userHome: home
+      ).id == "user-installed"
+    )
+    #expect(
+      configuration.category(
         forApplicationPath: "/Applications/Unknown.app",
         platformBinary: false,
         details: [Detail("Installation timing", "Unknown")],
@@ -146,7 +170,7 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 6,
+        "schemaVersion": 7,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
@@ -181,7 +205,7 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 6,
+        "schemaVersion": 7,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{
