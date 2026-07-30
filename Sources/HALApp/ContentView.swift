@@ -11,6 +11,7 @@ struct ContentView: View {
   @State private var unlinkError: String?
   @State private var diagnosticExportError: String?
   @State private var linkedStatusExpanded = false
+  @State private var freshnessHoverTask: Task<Void, Never>?
 
   init(
     configuration: AppConfiguration,
@@ -344,6 +345,7 @@ struct ContentView: View {
           }
         }
         .buttonStyle(.plain)
+        .onHover(perform: scheduleFreshnessStatusPresentation)
         .popover(isPresented: $linkedStatusExpanded, arrowEdge: .bottom) {
           CollectionHealthPanel(model: model, exportAction: exportRedactedDiagnostics)
         }
@@ -362,7 +364,25 @@ struct ContentView: View {
       )
       .accessibilityElement(children: .combine)
       .accessibilityLabel(freshnessText(freshness))
+      .accessibilityHint(
+        "Click or pause the pointer to show collection status and refresh actions."
+      )
       .accessibilityIdentifier("dataFreshnessFooter")
+      .onDisappear {
+        freshnessHoverTask?.cancel()
+        freshnessHoverTask = nil
+      }
+    }
+  }
+
+  private func scheduleFreshnessStatusPresentation(_ hovering: Bool) {
+    freshnessHoverTask?.cancel()
+    freshnessHoverTask = nil
+    guard hovering, !linkedStatusExpanded else { return }
+    freshnessHoverTask = Task { @MainActor in
+      try? await Task.sleep(for: .milliseconds(700))
+      guard !Task.isCancelled else { return }
+      linkedStatusExpanded = true
     }
   }
 
@@ -1537,10 +1557,30 @@ private struct CollectionHealthPanel: View {
   let exportAction: () -> Void
 
   var body: some View {
+    let freshness = model.dataFreshness()
     ScrollView {
       VStack(alignment: .leading, spacing: 14) {
         Text("Collection Health")
           .font(.halSection.bold())
+        HStack(alignment: .top, spacing: 10) {
+          Image(systemName: statusSymbol(freshness))
+            .foregroundStyle(statusColor(freshness))
+          VStack(alignment: .leading, spacing: 3) {
+            Text(statusTitle(freshness))
+              .font(.halRowTitle)
+            Text(statusExplanation(freshness))
+              .font(.halSecondary)
+              .foregroundStyle(.secondary)
+              .textSelection(.enabled)
+          }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(statusColor(freshness).opacity(0.09), in: RoundedRectangle(cornerRadius: 10))
+        .overlay {
+          RoundedRectangle(cornerRadius: 10)
+            .stroke(statusColor(freshness).opacity(0.28))
+        }
         Text("HAL only read configured sources. It did not change applications or machine data.")
           .foregroundStyle(.secondary)
           .textSelection(.enabled)
@@ -1570,7 +1610,17 @@ private struct CollectionHealthPanel: View {
           Divider()
         }
         HStack {
-          Button("Check This Mac Again") { model.refreshLiveData() }
+          if model.isSynthetic {
+            Button(model.isCollecting ? "Linking…" : "Link to This Mac") {
+              model.linkToMac()
+            }
+            .disabled(model.isCollecting)
+          } else {
+            Button(model.isCollecting ? "Checking…" : "Check This Mac Again") {
+              model.refreshLiveData()
+            }
+            .disabled(model.isCollecting)
+          }
           Button("Export Redacted Diagnostics…") { exportAction() }
         }
         .buttonStyle(.bordered)
@@ -1578,6 +1628,69 @@ private struct CollectionHealthPanel: View {
       .padding(20)
     }
     .frame(width: 520, height: 520)
+  }
+
+  private func statusTitle(_ freshness: FreshnessState) -> String {
+    if model.isSynthetic { return "Deterministic fixture is current" }
+    return switch freshness {
+    case .fresh: "Observation is current"
+    case .aging: "Observation is getting older"
+    case .stale: "Observation is stale"
+    case .partial: "Observation is partial"
+    case .unavailable: "Data is unavailable"
+    case .permissionDenied: "Permission limits this observation"
+    case .neverCollected: "This Mac has not been observed"
+    }
+  }
+
+  private func statusExplanation(_ freshness: FreshnessState) -> String {
+    if model.isSynthetic {
+      return
+        "This reproducible example does not read this Mac. Link explicitly to collect current read-only observations."
+    }
+    let timestamp =
+      model.scanContext.completedAt.map {
+        " Last completed \($0.formatted(date: .abbreviated, time: .shortened))."
+      } ?? ""
+    let explanation =
+      switch freshness {
+      case .fresh:
+        "HAL completed a recent read-only check."
+      case .aging:
+        "The retained snapshot may no longer reflect recent changes. You can check again now."
+      case .stale:
+        "The retained snapshot is old enough that HAL recommends checking again."
+      case .partial:
+        "One or more configured sources did not complete normally. Existing observations remain usable."
+      case .unavailable:
+        "Configured sources were unavailable during the last check."
+      case .permissionDenied:
+        "macOS denied access to at least one configured source. Checking again can retry after permissions change."
+      case .neverCollected:
+        "Run a read-only check to create the first observation."
+      }
+    return explanation + timestamp
+  }
+
+  private func statusSymbol(_ freshness: FreshnessState) -> String {
+    switch freshness {
+    case .fresh: "checkmark.circle.fill"
+    case .aging: "clock.fill"
+    case .stale: "exclamationmark.circle.fill"
+    case .partial: "circle.lefthalf.filled"
+    case .unavailable: "questionmark.circle.fill"
+    case .permissionDenied: "lock.circle.fill"
+    case .neverCollected: "circle.dashed"
+    }
+  }
+
+  private func statusColor(_ freshness: FreshnessState) -> Color {
+    switch freshness {
+    case .fresh: .green
+    case .aging, .partial, .permissionDenied: .orange
+    case .stale: .red
+    case .unavailable, .neverCollected: .secondary
+    }
   }
 
   private func impact(for run: CollectorRun) -> String {
