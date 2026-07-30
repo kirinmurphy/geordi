@@ -1045,6 +1045,26 @@ public struct ApplicationGraphProjector: Sendable {
     let concreteManagerIDs = Set(
       (homebrewManagerEntities + ecosystemManagerEntities + appStoreManagerEntities).map(\.id)
     )
+    let projectedEntities =
+      (applicationEntities + processEntities + persistenceEntities + locationEntities
+      + rebuildableDataEntities
+      + rebuildableManagerEntities.values.filter {
+        !concreteManagerIDs.contains($0.id)
+      }
+      + homebrewManagerEntities + appStoreManagerEntities + homebrewPackageEntities
+      + homebrewCaskEntities + runtimeEntities
+      + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities
+      + shellFrameworkEntities + shellProcessEntities)
+      .sorted { $0.id.rawValue < $1.id.rawValue }
+    let projectedRelationships =
+      (processRelationships + persistenceRelationships + relationships
+      + rebuildableManagerRelationships + homebrewPackageRelationships
+      + homebrewDependencyRelationships
+      + homebrewCaskRelationships + homebrewApplicationRelationships
+      + appStoreRelationships
+      + ecosystemRelationships + runtimeInstallationRelationships
+      + commandLineRelationships + shellProcessRelationships)
+      .sorted { $0.id.rawValue < $1.id.rawValue }
     let graph = SystemGraph(
       metadata: FixtureMetadata(
         id: "live-applications-\(scanID.rawValue)",
@@ -1052,24 +1072,8 @@ public struct ApplicationGraphProjector: Sendable {
         name: "This Mac",
         summary: "A read-only application inventory observed on this Mac."
       ),
-      entities:
-        applicationEntities + processEntities + persistenceEntities + locationEntities
-        + rebuildableDataEntities
-        + rebuildableManagerEntities.values.filter {
-          !concreteManagerIDs.contains($0.id)
-        }
-        + homebrewManagerEntities + appStoreManagerEntities + homebrewPackageEntities
-        + homebrewCaskEntities + runtimeEntities
-        + ecosystemManagerEntities + ecosystemPackageEntities + commandLineEntities
-        + shellFrameworkEntities + shellProcessEntities,
-      relationships:
-        processRelationships + persistenceRelationships + relationships
-        + rebuildableManagerRelationships + homebrewPackageRelationships
-        + homebrewDependencyRelationships
-        + homebrewCaskRelationships + homebrewApplicationRelationships
-        + appStoreRelationships
-        + ecosystemRelationships + runtimeInstallationRelationships
-        + commandLineRelationships + shellProcessRelationships
+      entities: projectedEntities,
+      relationships: projectedRelationships
     )
     return GraphSnapshot(
       graph: graph,

@@ -351,6 +351,10 @@ struct HomebrewCollectorTests {
       homebrew: homebrew
     ).graph
 
+    #expect(graph.entities.map(\.id.rawValue) == graph.entities.map(\.id.rawValue).sorted())
+    #expect(
+      graph.relationships.map(\.id.rawValue) == graph.relationships.map(\.id.rawValue).sorted()
+    )
     #expect(
       graph.entity("package:homebrew:/opt/homebrew:tmux")?.details.contains {
         $0.label == "Installation reason" && $0.value == "Installed on request"

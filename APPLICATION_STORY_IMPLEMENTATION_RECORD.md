@@ -193,6 +193,15 @@ current Mac setup marker.
 
 ## July 30 software-architecture refinement
 
+HAL's projected live graph is canonically ordered by stable entity and
+relationship IDs before it reaches any view. Dictionary and filesystem
+enumeration order therefore cannot change the displayed ordering. Labels,
+classifications, grouping, stages, and thresholds come from validated versioned
+manifests or directly observed system metadata; presentation code does not
+LLM-generate system facts. Time-sensitive values such as processes and
+freshness remain explicitly observed facts. Given the same captured
+observations and manifests, HAL produces the same graph and presentation.
+
 HAL now requires a successful, timeout-bounded version response before
 presenting an executable as an installed runtime. This prevents Apple's
 `/usr/bin/java` and `/usr/bin/javac` launcher stubs from appearing as available
@@ -224,7 +233,7 @@ text sizes plus small, base, large, and extra-large icon sizes. The minimum text
 role increased to 14 points, homepage list icons use the larger shared base
 scale, and generic application nodes use the idiomatic multiple-window symbol.
 
-The completed refinement boundary passed strict formatting, 140 tests across
+The completed refinement boundary passed strict formatting, 149 tests across
 27 suites, all seven synthetic-profile validations, Debug build, native bundle
 packaging, and UI bundle smoke validation. The verified build was installed at
 `~/Applications/HAL.app` and launched; automated window inspection remained
