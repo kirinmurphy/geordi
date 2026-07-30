@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 7,
-  "allApplicationsLabel": "All Applications",
+  "schemaVersion": 8,
+  "allApplicationsLabel": "All",
   "defaultCategoryID": "user-installed",
   "categories": [
     {
@@ -23,6 +23,7 @@
       "id": "bundled-software",
       "kind": "scope",
       "label": "Bundled Software",
+      "filterLabel": "Bundled",
       "summary": "Applications in macOS system locations or observed on this Mac at setup.",
       "priority": 290,
       "isFallback": false,
@@ -136,6 +137,7 @@
       "id": "user-installed",
       "kind": "scope",
       "label": "User-installed Applications",
+      "filterLabel": "User Installed",
       "summary": "Applications added to standard application folders beyond the software included with macOS.",
       "priority": 100,
       "isFallback": false,

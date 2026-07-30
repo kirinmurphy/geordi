@@ -824,9 +824,9 @@ private struct OverviewView: View {
                 model.selectedApplicationCategoryID = category.id
               } label: {
                 if model.selectedApplicationCategoryID == category.id {
-                  Label(category.label, systemImage: "checkmark")
+                  Label(category.filterLabel ?? category.label, systemImage: "checkmark")
                 } else {
-                  Text(category.label)
+                  Text(category.filterLabel ?? category.label)
                 }
               }
             }
@@ -894,9 +894,9 @@ private struct OverviewView: View {
         $0.id == selectedID
       })
     else {
-      return model.applicationClassifications?.allApplicationsLabel ?? "All Applications"
+      return model.applicationClassifications?.allApplicationsLabel ?? "All"
     }
-    return category.label
+    return category.filterLabel ?? category.label
   }
 
   private var applications: [Entity] {

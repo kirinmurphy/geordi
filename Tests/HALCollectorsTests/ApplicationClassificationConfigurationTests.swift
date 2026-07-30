@@ -10,7 +10,17 @@ struct ApplicationClassificationConfigurationTests {
     let configuration = try ApplicationClassificationConfiguration.bundled()
     let home = URL(filePath: "/Users/example", directoryHint: .isDirectory)
 
+    #expect(configuration.schemaVersion == 8)
+    #expect(configuration.allApplicationsLabel == "All")
     #expect(configuration.defaultCategoryID == "user-installed")
+    #expect(
+      configuration.categories.first { $0.id == "user-installed" }?.filterLabel
+        == "User Installed"
+    )
+    #expect(
+      configuration.categories.first { $0.id == "bundled-software" }?.filterLabel
+        == "Bundled"
+    )
     #expect(
       configuration.category(
         forApplicationPath: "/Applications/Firefox.app",
@@ -170,7 +180,7 @@ struct ApplicationClassificationConfigurationTests {
     let data = Data(
       """
       {
-        "schemaVersion": 7,
+        "schemaVersion": 8,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "other",
         "categories": [{
@@ -205,7 +215,7 @@ struct ApplicationClassificationConfigurationTests {
     let missingFallback = Data(
       """
       {
-        "schemaVersion": 7,
+        "schemaVersion": 8,
         "allApplicationsLabel": "All",
         "defaultCategoryID": "apps",
         "categories": [{

@@ -135,11 +135,16 @@ struct PathActionMenu: View {
         }
       }
     } label: {
-      Text(path)
-        .underline()
-        .lineLimit(2)
-        .truncationMode(.middle)
-        .textSelection(.enabled)
+      HStack(spacing: 5) {
+        Text(path)
+          .underline()
+          .lineLimit(2)
+          .truncationMode(.middle)
+          .textSelection(.enabled)
+        Image(systemName: "chevron.down")
+          .font(.system(size: 12, weight: .bold))
+          .foregroundStyle(.secondary)
+      }
     }
     .menuIndicator(.hidden)
     .menuStyle(.borderlessButton)
