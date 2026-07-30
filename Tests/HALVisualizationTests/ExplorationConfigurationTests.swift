@@ -6,6 +6,91 @@ import Testing
 
 @Suite("Exploration configuration")
 struct ExplorationConfigurationTests {
+  @Test("Exploration contexts are schema validated and cover every home question")
+  func explorationContexts() throws {
+    let configuration = try ExplorationContextConfiguration.bundled()
+    #expect(
+      Set(configuration.contexts.map(\.id))
+        == Set(["applications", "startup", "storage", "command-line", "shell-path", "filesystem"])
+    )
+    #expect(configuration.context("applications")?.presentation == .applicationBrowser)
+    #expect(configuration.context("startup")?.drillIn == .boundedRelationships)
+
+    let invalidUnknownKey = """
+      {"schemaVersion":1,"contexts":[],"unexpected":true}
+      """.data(using: .utf8)!
+    #expect(throws: ExplorationContextError.self) {
+      try ExplorationContextConfiguration.decode(
+        invalidUnknownKey,
+        schema: try resource("exploration-contexts.schema")
+      )
+    }
+
+    let invalidEnum = """
+      {"schemaVersion":1,"contexts":[{"id":"bad","question":"Bad","title":"Bad","presentation":"everythingGraph","supportedEntityTypes":["application"],"supportedRelationshipTypes":[],"sections":[],"drillIn":"none","initialItemBudget":1,"emptyTitle":"Empty","emptyMessage":"Empty"}]}
+      """.data(using: .utf8)!
+    #expect(throws: ExplorationContextError.self) {
+      try ExplorationContextConfiguration.decode(
+        invalidEnum,
+        schema: try resource("exploration-contexts.schema")
+      )
+    }
+  }
+
+  @Test("Exploration presentation is stable across shuffled observations")
+  func deterministicExploration() throws {
+    let configuration = try ExplorationContextConfiguration.bundled()
+    let context = try #require(configuration.context("startup"))
+    let graph = FixtureCatalog.familiarMac
+    let shuffled = SystemGraph(
+      metadata: graph.metadata,
+      entities: Array(graph.entities.reversed()),
+      relationships: Array(graph.relationships.reversed())
+    )
+    let presenter = ExplorationPresenter()
+    let first = presenter.present(graph: graph, context: context)
+    let second = presenter.present(graph: shuffled, context: context)
+    #expect(first == second)
+    #expect(first.sections.flatMap(\.groups).allSatisfy { $0.id.hasPrefix("exploration-group:") })
+    #expect(
+      first.sections.flatMap(\.groups).flatMap(\.entityIDs).allSatisfy {
+        graph.entity($0) != nil
+      })
+  }
+
+  @Test("Exploration empty and unresolved states preserve entity IDs")
+  func explorationStates() throws {
+    let context = try #require(
+      try ExplorationContextConfiguration.bundled().context("startup")
+    )
+    let unresolved = Entity(
+      id: "persistence.unresolved",
+      type: .persistence,
+      name: "Unknown helper",
+      summary: "No owner"
+    )
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "states", name: "States", summary: "States"),
+      entities: [unresolved],
+      relationships: []
+    )
+    let result = ExplorationPresenter().present(graph: graph, context: context)
+    #expect(
+      result.sections.first { $0.id == "unresolved-declarations" }?
+        .groups.flatMap(\.entityIDs) == [unresolved.id]
+    )
+    #expect(
+      ExplorationPresenter().present(
+        graph: SystemGraph(
+          metadata: graph.metadata,
+          entities: [],
+          relationships: []
+        ),
+        context: context
+      ).sections.allSatisfy { $0.groups.isEmpty }
+    )
+  }
+
   @Test("Glossary is schema validated and aliases are exact")
   func glossary() throws {
     let glossary = try Glossary.bundled()

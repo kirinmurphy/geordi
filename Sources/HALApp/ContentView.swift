@@ -52,13 +52,17 @@ struct ContentView: View {
             FilesystemMapView(model: model)
           case .shellPath:
             ShellPathVisualizerView()
+          case .applications:
+            ApplicationBrowserView(model: model)
+          case .startup, .storage, .commandLine:
+            ExplorationBrowserView(model: model)
           case .entity(let id):
             if let entity = model.fixture.entity(id), entity.type == .application {
               ApplicationStoryView(model: model, application: entity)
             } else {
               AtlasDetailView(model: model)
             }
-          default:
+          case .performance:
             AtlasDetailView(model: model)
           }
         }

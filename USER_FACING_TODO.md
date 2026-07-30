@@ -1,7 +1,7 @@
 # HAL User-Facing Todo
 
 Status: prioritized product gaps discovered during hands-on use  
-Updated: July 29, 2026
+Updated: July 30, 2026
 
 These items should improve questions users can answer. They are not
 authorization to add broad history, arbitrary command execution, or unbounded
@@ -22,7 +22,7 @@ filesystem scanning.
   an honest unknown state.
 - [x] Represent App Store-managed applications as a Software Source alongside
   package managers, without conflating applications and packages.
-- [ ] Give every “What do you want to understand?” choice a destination that
+- [x] Give every “What do you want to understand?” choice a destination that
   explains that question instead of routing aggregate questions to unbounded
   type-filtered relationship maps.
 - [x] Keep high-fan-out relationship maps readable by grouping or summarizing
@@ -34,6 +34,15 @@ filesystem scanning.
   no implicit collection of shell-file contents.
 
 ## Priority 1 — Replace aggregate “everything graphs” with question-shaped views
+
+Implementation status: completed. A versioned, schema-validated exploration
+context catalog now selects each homepage destination. Applications open in a
+searchable classified browser; startup declarations are grouped by observed
+owner with an explicit unresolved section; reclaimability is summarized by
+retained classification without treating rebuildable as safe to delete; and
+command-line software begins in deterministic role and discovery-source
+sections. Rows retain their real entity IDs and open the existing Application
+Story or bounded relationship universe.
 
 Current audit:
 

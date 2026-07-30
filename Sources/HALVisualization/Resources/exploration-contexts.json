@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "contexts": [
+    {
+      "id": "applications",
+      "question": "Understand an application",
+      "title": "Choose an application to understand",
+      "presentation": "applicationBrowser",
+      "supportedEntityTypes": ["application"],
+      "supportedRelationshipTypes": ["owns", "launches", "persists through", "may belong to"],
+      "sections": [
+        {
+          "id": "applications",
+          "title": "Applications",
+          "explanation": "Browse or search observed application bundles.",
+          "entityTypes": ["application"],
+          "grouping": "detail",
+          "detailLabel": "Display group"
+        }
+      ],
+      "drillIn": "applicationStory",
+      "initialItemBudget": 30,
+      "emptyTitle": "No applications observed",
+      "emptyMessage": "HAL did not receive any application entities from this data source.",
+      "unresolvedTitle": "Other applications"
+    },
+    {
+      "id": "startup",
+      "question": "See what starts automatically",
+      "title": "Startup declarations by owning software",
+      "presentation": "groupedBrowser",
+      "supportedEntityTypes": ["application", "persistence", "process"],
+      "supportedRelationshipTypes": ["persists through", "launches"],
+      "sections": [
+        {
+          "id": "owned-declarations",
+          "title": "Declarations with an observed owner",
+          "explanation": "A declaration may ask macOS to start software; it is not a running process.",
+          "entityTypes": ["persistence"],
+          "grouping": "relationshipOwner",
+          "relationshipTypes": ["persists through"]
+        },
+        {
+          "id": "unresolved-declarations",
+          "title": "Unresolved declarations",
+          "explanation": "HAL could not connect these declarations to one software entity.",
+          "entityTypes": ["persistence"],
+          "grouping": "flat",
+          "relationshipTypes": ["persists through"],
+          "unresolved": true
+        }
+      ],
+      "drillIn": "boundedRelationships",
+      "initialItemBudget": 24,
+      "emptyTitle": "No startup declarations observed",
+      "emptyMessage": "The current snapshot contains no configured startup declarations.",
+      "unresolvedTitle": "Unresolved"
+    },
+    {
+      "id": "storage",
+      "question": "Explore reclaimable data",
+      "title": "Rebuildable and redownloadable locations",
+      "presentation": "groupedBrowser",
+      "supportedEntityTypes": ["file"],
+      "supportedRelationshipTypes": ["owns", "reads and writes", "may belong to"],
+      "sections": [
+        {
+          "id": "reclaimability",
+          "title": "Observed reclaimability",
+          "explanation": "Rebuildable describes how data may be recreated; it is not permission to delete it.",
+          "entityTypes": ["file"],
+          "grouping": "detail",
+          "detailLabel": "Classification"
+        },
+        {
+          "id": "synthetic-reclaimability",
+          "title": "Reclaimability evidence",
+          "explanation": "Fixture removal states are kept distinct, including protected and non-candidate data.",
+          "entityTypes": ["file"],
+          "grouping": "detail",
+          "detailLabel": "Removal"
+        }
+      ],
+      "drillIn": "boundedRelationships",
+      "initialItemBudget": 20,
+      "emptyTitle": "No reclaimable locations observed",
+      "emptyMessage": "HAL did not observe any configured rebuildable or redownloadable roots.",
+      "unresolvedTitle": "Reclaimability not classified"
+    },
+    {
+      "id": "command-line",
+      "question": "Browse command-line tools",
+      "title": "Command-line software by source and role",
+      "presentation": "groupedBrowser",
+      "supportedEntityTypes": ["packageManager", "package", "shellFramework"],
+      "supportedRelationshipTypes": ["owns", "provides", "launches"],
+      "sections": [
+        {
+          "id": "package-managers",
+          "title": "Package managers",
+          "explanation": "Observed software managers and their retained inventories.",
+          "entityTypes": ["packageManager"],
+          "grouping": "flat"
+        },
+        {
+          "id": "requested-packages",
+          "title": "User-requested packages",
+          "explanation": "Packages whose inventory explicitly reports a requested installation reason.",
+          "entityTypes": ["package"],
+          "grouping": "flat",
+          "detailLabel": "Installation reason",
+          "detailValues": ["Installed on request"]
+        },
+        {
+          "id": "dependency-packages",
+          "title": "Dependency packages",
+          "explanation": "Packages whose inventory explicitly reports dependency status.",
+          "entityTypes": ["package"],
+          "grouping": "flat",
+          "detailLabel": "Installation reason",
+          "detailValues": ["Installed as a dependency"]
+        },
+        {
+          "id": "runtimes",
+          "title": "Runtimes and developer tools",
+          "explanation": "Capabilities identified by configured runtime detectors.",
+          "entityTypes": ["package"],
+          "grouping": "detail",
+          "detailLabel": "Capability kind"
+        },
+        {
+          "id": "shell-frameworks",
+          "title": "Shell frameworks",
+          "explanation": "Frameworks identified by bounded, configured evidence.",
+          "entityTypes": ["shellFramework"],
+          "grouping": "flat"
+        },
+        {
+          "id": "commands",
+          "title": "Unclassified commands",
+          "explanation": "Commands are grouped only by observed discovery source; HAL does not guess purpose from names.",
+          "entityTypes": ["package"],
+          "grouping": "detail",
+          "detailLabel": "Discovered from"
+        }
+      ],
+      "drillIn": "boundedRelationships",
+      "initialItemBudget": 30,
+      "emptyTitle": "No command-line software observed",
+      "emptyMessage": "The configured command-line collectors did not produce software entities.",
+      "unresolvedTitle": "Explicitly unclassified"
+    },
+    {
+      "id": "shell-path",
+      "question": "Visualize shell PATH",
+      "title": "Shell PATH visualizer",
+      "presentation": "purposeBuilt",
+      "supportedEntityTypes": ["file"],
+      "supportedRelationshipTypes": [],
+      "sections": [],
+      "drillIn": "none",
+      "initialItemBudget": 1,
+      "emptyTitle": "Paste shell configuration",
+      "emptyMessage": "HAL analyzes only the text you explicitly provide."
+    },
+    {
+      "id": "filesystem",
+      "question": "Understand where software lives",
+      "title": "Filesystem map",
+      "presentation": "purposeBuilt",
+      "supportedEntityTypes": ["application", "file", "package", "packageManager", "shellFramework"],
+      "supportedRelationshipTypes": ["owns", "reads and writes", "may belong to"],
+      "sections": [],
+      "drillIn": "boundedRelationships",
+      "initialItemBudget": 30,
+      "emptyTitle": "No observed paths",
+      "emptyMessage": "HAL has not indexed the disk and did not receive any configured paths."
+    }
+  ]
+}

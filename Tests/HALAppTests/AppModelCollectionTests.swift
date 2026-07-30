@@ -2,6 +2,7 @@ import Foundation
 import HALCollectors
 import HALDataSource
 import HALDomain
+import HALVisualization
 import Testing
 
 @testable import HALApp
@@ -28,6 +29,39 @@ struct AppModelCollectionTests {
     model.exploreLinkedApplications()
     #expect(!model.linkCompletionPending)
     #expect(model.destination == .applications)
+  }
+
+  @Test("Homepage destinations resolve to their manifest exploration contexts")
+  func homepageExplorationRoutes() {
+    let unused = snapshot(id: "unused", entityName: "Unused")
+    let model = makeModel(preferences: MemoryPreferences()) { unused }
+    let routes: [(AppModel.Destination, String, ExplorationPresentationKind)] = [
+      (.applications, "applications", .applicationBrowser),
+      (.startup, "startup", .groupedBrowser),
+      (.storage, "storage", .groupedBrowser),
+      (.commandLine, "command-line", .groupedBrowser),
+      (.shellPath, "shell-path", .purposeBuilt),
+      (.filesystem, "filesystem", .purposeBuilt),
+    ]
+
+    for (destination, contextID, kind) in routes {
+      model.navigate(to: destination)
+      #expect(model.explorationContext?.id == contextID)
+      #expect(model.explorationContext?.presentation == kind)
+    }
+  }
+
+  @Test("Aggregate destinations have a bounded first-screen contract")
+  func aggregateDestinationBudgets() {
+    let unused = snapshot(id: "unused", entityName: "Unused")
+    let model = makeModel(preferences: MemoryPreferences()) { unused }
+    for destination in [
+      AppModel.Destination.applications, .startup, .storage, .commandLine,
+    ] {
+      model.navigate(to: destination)
+      #expect((model.explorationContext?.initialItemBudget ?? 101) <= 30)
+      #expect(model.explorationContext?.presentation != .centeredMap)
+    }
   }
 
   @Test("Cancelling initial link ignores a late result and stays synthetic")

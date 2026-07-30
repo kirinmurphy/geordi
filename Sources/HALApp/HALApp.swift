@@ -112,6 +112,7 @@ final class AppModel {
   private let userDataStore: HALUserDataStore?
   private let liveSnapshot: @Sendable () throws -> GraphSnapshot
   private let displayPolicy: DisplayPolicy?
+  private let explorationContexts: ExplorationContextConfiguration?
   private var collectionTask: Task<Void, Never>?
   private var collectionGeneration: UUID?
   var fixture: SystemGraph
@@ -154,6 +155,7 @@ final class AppModel {
     self.userDataStore = userDataStore
     self.liveSnapshot = liveSnapshot
     displayPolicy = try? DisplayPolicy.bundled()
+    explorationContexts = try? ExplorationContextConfiguration.bundled()
     let initialMode = preferences.mode()
     if initialMode == .linkedMac {
       selectedApplicationCategoryID = applicationClassifications?.defaultCategoryID
@@ -537,6 +539,26 @@ final class AppModel {
         centeredOn: id,
         policy: policy
       )
+    }
+  }
+
+  var explorationContext: ExplorationContext? {
+    let id: String? =
+      switch destination {
+      case .applications: "applications"
+      case .startup: "startup"
+      case .storage: "storage"
+      case .commandLine: "command-line"
+      case .shellPath: "shell-path"
+      case .filesystem: "filesystem"
+      default: nil
+      }
+    return id.flatMap { explorationContexts?.context($0) }
+  }
+
+  var explorationPresentation: ExplorationPresentation? {
+    explorationContext.map {
+      ExplorationPresenter().present(graph: fixture, context: $0)
     }
   }
 
