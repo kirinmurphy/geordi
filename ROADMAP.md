@@ -71,6 +71,22 @@ The explainer is observational. It does not unload, disable, edit, delete, or
 approve a service. Any future control requires a separately reviewed lifecycle,
 authorization, recovery, and system-integrity plan.
 
+## Future roadmap initiative — Portable Mac profiles
+
+HAL may eventually pair its evidence-backed understanding of a Mac with a
+separate, user-authored desired-machine profile that can be reviewed and
+deployed to another Mac.
+
+Companion prototype: sibling repository `../hal-bootstrap`
+
+Prioritization and safety plan: `FUTURE_PHASE_PLANS.md`
+
+This is not ordinary HAL collection. Import and comparison can remain
+read-only, while installation, shell configuration, and migration require a
+separate explicit authorization boundary. The desired profile must use typed,
+schema-validated installation and environment actions rather than arbitrary
+uploaded shell commands.
+
 ## Milestone 0: repository and interactive concept
 
 ### Outcome

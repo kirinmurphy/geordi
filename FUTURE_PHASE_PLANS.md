@@ -70,6 +70,65 @@ answer “where did this come from?” in representative evaluations.
 The first concrete provenance gap is reliable Homebrew cask ownership for
 applications placed in `/Applications`; see `USER_FACING_TODO.md`.
 
+## Candidate product phase — Portable Mac profiles and guided bootstrap
+
+Companion prototype: sibling repository `../hal-bootstrap`
+
+Potential outcome:
+
+- upload, import, edit, validate, and export a versioned desired-machine
+  profile;
+- describe applications, command-line tools, bundles, dependencies,
+  installation adapters, shell-environment requirements, and verification
+  checks;
+- compare a captured HAL profile with the desired profile;
+- preview a deterministic, dependency-ordered migration plan;
+- move a reviewed laptop profile to another Mac without treating the source
+  machine's incidental state as universally desired; and
+- generate or execute an auditable bootstrap plan only after explicit review.
+
+The existing `hal-bootstrap` starter validates the separation between
+detection and installation and uses a stub installer by default. Preserve that
+separation if the projects converge: HAL observations are evidence about what
+exists, while a portable profile is an explicit user-authored decision about
+what should be installed.
+
+The profile format must be versioned and schema validated. Growable
+applications, tools, bundles, dependencies, install adapters, PATH
+contributions, and verification checks belong in manifests rather than
+hardcoded application logic.
+
+Shell configuration is part of the desired-machine plan. For example,
+installing Go on macOS does not itself make `$HOME/go/bin` discoverable. A
+default-tools profile should be able to declare that PATH contribution,
+explain why it is needed, detect an equivalent existing entry, preview an
+idempotent `.zshrc` change, distinguish persistent configuration from the
+current shell process, and provide rollback for HAL-managed edits.
+
+Safety boundary:
+
+- importing or comparing a profile is read-only;
+- uploaded profiles are untrusted data and cannot introduce arbitrary shell
+  commands;
+- installation behavior uses reviewed, typed adapters with constrained
+  arguments;
+- every filesystem or shell-profile change is previewed and explicitly
+  approved;
+- secrets and machine-specific paths are excluded or represented by validated
+  placeholders;
+- destructive replacement and cleanup are outside the first phase; and
+- bootstrap execution remains a separate authorization boundary from HAL's
+  ordinary synthetic or linked read-only collection.
+
+Entry signal: users want to reproduce an understood machine configuration on a
+new Mac, and the `hal-bootstrap` prototype demonstrates deterministic planning,
+idempotent environment changes, verification, and rollback without arbitrary
+command execution.
+
+Priority: after daemon explanation and representative Application Story
+validation; before installation-footprint automation or destructive reclaim
+work.
+
 ## Later milestones
 
 - Reclaim planning and recoverable cleanup
