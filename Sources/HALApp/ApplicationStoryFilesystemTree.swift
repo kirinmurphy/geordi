@@ -117,10 +117,8 @@ private struct ApplicationStoryTreeBranch: View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(spacing: 8) {
         if isRoot {
-          Image(systemName: "circle.fill")
-            .font(.system(size: 7, weight: .semibold))
-            .foregroundStyle(.tertiary)
-            .frame(width: 18)
+          ApplicationStoryTreeRootConnector(
+            hasDescendants: !node.items.isEmpty || !node.children.isEmpty)
         } else {
           ApplicationStoryTreeConnector(
             ancestorContinuations: ancestorContinuations,
@@ -206,7 +204,13 @@ private struct ApplicationStoryTreeLeaf: View {
     .padding(.vertical, 10)
     .background(.background.opacity(0.45))
     .overlay(alignment: .bottom) {
-      Rectangle().fill(.secondary.opacity(0.12)).frame(height: 1)
+      HStack(spacing: 0) {
+        // Keep the row separator from painting over the vertical tree trunks.
+        Color.clear.frame(
+          width: CGFloat(ancestorContinuations.count + 1) * 20 + 12
+        )
+        Rectangle().fill(.secondary.opacity(0.12)).frame(height: 1)
+      }
     }
   }
 
@@ -215,6 +219,32 @@ private struct ApplicationStoryTreeLeaf: View {
     return summaries.isEmpty
       ? "HAL retained no supporting evidence details."
       : summaries.prefix(2).joined(separator: " ")
+  }
+}
+
+private struct ApplicationStoryTreeRootConnector: View {
+  let hasDescendants: Bool
+
+  var body: some View {
+    Canvas { context, size in
+      let x = size.width / 2
+      let midpoint = size.height / 2
+      if hasDescendants {
+        var trunk = Path()
+        trunk.move(to: CGPoint(x: x, y: midpoint))
+        trunk.addLine(to: CGPoint(x: x, y: size.height))
+        context.stroke(
+          trunk,
+          with: .color(.secondary.opacity(0.42)),
+          style: StrokeStyle(lineWidth: 1.5, lineCap: .square)
+        )
+      }
+      context.fill(
+        Path(ellipseIn: CGRect(x: x - 3.5, y: midpoint - 3.5, width: 7, height: 7)),
+        with: .color(.secondary.opacity(0.55))
+      )
+    }
+    .frame(width: 20)
   }
 }
 
@@ -249,8 +279,8 @@ private struct ApplicationStoryTreeConnector: View {
 
       context.stroke(
         path,
-        with: .color(.secondary.opacity(0.34)),
-        style: StrokeStyle(lineWidth: 1, lineCap: .square, lineJoin: .miter)
+        with: .color(.secondary.opacity(0.42)),
+        style: StrokeStyle(lineWidth: 1.5, lineCap: .square, lineJoin: .miter)
       )
     }
     .frame(width: CGFloat(ancestorContinuations.count + 1) * columnWidth)
