@@ -9,7 +9,7 @@ struct ApplicationRelationshipPreview: View {
 
   var body: some View {
     GeometryReader { proxy in
-      let width = min(proxy.size.width * 0.9, 750)
+      let width = min(proxy.size.width * 0.9, 800)
       RelationshipCanvas(
         graph: graph,
         layout: layout,
