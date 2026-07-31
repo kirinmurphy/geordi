@@ -30,7 +30,7 @@
       "title": "Startup declarations by owning software",
       "presentation": "groupedBrowser",
       "supportedEntityTypes": ["application", "persistence", "process"],
-      "supportedRelationshipTypes": ["persists through", "launches"],
+      "supportedRelationshipTypes": ["persists through", "launches", "observed running"],
       "sections": [
         {
           "id": "unresolved-declarations",

@@ -1,6 +1,6 @@
 # HAL Background Services and Daemon Explainer
 
-Status: next Priority 1 product initiative  
+Status: Slice 2 process correlation complete; loaded-state collection deferred
 Updated: July 30, 2026
 
 ## Product promise
@@ -113,16 +113,34 @@ are loaded or running.
 
 ### Slice 2 — Point-in-time activity
 
-- Add one bounded, read-only, timeout-limited loaded-service observation
-  adapter after platform feasibility review.
-- Match declarations to loaded records using durable identifiers declared in a
-  versioned strategy manifest.
-- Correlate exact observed executable identity to existing process snapshots.
-- Show observed running instances separately from loaded state.
-- Represent unavailable, permission-denied, partial, and ambiguous results.
+- [x] Correlate exact observed executable identity to existing process
+  snapshots through a versioned, schema-validated strategy manifest.
+- [x] Show observed running instances separately from loaded state, retaining
+  point-in-time observation timestamps, process entity IDs, and evidence.
+- [x] Represent unavailable, permission-denied, partial, unmatched, and
+  ambiguous process-correlation results without treating absence as
+  inactivity.
+- [ ] Add loaded-service observation. The feasibility review below did not
+  justify a collector in this slice.
 
-Exit: a user can tell whether HAL observed a service loaded, running, both, or
-neither at one recorded time.
+Process-correlation exit: complete. Loaded state remains explicitly unavailable.
+
+#### Loaded-state feasibility result
+
+The reviewed built-in candidate was `launchctl print` for a specific launchd
+domain or service target. It is read-only and can be timeout-limited, but its
+human-oriented output is not a stable, documented machine schema; a domain
+print can be broad; and output may expose arguments, environment values, and
+other payload HAL is prohibited from retaining. Enumerating targets would also
+require a separately bounded and manifest-defined source of loaded identifiers.
+`launchctl print-disabled` reports disabled overrides, not loaded state, and
+process presence cannot substitute for either source.
+
+No loaded-state collector is added. Before reconsideration, HAL needs a reviewed
+field allowlist and parser, manifest-defined domains and record budgets,
+fixtures for OS output variants, deterministic normalization, explicit timeout
+and permission outcomes, and proof that prohibited payloads are discarded
+before persistence. Ordinary synthetic launch remains non-collecting.
 
 ### Slice 3 — Ownership and provenance
 

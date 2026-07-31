@@ -14,6 +14,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   public let maxUnmatchedProcesses: Int
   public let persistenceCollector: PersistenceCollector
   public let persistenceResolver: PersistenceApplicationResolver
+  public let persistenceRuntimeMatcher: PersistenceRuntimeMatcher?
   public let homebrewCollector: HomebrewCollector?
   public let runtimeCollector: RuntimeCollector?
   public let packageEcosystemCollector: PackageEcosystemCollector?
@@ -31,6 +32,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     rebuildableDataConfiguration: RebuildableDataConfiguration? = nil,
     processConfiguration: ProcessCollectorConfiguration,
     persistenceRoots: [PersistenceSearchRoot],
+    persistenceRuntimeMatchingConfiguration: PersistenceRuntimeMatchingConfiguration? = nil,
     homebrewConfiguration: HomebrewInstallationConfiguration? = nil,
     runtimeConfiguration: RuntimeCollectorConfiguration? = nil,
     packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
@@ -95,6 +97,9 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       clock: clock
     )
     persistenceResolver = PersistenceApplicationResolver(clock: clock)
+    persistenceRuntimeMatcher = persistenceRuntimeMatchingConfiguration.map {
+      PersistenceRuntimeMatcher(configuration: $0, clock: clock)
+    }
     homebrewCollector = homebrewConfiguration.map {
       HomebrewCollector(configuration: $0, clock: clock)
     }
@@ -149,6 +154,8 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       rebuildableDataConfiguration: rebuildableDataConfiguration,
       processConfiguration: processConfiguration,
       persistenceRoots: try persistenceConfiguration.resolvedRoots(userHome: userHome),
+      persistenceRuntimeMatchingConfiguration:
+        try PersistenceRuntimeMatchingConfiguration.bundled(),
       homebrewConfiguration: homebrewConfiguration,
       runtimeConfiguration: runtimeConfiguration,
       packageEcosystemConfiguration: packageEcosystemConfiguration,
@@ -195,6 +202,11 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       declarations: persistence,
       applications: applications.observations
     )
+    let persistenceRuntimeCorrelations = persistenceRuntimeMatcher?.match(
+      scanID: scanID,
+      declarations: persistence,
+      processes: processes
+    )
     let homebrew = homebrewCollector?.collect(scanID: scanID)
     let runtimes = runtimeCollector?.collect(scanID: scanID)
     let packageEcosystems = packageEcosystemCollector?.collect(scanID: scanID)
@@ -213,6 +225,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       maxUnmatchedProcesses: maxUnmatchedProcesses,
       persistence: persistence,
       persistenceResolutions: persistenceResolutions,
+      persistenceRuntimeCorrelations: persistenceRuntimeCorrelations,
       homebrew: homebrew,
       runtimes: runtimes,
       packageEcosystems: packageEcosystems,

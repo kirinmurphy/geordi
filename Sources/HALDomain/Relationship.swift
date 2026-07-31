@@ -11,6 +11,7 @@ public enum RelationshipType: String, CaseIterable, Codable, Sendable {
   case occurredNear = "occurred near"
   case mayBelongTo = "may belong to"
   case shares
+  case observedRunning = "observed running"
 }
 
 public enum Confidence: String, CaseIterable, Codable, Comparable, Sendable {

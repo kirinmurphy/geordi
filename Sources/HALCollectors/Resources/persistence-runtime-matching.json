@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "maximumMatchesPerDeclaration": 32,
+  "strategies": [
+    {
+      "id": "exact-declared-executable",
+      "priority": 100,
+      "declarationIdentityField": "programPath",
+      "processIdentityField": "executablePath",
+      "comparison": "exact",
+      "applicableKinds": ["launchAgent", "launchDaemon"],
+      "relationshipType": "observed running",
+      "confidence": "confirmed",
+      "explanation": "HAL observed the declared executable running during this snapshot."
+    }
+  ],
+  "outcomes": [
+    {"state": "matched", "label": "Observed running", "explanation": "HAL observed the declared executable running during this snapshot."},
+    {"state": "ambiguous", "label": "Correlation ambiguous", "explanation": "Retained identity was insufficient or exceeded the bounded match budget."},
+    {"state": "unmatched", "label": "Not observed in this snapshot", "explanation": "Absence from one process snapshot is inconclusive."},
+    {"state": "partial", "label": "Process evidence partial", "explanation": "The process snapshot was incomplete."},
+    {"state": "unavailable", "label": "Process evidence unavailable", "explanation": "No usable process snapshot was available."},
+    {"state": "permissionDenied", "label": "Process evidence permission denied", "explanation": "Permission prevented a usable process snapshot."}
+  ]
+}

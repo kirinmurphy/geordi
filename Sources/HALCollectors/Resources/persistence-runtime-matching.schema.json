@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "maximumMatchesPerDeclaration", "strategies", "outcomes"],
+  "properties": {
+    "schemaVersion": {"type": "integer"},
+    "maximumMatchesPerDeclaration": {"type": "integer", "minimum": 1, "maximum": 128},
+    "strategies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "priority", "declarationIdentityField", "processIdentityField", "comparison", "applicableKinds", "relationshipType", "confidence", "explanation"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "priority": {"type": "integer"},
+          "declarationIdentityField": {"enum": ["programPath"]},
+          "processIdentityField": {"enum": ["executablePath"]},
+          "comparison": {"enum": ["exact"]},
+          "applicableKinds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["launchAgent", "launchDaemon"]}},
+          "relationshipType": {"enum": ["observed running"]},
+          "confidence": {"enum": ["confirmed"]},
+          "explanation": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "outcomes": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["state", "label", "explanation"],
+        "properties": {
+          "state": {"enum": ["matched", "ambiguous", "unmatched", "partial", "unavailable", "permissionDenied"]},
+          "label": {"type": "string", "minLength": 1},
+          "explanation": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

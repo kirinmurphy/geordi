@@ -63,6 +63,32 @@
         { "label": "Evidence state", "value": "Negative" },
         { "label": "App Store receipt", "value": "Not observed" }
       ]
+    },
+    {
+      "id": "persistence.process-partial",
+      "type": "persistence",
+      "name": "Partial process evidence declaration",
+      "summary": "A configured declaration whose process snapshot was incomplete.",
+      "details": [
+        { "label": "Type", "value": "Launch daemon" },
+        { "label": "Scope", "value": "System-wide" },
+        { "label": "Ownership", "value": "Unresolved" },
+        { "label": "Loaded state", "value": "Unavailable — no reviewed loaded-service source" },
+        { "label": "Running state", "value": "Process evidence partial" }
+      ]
+    },
+    {
+      "id": "persistence.process-unavailable",
+      "type": "persistence",
+      "name": "Unavailable process evidence declaration",
+      "summary": "A configured declaration retained when process evidence was unavailable.",
+      "details": [
+        { "label": "Type", "value": "Launch agent" },
+        { "label": "Scope", "value": "User session" },
+        { "label": "Ownership", "value": "Unresolved" },
+        { "label": "Loaded state", "value": "Unavailable — no reviewed loaded-service source" },
+        { "label": "Running state", "value": "Process evidence unavailable" }
+      ]
     }
   ],
   "relationships": [

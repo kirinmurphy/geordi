@@ -518,6 +518,22 @@
         {
           "label" : "Ownership",
           "value" : "Matched to one application"
+        },
+        {
+          "label" : "Loaded state",
+          "value" : "Unavailable — no reviewed loaded-service source"
+        },
+        {
+          "label" : "Running state",
+          "value" : "Observed running in this snapshot"
+        },
+        {
+          "label" : "Process observation time",
+          "value" : "2026-07-30T18:00:00Z"
+        },
+        {
+          "label" : "Matched process instances",
+          "value" : "1"
         }
       ],
       "id" : "persistence.docker",
@@ -538,6 +554,14 @@
         {
           "label" : "Ownership",
           "value" : "Matched to one application"
+        },
+        {
+          "label" : "Loaded state",
+          "value" : "Unavailable — no reviewed loaded-service source"
+        },
+        {
+          "label" : "Running state",
+          "value" : "Not observed in this snapshot — absence is inconclusive"
         }
       ],
       "id" : "persistence.chatgpt",
@@ -624,6 +648,32 @@
   "id" : "familiar-mac",
   "name" : "This Mac",
   "relationships" : [
+    {
+      "confidence" : "confirmed",
+      "evidence" : [
+        {
+          "id" : "docker-runtime-process",
+          "kind" : "observed",
+          "observedAt" : 807145200,
+          "source" : "Synthetic point-in-time process snapshot",
+          "summary" : "The declared executable identity was present in the snapshot."
+        },
+        {
+          "id" : "docker-runtime-exact-match",
+          "kind" : "derived",
+          "observedAt" : 807145200,
+          "ruleID" : "exact-declared-executable",
+          "ruleVersion" : 1,
+          "source" : "Persistence runtime matching manifest",
+          "summary" : "The retained declaration and process executable paths were exactly equal."
+        }
+      ],
+      "explanation" : "HAL observed the declared executable running during this snapshot.",
+      "id" : "docker-runtime-observed",
+      "source" : "persistence.docker",
+      "target" : "process.docker",
+      "type" : "observed running"
+    },
     {
       "confidence" : "confirmed",
       "evidence" : [

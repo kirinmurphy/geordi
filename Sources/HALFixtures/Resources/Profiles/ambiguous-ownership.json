@@ -39,6 +39,14 @@
         {
           "label" : "Ownership",
           "value" : "Ambiguous"
+        },
+        {
+          "label" : "Loaded state",
+          "value" : "Unavailable — no reviewed loaded-service source"
+        },
+        {
+          "label" : "Running state",
+          "value" : "Correlation ambiguous"
         }
       ],
       "id" : "persistence.shared",

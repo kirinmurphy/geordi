@@ -17,6 +17,7 @@ public struct ApplicationGraphProjector: Sendable {
     maxUnmatchedProcesses: Int = 0,
     persistence: CollectorOutput<PersistenceDeclarationValue>? = nil,
     persistenceResolutions: CollectorOutput<PersistenceApplicationResolutionValue>? = nil,
+    persistenceRuntimeCorrelations: CollectorOutput<PersistenceRuntimeCorrelationValue>? = nil,
     homebrew: CollectorOutput<HomebrewInventoryValue>? = nil,
     runtimes: CollectorOutput<RuntimeValue>? = nil,
     packageEcosystems: CollectorOutput<PackageEcosystemInventoryValue>? = nil,
@@ -299,18 +300,28 @@ public struct ApplicationGraphProjector: Sendable {
         ($0.value.pid, $0)
       }
     )
+    let correlatedProcessIDs = Set(
+      (persistenceRuntimeCorrelations?.observations ?? []).flatMap(\.value.processIDs)
+    )
     let visibleProcessResolutions = preferredProcessResolutions(
       processResolutions?.observations ?? [],
       processesByPID: processesByPID,
       limit: maxProcessesPerApplication
     )
+    let correlatedProcessResolutions = (processResolutions?.observations ?? []).filter {
+      correlatedProcessIDs.contains($0.value.processID)
+    }
     let unresolvedProcessResolutions = preferredUnresolvedProcessResolutions(
       processResolutions?.observations ?? [],
       processesByPID: processesByPID,
       limit: maxUnmatchedProcesses
     )
     let processGroups = Dictionary(
-      grouping: visibleProcessResolutions + unresolvedProcessResolutions
+      grouping: Dictionary(
+        (visibleProcessResolutions + correlatedProcessResolutions + unresolvedProcessResolutions)
+          .map { ($0.value.processID, $0) },
+        uniquingKeysWith: { first, _ in first }
+      ).values
     ) { resolution in
       processGroupKey(resolution: resolution, processesByPID: processesByPID)
     }
@@ -480,10 +491,16 @@ public struct ApplicationGraphProjector: Sendable {
         ($0.value.declarationPath, $0)
       }
     )
+    let runtimeCorrelationsByPath = Dictionary(
+      uniqueKeysWithValues: (persistenceRuntimeCorrelations?.observations ?? []).map {
+        ($0.value.declarationPath, $0)
+      }
+    )
     let persistenceEntities = declarationsByPath.values.sorted {
       $0.value.declarationPath < $1.value.declarationPath
     }.map { declaration in
       let resolution = resolutionsByPath[declaration.value.declarationPath]
+      let runtime = runtimeCorrelationsByPath[declaration.value.declarationPath]
       let ownership =
         switch resolution?.value.state {
         case .matched: "Matched to one application"
@@ -503,13 +520,23 @@ public struct ApplicationGraphProjector: Sendable {
           declaration.value.scope == .user ? "User session" : "System-wide"
         ),
         Detail("Ownership", ownership),
-        Detail("Loaded state", "Not observed"),
-        Detail("Running state", "Not directly observed for this declaration"),
+        Detail("Loaded state", "Unavailable — no reviewed loaded-service source"),
+        Detail("Running state", runtimeState(runtime?.value.state)),
         Detail("Run at load", declaration.value.runAtLoad ? "Yes" : "No"),
         Detail("Keep alive", declaration.value.keepAlive ? "Yes" : "No"),
       ]
       if let program = declaration.value.programPath {
         details.append(Detail("Program", program))
+      }
+      if let runtime {
+        let processObservationTime =
+          runtime.value.processIDs.compactMap {
+            processesByPID[$0]?.observedAt
+          }.max() ?? runtime.observedAt
+        details.append(
+          Detail("Process observation time", Self.timestamp(processObservationTime))
+        )
+        details.append(Detail("Matched process instances", "\(runtime.value.processIDs.count)"))
       }
       return Entity(
         id: persistenceEntityID(declaration.value.declarationPath),
@@ -565,6 +592,49 @@ public struct ApplicationGraphProjector: Sendable {
         ]
       )
     }
+    let persistenceRuntimeRelationships = (persistenceRuntimeCorrelations?.observations ?? [])
+      .filter { $0.value.state == .matched }
+      .flatMap { correlation -> [Relationship] in
+        correlation.value.processIDs.compactMap { pid in
+          guard
+            let process = processesByPID[pid],
+            let resolution = processResolutions?.observations.first(where: {
+              $0.value.processID == pid
+            })
+          else { return nil }
+          let processID = processEntityID(resolution: resolution, process: process.value)
+          return Relationship(
+            id: RelationshipID(
+              "persistence-runtime:\(persistenceEntityID(correlation.value.declarationPath).rawValue):\(processID.rawValue)"
+            ),
+            source: persistenceEntityID(correlation.value.declarationPath),
+            target: processID,
+            type: .observedRunning,
+            confidence: correlation.value.confidence ?? .confirmed,
+            explanation: "HAL observed the declared executable running during this snapshot.",
+            evidence: [
+              Evidence(
+                id: "\(process.id.rawValue):persistence-runtime",
+                kind: .observed,
+                summary: "The process snapshot retained this exact executable path.",
+                source: "Read-only process snapshot",
+                observationID: process.id,
+                observedAt: process.observedAt
+              ),
+              Evidence(
+                id: "\(correlation.id.rawValue):exact-match",
+                kind: .derived,
+                summary: "The declaration and process executable identities were exactly equal.",
+                source: "Persistence runtime matching manifest",
+                observationID: correlation.id,
+                observedAt: correlation.observedAt,
+                ruleID: correlation.value.strategyID,
+                ruleVersion: PersistenceRuntimeMatcher.version
+              ),
+            ]
+          )
+        }
+      }
     let homebrewManagerEntities =
       (homebrew?.observations.first).map { observation in
         [
@@ -1048,6 +1118,9 @@ public struct ApplicationGraphProjector: Sendable {
     if let persistenceResolutions {
       collectorRuns.append(persistenceResolutions.run)
     }
+    if let persistenceRuntimeCorrelations {
+      collectorRuns.append(persistenceRuntimeCorrelations.run)
+    }
     if let homebrew {
       collectorRuns.append(homebrew.run)
     }
@@ -1078,7 +1151,8 @@ public struct ApplicationGraphProjector: Sendable {
       + shellFrameworkEntities + shellProcessEntities)
       .sorted { $0.id.rawValue < $1.id.rawValue }
     let projectedRelationships =
-      (processRelationships + persistenceRelationships + relationships
+      (processRelationships + persistenceRelationships + persistenceRuntimeRelationships
+      + relationships
       + rebuildableManagerRelationships + homebrewPackageRelationships
       + homebrewDependencyRelationships
       + homebrewCaskRelationships + homebrewApplicationRelationships
@@ -1204,6 +1278,31 @@ public struct ApplicationGraphProjector: Sendable {
 
   private func persistenceEntityID(_ path: String) -> EntityID {
     EntityID("persistence:declaration:\(path)")
+  }
+
+  private func runtimeState(_ state: PersistenceRuntimeCorrelationState?) -> String {
+    switch state {
+    case .matched: "Observed running in this snapshot"
+    case .ambiguous: "Correlation ambiguous"
+    case .unmatched: "Not observed in this snapshot — absence is inconclusive"
+    case .partial: "Process evidence partial"
+    case .unavailable: "Process evidence unavailable"
+    case .permissionDenied: "Process evidence permission denied"
+    case nil: "Process evidence not evaluated"
+    }
+  }
+
+  private static func timestamp(_ date: Date) -> String {
+    date.formatted(
+      Date.ISO8601FormatStyle(
+        dateSeparator: .dash,
+        dateTimeSeparator: .standard,
+        timeSeparator: .colon,
+        timeZoneSeparator: .colon,
+        includingFractionalSeconds: false,
+        timeZone: .gmt
+      )
+    )
   }
 
   private func rebuildableDataEntityID(_ path: String) -> EntityID {

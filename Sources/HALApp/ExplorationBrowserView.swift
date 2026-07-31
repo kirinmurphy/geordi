@@ -220,15 +220,20 @@ struct ExplorationBrowserView: View {
       let type = entity.details.first { $0.label == "Type" }?.value ?? "Startup declaration"
       let scope = entity.details.first { $0.label == "Scope" }?.value
       let ownership = entity.details.first { $0.label == "Ownership" }?.value
+      let running = entity.details.first { $0.label == "Running state" }?.value
+      let observedAt = entity.details.first { $0.label == "Process observation time" }?.value
       let activation = [
         entity.details.first { $0.label == "Run at load" }?.value == "Yes"
           ? "run at load configured" : nil,
         entity.details.first { $0.label == "Keep alive" }?.value == "Yes"
           ? "restart policy configured" : nil,
       ].compactMap { $0 }.joined(separator: ", ")
-      return [type, scope, ownership, activation.isEmpty ? nil : activation]
-        .compactMap { $0 }
-        .joined(separator: " · ")
+      return [
+        type, scope, ownership, running, observedAt.map { "observed \($0)" },
+        activation.isEmpty ? nil : activation,
+      ]
+      .compactMap { $0 }
+      .joined(separator: " · ")
     }
     if let path = entity.details.first(where: {
       ["Path", "Location", "Executable", "Declaration"].contains($0.label)

@@ -94,7 +94,8 @@
     "relationshipType": {
       "enum": [
         "owns", "provides", "launches", "reads and writes", "persists through",
-        "consumes", "contributes to", "occurred near", "may belong to", "shares"
+        "consumes", "contributes to", "occurred near", "may belong to", "shares",
+        "observed running"
       ]
     }
   }

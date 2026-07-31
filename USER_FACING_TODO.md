@@ -89,12 +89,14 @@ Acceptance criteria:
 
 Roadmap: `DAEMON_EXPLAINER_PLAN.md`
 
-Implementation status: Slice 1 completed. Live normalization now preserves
+Implementation status: Slice 2 process correlation completed. Live normalization preserves
 every valid retained declaration, including unresolved ownership, with its
 configured scope and kind. The startup browser separates unresolved items,
 LaunchDaemons, and LaunchAgents; matched sections are grouped by owning
-software. Loaded and running state remain explicitly unobserved rather than
-being inferred from configuration.
+software. Exact retained executable identity is correlated to point-in-time
+process observations through a versioned matching manifest. Loaded state
+remains explicitly unavailable rather than being inferred from configuration
+or process presence.
 
 Current gap:
 
@@ -116,12 +118,18 @@ Completed first slice:
 5. Keep loaded and declaration-specific running state explicitly unavailable
    until dedicated read-only observations exist.
 
-Next implementation slice:
+Completed second slice:
 
-1. Review a bounded, timeout-limited loaded-service observation source.
-2. Add a versioned identity-matching strategy manifest.
-3. Correlate exact declaration executable identity to existing point-in-time
-   process observations without treating absence as inactivity.
+1. Added a versioned, schema-validated identity-matching strategy manifest.
+2. Correlated exact declaration executable paths to exact retained process
+   executable paths, with multiple-instance, ambiguous, partial, unavailable,
+   permission-denied, and unmatched outcomes.
+3. Preserved process observation timestamps, provenance, stable entity IDs,
+   deterministic relationship IDs, and inconclusive absence language.
+4. Reviewed `launchctl print` and `launchctl print-disabled`. No loaded-state
+   collector was added because the available output is not yet justified as a
+   bounded stable machine contract and may contain prohibited arguments or
+   environment payloads. See `DAEMON_EXPLAINER_PLAN.md`.
 
 Acceptance criteria:
 
