@@ -1,7 +1,55 @@
 import Foundation
 import HALDomain
 
-public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
+private enum IndependentCollectionResult: Sendable {
+  case signatures(CollectorOutput<ApplicationSignatureValue>)
+  case provenance(CollectorOutput<ApplicationProvenanceValue>)
+  case rebuildableData(CollectorOutput<RebuildableDataValue>)
+  case processes(CollectorOutput<ProcessValue>)
+  case persistence(CollectorOutput<PersistenceDeclarationValue>)
+  case homebrew(CollectorOutput<HomebrewInventoryValue>)
+  case runtimes(CollectorOutput<RuntimeValue>)
+  case packageEcosystems(CollectorOutput<PackageEcosystemInventoryValue>)
+  case commandLineSoftware(CollectorOutput<CommandLineSoftwareValue>)
+  case shellFrameworks(CollectorOutput<ShellFrameworkValue>)
+}
+
+enum BoundedCollectionScheduler {
+  static func run<Result: Sendable>(
+    _ jobs: [@Sendable () throws -> Result],
+    limit: Int
+  ) async throws -> [Result] {
+    precondition(limit > 0)
+    return try await withThrowingTaskGroup(of: (Int, Result).self) { group in
+      var nextIndex = 0
+      var results = [Result?](repeating: nil, count: jobs.count)
+
+      func submitNext() {
+        guard nextIndex < jobs.count else { return }
+        let index = nextIndex
+        let job = jobs[index]
+        nextIndex += 1
+        group.addTask {
+          try Task.checkCancellation()
+          let result = try job()
+          try Task.checkCancellation()
+          return (index, result)
+        }
+      }
+
+      for _ in 0..<min(limit, jobs.count) {
+        submitNext()
+      }
+      while let (index, result) = try await group.next() {
+        results[index] = result
+        submitNext()
+      }
+      return results.compactMap { $0 }
+    }
+  }
+}
+
+public struct ApplicationInventorySnapshotProvider: Sendable {
   public let scanID: ScanID
   public let collector: ApplicationBundleCollector
   public let signatureCollector: ApplicationSignatureCollector
@@ -174,43 +222,101 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     )
   }
 
-  public func snapshot() -> GraphSnapshot {
-    do {
-      return try cancellableSnapshot()
-    } catch {
-      return unavailableSnapshot(error)
-    }
-  }
-
-  public func cancellableSnapshot() throws -> GraphSnapshot {
+  public func cancellableSnapshot(maxConcurrentTasks: Int = 4) async throws -> GraphSnapshot {
+    precondition(maxConcurrentTasks > 0)
     try Task.checkCancellation()
     let applications = collector.collect(scanID: scanID)
     try Task.checkCancellation()
-    let signatures = signatureCollector.collect(
-      scanID: scanID,
-      applications: applications.observations
+
+    var jobs: [@Sendable () throws -> IndependentCollectionResult] = [
+      {
+        .signatures(
+          signatureCollector.collect(
+            scanID: scanID,
+            applications: applications.observations
+          )
+        )
+      },
+      {
+        .provenance(
+          provenanceCollector.collect(
+            scanID: scanID,
+            applications: applications.observations
+          )
+        )
+      },
+      { .processes(processCollector.collect(scanID: scanID)) },
+      { .persistence(persistenceCollector.collect(scanID: scanID)) },
+    ]
+    if let rebuildableDataCollector {
+      jobs.append { .rebuildableData(rebuildableDataCollector.collect(scanID: scanID)) }
+    }
+    if let homebrewCollector {
+      jobs.append { .homebrew(homebrewCollector.collect(scanID: scanID)) }
+    }
+    if let runtimeCollector {
+      jobs.append { .runtimes(runtimeCollector.collect(scanID: scanID)) }
+    }
+    if let packageEcosystemCollector {
+      jobs.append { .packageEcosystems(packageEcosystemCollector.collect(scanID: scanID)) }
+    }
+    if let commandLineSoftwareCollector {
+      jobs.append {
+        .commandLineSoftware(commandLineSoftwareCollector.collect(scanID: scanID))
+      }
+    }
+    if let shellFrameworkCollector {
+      jobs.append { .shellFrameworks(shellFrameworkCollector.collect(scanID: scanID)) }
+    }
+
+    let results = try await BoundedCollectionScheduler.run(
+      jobs,
+      limit: maxConcurrentTasks
     )
-    let provenance = provenanceCollector.collect(
-      scanID: scanID,
-      applications: applications.observations
-    )
+    var signatures: CollectorOutput<ApplicationSignatureValue>?
+    var provenance: CollectorOutput<ApplicationProvenanceValue>?
+    var rebuildableData: CollectorOutput<RebuildableDataValue>?
+    var processes: CollectorOutput<ProcessValue>?
+    var persistence: CollectorOutput<PersistenceDeclarationValue>?
+    var homebrew: CollectorOutput<HomebrewInventoryValue>?
+    var runtimes: CollectorOutput<RuntimeValue>?
+    var packageEcosystems: CollectorOutput<PackageEcosystemInventoryValue>?
+    var commandLineSoftware: CollectorOutput<CommandLineSoftwareValue>?
+    var shellFrameworks: CollectorOutput<ShellFrameworkValue>?
+    for result in results {
+      switch result {
+      case .signatures(let output): signatures = output
+      case .provenance(let output): provenance = output
+      case .rebuildableData(let output): rebuildableData = output
+      case .processes(let output): processes = output
+      case .persistence(let output): persistence = output
+      case .homebrew(let output): homebrew = output
+      case .runtimes(let output): runtimes = output
+      case .packageEcosystems(let output): packageEcosystems = output
+      case .commandLineSoftware(let output): commandLineSoftware = output
+      case .shellFrameworks(let output): shellFrameworks = output
+      }
+    }
+    guard
+      let signatures,
+      let provenance,
+      let processes,
+      let persistence
+    else {
+      preconditionFailure("Required collection stages did not produce results.")
+    }
+
     try Task.checkCancellation()
     let associatedLocations = associatedLocationCollector.collect(
       scanID: scanID,
       applications: applications.observations,
       signatures: signatures.observations
     )
-    try Task.checkCancellation()
-    let rebuildableData = rebuildableDataCollector?.collect(scanID: scanID)
-    try Task.checkCancellation()
-    let processes = processCollector.collect(scanID: scanID)
     let processResolutions = processResolver.resolve(
       scanID: scanID,
       processes: processes,
       applications: applications.observations
     )
-    try Task.checkCancellation()
-    let persistence = persistenceCollector.collect(scanID: scanID)
     let persistenceResolutions = persistenceResolver.resolve(
       scanID: scanID,
       declarations: persistence,
@@ -221,16 +327,6 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       declarations: persistence,
       processes: processes
     )
-    try Task.checkCancellation()
-    let homebrew = homebrewCollector?.collect(scanID: scanID)
-    try Task.checkCancellation()
-    let runtimes = runtimeCollector?.collect(scanID: scanID)
-    try Task.checkCancellation()
-    let packageEcosystems = packageEcosystemCollector?.collect(scanID: scanID)
-    try Task.checkCancellation()
-    let commandLineSoftware = commandLineSoftwareCollector?.collect(scanID: scanID)
-    try Task.checkCancellation()
-    let shellFrameworks = shellFrameworkCollector?.collect(scanID: scanID)
     try Task.checkCancellation()
     let snapshot = projector.snapshot(
       scanID: scanID,
@@ -257,41 +353,4 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     return snapshot
   }
 
-  private func unavailableSnapshot(_ error: Error) -> GraphSnapshot {
-    let now = Date()
-    return GraphSnapshot(
-      graph: SystemGraph(
-        metadata: FixtureMetadata(
-          id: "live-applications-\(scanID.rawValue)",
-          name: "This Mac",
-          summary: "Application inventory collection was unavailable."
-        ),
-        entities: [],
-        relationships: []
-      ),
-      scan: ScanContext(
-        id: scanID,
-        environment: .liveReadOnly,
-        startedAt: now,
-        completedAt: now,
-        collectorRuns: [
-          CollectorRun(
-            collectorID: "application-inventory",
-            collectorVersion: 1,
-            availability: .unavailable,
-            state: .failed,
-            startedAt: now,
-            completedAt: now,
-            issues: [
-              CollectionIssue(
-                id: "application-inventory-failure",
-                severity: .error,
-                summary: String(describing: error)
-              )
-            ]
-          )
-        ]
-      )
-    )
-  }
 }

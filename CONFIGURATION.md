@@ -89,7 +89,11 @@ individual manifest files.
 which collector adapters participate in a live snapshot. The adjacent schema
 restricts entries to reviewed adapter identifiers; Swift supplies the adapter
 registry and safety invariants. Adding or disabling an optional collector does
-not require changing application composition code.
+not require changing application composition code. The profile also bounds
+structured-concurrency fan-out. Application discovery runs first; independent
+collector stages then run within that bound, and application-dependent
+resolution and projection remain ordered. Result assembly preserves manifest
+submission order regardless of task completion order.
 
 `HALVisualization/Resources/reference-catalog.json` owns the user-facing
 reference concepts, symbols, tint tokens, and entity-type mappings. This keeps

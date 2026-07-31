@@ -6,10 +6,16 @@ public struct CollectionProfile: Codable, Hashable, Sendable {
   public static let currentVersion = 1
 
   public let schemaVersion: Int
+  public let maxConcurrentTasks: Int
   public let collectors: [CollectionProfileEntry]
 
-  public init(schemaVersion: Int = Self.currentVersion, collectors: [CollectionProfileEntry]) {
+  public init(
+    schemaVersion: Int = Self.currentVersion,
+    maxConcurrentTasks: Int,
+    collectors: [CollectionProfileEntry]
+  ) {
     self.schemaVersion = schemaVersion
+    self.maxConcurrentTasks = maxConcurrentTasks
     self.collectors = collectors
   }
 
@@ -104,7 +110,7 @@ public struct LiveApplicationSnapshotFactory: Sendable {
     Self(profile: try CollectionProfile.bundled())
   }
 
-  public func snapshot(scanID: ScanID) throws -> GraphSnapshot {
+  public func snapshot(scanID: ScanID) async throws -> GraphSnapshot {
     let enabled = Set(profile.collectors.filter(\.enabled).map(\.id))
     func includes(_ id: CollectionAdapterID) -> Bool { enabled.contains(id.rawValue) }
 
@@ -116,7 +122,7 @@ public struct LiveApplicationSnapshotFactory: Sendable {
     let persistenceConfiguration = try PersistenceCollectorConfiguration.bundled()
     let classifications = try ApplicationClassificationConfiguration.bundled()
 
-    return try ApplicationInventorySnapshotProvider(
+    return try await ApplicationInventorySnapshotProvider(
       scanID: scanID,
       configuration: applicationConfiguration,
       provenanceConfiguration: provenanceConfiguration,
@@ -139,6 +145,6 @@ public struct LiveApplicationSnapshotFactory: Sendable {
       shellFrameworkConfiguration:
         includes(.shellFrameworks) ? try ShellFrameworkConfiguration.bundled() : nil,
       applicationClassifications: classifications
-    ).cancellableSnapshot()
+    ).cancellableSnapshot(maxConcurrentTasks: profile.maxConcurrentTasks)
   }
 }

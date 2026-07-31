@@ -450,7 +450,7 @@ struct AppModelCollectionTests {
   private func makeModel(
     preferences: MemoryPreferences,
     store: HALUserDataStore? = nil,
-    live: @escaping @Sendable () throws -> GraphSnapshot
+    live: @escaping @Sendable () async throws -> GraphSnapshot
   ) -> AppModel {
     let resolvedStore: HALUserDataStore
     if let store {

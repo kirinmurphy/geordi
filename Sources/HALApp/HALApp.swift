@@ -21,7 +21,7 @@ struct HALApp: App {
         preferences: UserDefaultsDataSourcePreferenceStore(),
         userDataStore: try? HALUserDataStore.applicationSupport(),
         liveSnapshot: {
-          try LiveApplicationSnapshotFactory.bundled().snapshot(
+          try await LiveApplicationSnapshotFactory.bundled().snapshot(
             scanID: ScanID("live-\(UUID().uuidString)")
           )
         }
@@ -97,7 +97,7 @@ final class AppModel {
   private let syntheticProvider: any GraphSnapshotProvider
   private let preferences: any DataSourcePreferenceStore
   private let userDataStore: HALUserDataStore?
-  private let liveSnapshot: @Sendable () throws -> GraphSnapshot
+  private let liveSnapshot: @Sendable () async throws -> GraphSnapshot
   private let displayPolicy: DisplayPolicy
   private let explorationContexts: ExplorationContextConfiguration
   private var collectionTask: Task<Void, Never>?
@@ -135,7 +135,7 @@ final class AppModel {
     userDataStore: HALUserDataStore?,
     displayPolicy: DisplayPolicy? = nil,
     explorationContexts: ExplorationContextConfiguration? = nil,
-    liveSnapshot: @escaping @Sendable () throws -> GraphSnapshot
+    liveSnapshot: @escaping @Sendable () async throws -> GraphSnapshot
   ) {
     self.configuration = configuration
     self.applicationClassifications = applicationClassifications
@@ -369,7 +369,7 @@ final class AppModel {
     collectionGeneration = generation
     collectionError = nil
     let collect = liveSnapshot
-    let worker = Task.detached { try collect() }
+    let worker = Task { try await collect() }
     collectionWorkerTask = worker
     collectionTask = Task {
       defer {

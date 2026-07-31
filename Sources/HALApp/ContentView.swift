@@ -19,7 +19,7 @@ struct ContentView: View {
     syntheticProvider: any GraphSnapshotProvider,
     preferences: any DataSourcePreferenceStore,
     userDataStore: HALUserDataStore?,
-    liveSnapshot: @escaping @Sendable () throws -> GraphSnapshot
+    liveSnapshot: @escaping @Sendable () async throws -> GraphSnapshot
   ) {
     _model = State(
       initialValue: AppModel(

@@ -63,7 +63,7 @@ struct ApplicationBundleCollectorTests {
   }
 
   @Test("Projector preserves collection context and typed metadata")
-  func projection() throws {
+  func projection() async throws {
     let root = try temporaryDirectory()
     try createBundle(
       at: root.appending(path: "Example.app"),
@@ -94,7 +94,7 @@ struct ApplicationBundleCollectorTests {
   }
 
   @Test("Live provider remains explicit and deterministic with injected scope")
-  func liveProvider() throws {
+  func liveProvider() async throws {
     let root = try temporaryDirectory()
     try createBundle(
       at: root.appending(path: "Example.app"),
@@ -130,7 +130,7 @@ struct ApplicationBundleCollectorTests {
       clock: FixedClock(timestamp)
     )
 
-    let snapshot = provider.snapshot()
+    let snapshot = try await provider.cancellableSnapshot()
     #expect(snapshot.scan.id == "manual-scan")
     #expect(snapshot.scan.environment == .liveReadOnly)
     #expect(snapshot.graph.entities.map(\.name) == ["Example"])

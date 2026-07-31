@@ -9,6 +9,7 @@ struct SoftwareInventoryCollectorTests {
   func collectionCompositionProfile() throws {
     let profile = try CollectionProfile.bundled()
     #expect(profile.schemaVersion == CollectionProfile.currentVersion)
+    #expect(profile.maxConcurrentTasks == 4)
     #expect(profile.collectors.contains { $0.id == "applications" && $0.enabled })
     #expect(profile.collectors.contains { $0.id == "processes" && $0.enabled })
     #expect(Set(profile.collectors.map(\.id)).count == profile.collectors.count)

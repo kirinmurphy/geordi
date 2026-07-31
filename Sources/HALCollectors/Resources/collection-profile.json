@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "maxConcurrentTasks": 4,
   "collectors": [
     { "id": "applications", "enabled": true, "required": true },
     { "id": "applicationSignatures", "enabled": true, "required": true },
