@@ -184,7 +184,7 @@ public struct ApplicationGraphProjector: Sendable {
       let applicationGroup = value.match == .applicationGroupIdentifier
       return Relationship(
         id: RelationshipID(
-          "associated-location:\(applicationID.rawValue):\(value.locationID)"
+          "associated-location:\(applicationID.rawValue):\(value.locationID):\(locationEntityID(for: value).rawValue)"
         ),
         source: applicationID,
         target: locationEntityID(for: value),

@@ -430,6 +430,43 @@ struct ApplicationAssociatedLocationCollectorTests {
     #expect(snapshot.graph.relationships.allSatisfy { $0.evidence.count == 2 })
   }
 
+  @Test("Projection gives distinct identities to multiple locations from one rule")
+  func multipleLocationsFromOneRule() throws {
+    let locations = CollectorOutput(
+      run: completeRun(collectorID: ApplicationAssociatedLocationCollector.id),
+      observations: [
+        associatedObservation(
+          id: "first-group",
+          locationID: "group-container-children",
+          path: "/test-home/Library/Group Containers/TEAM.first",
+          match: .applicationGroupIdentifier,
+          status: .present
+        ),
+        associatedObservation(
+          id: "second-group",
+          locationID: "group-container-children",
+          path: "/test-home/Library/Group Containers/TEAM.second",
+          match: .applicationGroupIdentifier,
+          status: .present
+        ),
+      ]
+    )
+
+    let snapshot = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: CollectorOutput(
+        run: completeRun(collectorID: ApplicationBundleCollector.id),
+        observations: [application()]
+      ),
+      associatedLocations: locations
+    )
+
+    try snapshot.graph.validate()
+    #expect(snapshot.graph.relationships.count == 2)
+    #expect(Set(snapshot.graph.relationships.map(\.id)).count == 2)
+    #expect(Set(snapshot.graph.relationships.map(\.target)).count == 2)
+  }
+
   private func location(_ id: String, suffix: String) -> AssociatedLocationConfiguration {
     AssociatedLocationConfiguration(
       id: id,
@@ -463,6 +500,7 @@ struct ApplicationAssociatedLocationCollectorTests {
 
   private func associatedObservation(
     id: String,
+    locationID: String? = nil,
     path: String,
     match: AssociatedLocationMatch,
     status: AssociatedLocationStatus,
@@ -479,7 +517,7 @@ struct ApplicationAssociatedLocationCollectorTests {
       ),
       value: ApplicationAssociatedLocationValue(
         applicationPath: applicationPath,
-        locationID: id,
+        locationID: locationID ?? id,
         locationPath: path,
         categoryLabel: "Test data",
         match: match,
