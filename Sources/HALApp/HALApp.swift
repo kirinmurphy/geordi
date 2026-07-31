@@ -158,8 +158,11 @@ final class AppModel {
       do {
         snapshot = try userDataStore?.loadSnapshot() ?? Self.emptyLinkedSnapshot()
       } catch {
-        snapshot = Self.emptyLinkedSnapshot()
-        collectionError = "HAL could not load its compiled snapshot: \(error.localizedDescription)"
+        snapshot = syntheticProvider.snapshot()
+        dataSourceMode = .synthetic
+        preferences.setMode(.synthetic)
+        collectionError =
+          "HAL could not load its compiled snapshot, so it returned to the fictional profile without deleting the stored file: \(error.localizedDescription)"
       }
     } else {
       snapshot = syntheticProvider.snapshot()

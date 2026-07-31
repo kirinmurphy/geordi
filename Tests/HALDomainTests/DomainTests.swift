@@ -280,4 +280,59 @@ struct DomainTests {
     #expect(finding.evidence.first?.observationID == "storage-observation")
     #expect(finding.state == .active)
   }
+
+  @Test("Relationship edge identities include source, target, and discriminator")
+  func relationshipEdgeIdentity() {
+    let first = RelationshipID.edge(
+      namespace: "associated-location",
+      source: "application",
+      target: "first-location",
+      discriminator: "group-rule"
+    )
+    let second = RelationshipID.edge(
+      namespace: "associated-location",
+      source: "application",
+      target: "second-location",
+      discriminator: "group-rule"
+    )
+
+    #expect(first != second)
+    #expect(
+      first
+        == RelationshipID.edge(
+          namespace: "associated-location",
+          source: "application",
+          target: "first-location",
+          discriminator: "group-rule"
+        )
+    )
+  }
+
+  @Test("Duplicate relationship diagnostics identify the collision")
+  func duplicateRelationshipDiagnostic() {
+    let entity = Entity(id: "application", type: .application, name: "App", summary: "App")
+    let relationship = Relationship(
+      id: "collision",
+      source: entity.id,
+      target: entity.id,
+      type: .shares,
+      confidence: .confirmed,
+      explanation: "Shared",
+      evidence: [Evidence(id: "evidence", kind: .observed, summary: "Observed", source: "Test")]
+    )
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "duplicate", name: "Duplicate", summary: "Duplicate"),
+      entities: [entity],
+      relationships: [relationship, relationship]
+    )
+
+    #expect(throws: GraphValidationError.duplicateRelationship("collision")) {
+      try graph.validate()
+    }
+    do {
+      try graph.validate()
+    } catch {
+      #expect(error.localizedDescription.contains("collision"))
+    }
+  }
 }

@@ -83,6 +83,68 @@ struct DataSourceLifecycleTests {
     #expect(FileManager.default.fileExists(atPath: backup.path))
   }
 
+  @Test("One-to-many relationship identities survive persistence and reload")
+  func denseRelationshipSnapshotRoundTrips() throws {
+    let temporary = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let store = HALUserDataStore(root: temporary.appending(path: "HAL"))
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    let application = Entity(
+      id: "application",
+      type: .application,
+      name: "Application",
+      summary: "Application"
+    )
+    let locations = ["first-location", "second-location"].map {
+      Entity(id: EntityID($0), type: .file, name: $0, summary: $0)
+    }
+    let relationships = locations.map { location in
+      Relationship(
+        id: .edge(
+          namespace: "associated-location",
+          source: application.id,
+          target: location.id,
+          discriminator: "group-container-children"
+        ),
+        source: application.id,
+        target: location.id,
+        type: .shares,
+        confidence: .high,
+        explanation: "The application can access this shared container.",
+        evidence: [
+          Evidence(
+            id: "evidence:\(location.id.rawValue)",
+            kind: .observed,
+            summary: "Observed",
+            source: "Test"
+          )
+        ]
+      )
+    }
+    let date = Date(timeIntervalSince1970: 1)
+    let snapshot = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "dense", name: "Dense", summary: "Dense"),
+        entities: [application] + locations,
+        relationships: relationships
+      ),
+      scan: ScanContext(
+        id: "dense",
+        environment: .liveReadOnly,
+        startedAt: date,
+        completedAt: date
+      )
+    )
+
+    try store.saveSnapshot(snapshot)
+    let loaded = try store.loadSnapshot()
+    let reloaded = try #require(loaded)
+
+    #expect(reloaded == snapshot)
+    #expect(Set(reloaded.graph.relationships.map(\.id)).count == 2)
+    try reloaded.graph.validate()
+  }
+
   @Test("Reset refuses a symbolic-link root")
   func resetRejectsSymlink() throws {
     let temporary = FileManager.default.temporaryDirectory

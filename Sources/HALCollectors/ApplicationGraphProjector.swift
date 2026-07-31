@@ -182,12 +182,16 @@ public struct ApplicationGraphProjector: Sendable {
       }
       let exact = value.match == .bundleIdentifier
       let applicationGroup = value.match == .applicationGroupIdentifier
+      let locationID = locationEntityID(for: value)
       return Relationship(
-        id: RelationshipID(
-          "associated-location:\(applicationID.rawValue):\(value.locationID):\(locationEntityID(for: value).rawValue)"
+        id: .edge(
+          namespace: "associated-location",
+          source: applicationID,
+          target: locationID,
+          discriminator: value.locationID
         ),
         source: applicationID,
-        target: locationEntityID(for: value),
+        target: locationID,
         type: applicationGroup ? .shares : .mayBelongTo,
         confidence: exact || applicationGroup ? .high : .possible,
         explanation:

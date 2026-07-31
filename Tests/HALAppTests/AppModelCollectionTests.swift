@@ -31,6 +31,34 @@ struct AppModelCollectionTests {
     #expect(preferences.mode() == .synthetic)
   }
 
+  @Test("Invalid linked cache falls back visibly without deleting stored data")
+  func invalidLinkedCacheFallsBackToSynthetic() throws {
+    let parent = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let store = HALUserDataStore(root: parent.appending(path: "HAL"))
+    defer { try? FileManager.default.removeItem(at: parent) }
+    try FileManager.default.createDirectory(at: store.root, withIntermediateDirectories: true)
+    let snapshotURL = store.root.appending(path: "latest-live-snapshot.json")
+    try Data("not a snapshot".utf8).write(to: snapshotURL)
+    let preferences = MemoryPreferences(mode: .linkedMac)
+    let synthetic = snapshot(id: "synthetic", entityName: "Clearly fictional")
+
+    let model = AppModel(
+      configuration: .phaseZero,
+      applicationClassifications: nil,
+      syntheticProvider: StaticProvider(synthetic),
+      preferences: preferences,
+      userDataStore: store,
+      liveSnapshot: { synthetic }
+    )
+
+    #expect(model.isSynthetic)
+    #expect(model.fixture == synthetic.graph)
+    #expect(model.collectionError?.contains("returned to the fictional profile") == true)
+    #expect(preferences.mode() == .synthetic)
+    #expect(FileManager.default.fileExists(atPath: snapshotURL.path))
+  }
+
   @Test("Initial link succeeds and hands off to application exploration")
   func initialLinkSuccess() async throws {
     let preferences = MemoryPreferences()

@@ -146,6 +146,17 @@ public struct RelationshipID: Hashable, Codable, Sendable, ExpressibleByStringLi
   public init(stringLiteral value: StringLiteralType) {
     self.init(value)
   }
+
+  public static func edge(
+    namespace: String,
+    source: EntityID,
+    target: EntityID,
+    discriminator: String? = nil
+  ) -> Self {
+    let components = [namespace, source.rawValue, target.rawValue, discriminator]
+      .compactMap { $0 }
+    return Self(components.map { "\($0.utf8.count):\($0)" }.joined(separator: "|"))
+  }
 }
 
 public struct Relationship: Identifiable, Hashable, Codable, Sendable {

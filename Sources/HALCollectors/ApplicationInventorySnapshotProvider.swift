@@ -226,6 +226,9 @@ public struct ApplicationInventorySnapshotProvider: Sendable {
     precondition(maxConcurrentTasks > 0)
     try Task.checkCancellation()
     let applications = collector.collect(scanID: scanID)
+    guard !applications.observations.isEmpty else {
+      throw ApplicationInventorySnapshotError.noApplicationsObserved
+    }
     try Task.checkCancellation()
 
     var jobs: [@Sendable () throws -> IndependentCollectionResult] = [
@@ -353,4 +356,15 @@ public struct ApplicationInventorySnapshotProvider: Sendable {
     return snapshot
   }
 
+}
+
+public enum ApplicationInventorySnapshotError: LocalizedError, Equatable, Sendable {
+  case noApplicationsObserved
+
+  public var errorDescription: String? {
+    switch self {
+    case .noApplicationsObserved:
+      "The required application collector completed without observing any applications."
+    }
+  }
 }

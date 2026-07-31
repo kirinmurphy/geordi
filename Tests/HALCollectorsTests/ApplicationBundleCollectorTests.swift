@@ -136,6 +136,32 @@ struct ApplicationBundleCollectorTests {
     #expect(snapshot.graph.entities.map(\.name) == ["Example"])
   }
 
+  @Test("Live provider rejects an unexplained empty application inventory")
+  func emptyLiveProviderFails() async throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let provider = ApplicationInventorySnapshotProvider(
+      scanID: "empty-scan",
+      roots: [ApplicationSearchRoot(url: root, required: true)],
+      provenanceConfiguration: ApplicationProvenanceConfiguration(adapters: []),
+      associatedLocationConfiguration: ApplicationAssociatedLocationConfiguration(locations: []),
+      processConfiguration: ProcessCollectorConfiguration(
+        maxProcessesPerApplication: 8,
+        strategies: []
+      ),
+      persistenceRoots: [],
+      signatureInspector: StubProviderSignatureInspector(),
+      provenanceInspector: StubProviderProvenanceInspector(),
+      associatedLocationInspector: StubAssociatedLocationInspector(),
+      processSampler: EmptyProcessSampler(),
+      clock: FixedClock(timestamp)
+    )
+
+    await #expect(throws: ApplicationInventorySnapshotError.noApplicationsObserved) {
+      try await provider.cancellableSnapshot()
+    }
+  }
+
   private func temporaryDirectory() throws -> URL {
     let url = FileManager.default.temporaryDirectory
       .appending(path: UUID().uuidString, directoryHint: .isDirectory)

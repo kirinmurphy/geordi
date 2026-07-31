@@ -78,9 +78,9 @@ public struct SystemGraph: Hashable, Codable, Sendable {
     guard Set(entityIDs).count == entityIDs.count else {
       throw GraphValidationError.duplicateEntity
     }
-    let relationshipIDs = relationships.map(\.id)
-    guard Set(relationshipIDs).count == relationshipIDs.count else {
-      throw GraphValidationError.duplicateRelationship
+    var seenRelationshipIDs = Set<RelationshipID>()
+    for relationship in relationships where !seenRelationshipIDs.insert(relationship.id).inserted {
+      throw GraphValidationError.duplicateRelationship(relationship.id)
     }
     let validIDs = Set(entityIDs)
     for relationship in relationships
@@ -148,10 +148,25 @@ public struct SystemGraphIndex: Sendable {
 public enum GraphValidationError: Error, Equatable {
   case invalidVersion
   case duplicateEntity
-  case duplicateRelationship
+  case duplicateRelationship(RelationshipID)
   case missingEndpoint(RelationshipID)
   case missingHumanReadableName
   case missingEvidence
+}
+
+extension GraphValidationError: LocalizedError {
+  public var errorDescription: String? {
+    switch self {
+    case .invalidVersion: "Graph metadata version must be positive."
+    case .duplicateEntity: "Graph contains a duplicate entity identifier."
+    case .duplicateRelationship(let id):
+      "Graph contains duplicate relationship identifier “\(id.rawValue)”."
+    case .missingEndpoint(let id):
+      "Relationship “\(id.rawValue)” refers to a missing endpoint."
+    case .missingHumanReadableName: "Every graph entity requires a human-readable name."
+    case .missingEvidence: "Every graph relationship requires evidence."
+    }
+  }
 }
 
 public struct GraphSelection: Hashable, Sendable {
