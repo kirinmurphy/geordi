@@ -507,17 +507,6 @@ public enum EntityVisualStyle {
     }
   }
 
-  public static func referenceID(for type: EntityType) -> String {
-    switch type {
-    case .application, .package, .shellFramework: "software"
-    case .process: "runtime"
-    case .file: "data"
-    case .persistence: "persistence"
-    case .resource: "resources"
-    case .incident, .event: "history"
-    case .packageManager: "source"
-    }
-  }
 }
 
 private struct RelationshipMarker: View {

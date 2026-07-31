@@ -1115,7 +1115,7 @@ private struct OverviewView: View {
   private var reclaimCandidates: [Entity] {
     if !model.isSynthetic {
       return model.fixture.entities.filter {
-        $0.type == .file && detail("Rebuildability", in: $0) != nil
+        $0.type == .file && $0.detail(.rebuildability) != nil
       }
     }
     let ids = Set(
@@ -1181,7 +1181,7 @@ private struct OverviewView: View {
   private var commandLineSoftware: [Entity] {
     model.fixture.entities.filter {
       $0.id.rawValue.hasPrefix("command-line-software:")
-        && detail("Package", in: $0) == nil
+        && $0.detail(.package) == nil
     }.sorted {
       $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
     }
@@ -1204,7 +1204,7 @@ private struct OverviewView: View {
 
   private var commandLineSourceGroups: [CommandLineSourceGroup] {
     Dictionary(grouping: filteredCommandLineSoftware) {
-      detail("Discovered from", in: $0) ?? "Other command location"
+      $0.detail(.discoveredFrom) ?? "Other command location"
     }
     .map { label, items in
       let isSystem = label.localizedCaseInsensitiveContains("macOS system")
@@ -1924,87 +1924,43 @@ struct ReferenceItem: Identifiable {
 }
 
 enum ReferenceCatalog {
-  static let items = [
+  static let configuration: ReferenceCatalogConfiguration = {
+    do {
+      return try ReferenceCatalogConfiguration.bundled()
+    } catch {
+      preconditionFailure("Required reference catalog failed validation: \(error)")
+    }
+  }()
+
+  static let items = configuration.items.map {
     ReferenceItem(
-      id: "mac", title: "Mac and storage", detail: "The machine, volumes, and accounts",
-      explanation:
-        "The physical and logical places where software and its data live. This context keeps a file or process tied to the Mac and storage volume that actually contains it.",
-      question: "Where does this exist?", examples: "Mac · internal volume · external volume",
-      symbol: "desktopcomputer", tint: .teal),
-    ReferenceItem(
-      id: "source", title: "Installation and identity",
-      detail: "Where it came from and who made it",
-      explanation:
-        "Provenance distinguishes a web download from an App Store or package-manager install, and identity records evidence such as signing and package receipts.",
-      question: "How did it get here, and can I identify it?",
-      examples: "Web · App Store · Homebrew · npm · developer signature",
-      symbol: "tray.and.arrow.down", tint: EntityVisualStyle.color(for: .packageManager)),
-    ReferenceItem(
-      id: "software", title: "Software", detail: "Things installed for a purpose",
-      explanation:
-        "The recognizable thing you chose to install, plus supporting packages or services. HAL uses this as the main point of entry instead of making you begin with low-level files.",
-      question: "What did I install?", examples: "Application · service · package · framework",
-      symbol: EntityVisualStyle.symbol(for: .application),
-      tint: EntityVisualStyle.color(for: .application)),
-    ReferenceItem(
-      id: "runtime", title: "Runtime", detail: "What is actively running",
-      explanation:
-        "Runtime entities represent active work happening now or during an observed period. Installed software can exist without running, and one application may create many processes.",
-      question: "What is running?", examples: "Process · helper · VM · container",
-      symbol: "gearshape.2", tint: EntityVisualStyle.color(for: .process)),
-    ReferenceItem(
-      id: "persistence", title: "Persistence", detail: "What can bring software back",
-      explanation:
-        "Persistence is separate from runtime. It records mechanisms that can launch software after login, restart it after reboot, or keep a helper available even when the main application is closed.",
-      question: "Why can this start or return automatically?",
-      examples: "Login item · LaunchAgent · LaunchDaemon · background helper · extension",
-      symbol: "power", tint: EntityVisualStyle.color(for: .persistence)),
-    ReferenceItem(
-      id: "data", title: "Data", detail: "What software creates or uses",
-      explanation:
-        "HAL separates valuable user work and configuration from disposable caches and logs. Ownership can be shared or uncertain, and uncertainty remains visible.",
-      question: "What does it leave behind, and is any of it reclaimable?",
-      examples: "Documents · settings · cache · logs · shared data",
-      symbol: "folder", tint: EntityVisualStyle.color(for: .file)),
-    ReferenceItem(
-      id: "resources", title: "Resources", detail: "Capacity used while work happens",
-      explanation:
-        "Resource observations describe changing system capacity. They are measurements over time, not permanent properties of an application.",
-      question: "What impact is it having right now or over time?",
-      examples: "CPU · memory · storage · network",
-      symbol: "gauge", tint: EntityVisualStyle.color(for: .resource)),
-    ReferenceItem(
-      id: "history", title: "Events and incidents", detail: "What changed and when",
-      explanation:
-        "Events form the timeline. Incidents mark a period where something became unhealthy or surprising. Their proximity to another event is evidence to investigate, not automatic proof of cause.",
-      question: "What happened, and when did it become a problem?",
-      examples: "Launch · update · file growth · memory-pressure incident",
-      symbol: "clock.arrow.circlepath", tint: EntityVisualStyle.color(for: .event)),
-    ReferenceItem(
-      id: "evidence", title: "Relationships and evidence",
-      detail: "How HAL connects facts, with confidence",
-      explanation:
-        "HAL links entities using observed facts and labeled inferences. Every inferred relationship should expose its supporting evidence and confidence so ambiguity remains visible.",
-      question: "How do we know these things belong together?",
-      examples: "Owns · launches · reads and writes · observed · inferred · confidence",
-      symbol: "point.3.connected.trianglepath.dotted", tint: .blue),
-    ReferenceItem(
-      id: "findings", title: "Findings and alerts", detail: "Evidence HAL brings to attention",
-      explanation:
-        "HAL turns related observations into reviewable findings. A finding states its evidence and confidence; it does not silently convert correlation into certainty.",
-      question: "What deserves my attention?", examples: "Performance alert · reclaim opportunity",
-      symbol: "exclamationmark.triangle", tint: .orange),
-    ReferenceItem(
-      id: "decisions", title: "Decisions and safe actions",
-      detail: "What you choose to do next",
-      explanation:
-        "The final layer is human control: inspect, keep, dismiss, or explicitly approve a safe action. Phase 0 demonstrates this model with synthetic data and performs no cleanup.",
-      question: "What can I safely decide or do?", examples: "Review · keep · dismiss · reclaim",
-      symbol: "checkmark.shield", tint: .red),
-  ]
+      id: $0.id,
+      title: $0.title,
+      detail: $0.detail,
+      explanation: $0.explanation,
+      question: $0.question,
+      examples: $0.examples,
+      symbol: $0.symbol,
+      tint: color(for: $0.tint)
+    )
+  }
 
   static func item(forEntityType type: EntityType) -> ReferenceItem? {
-    items.first { $0.id == EntityVisualStyle.referenceID(for: type) }
+    guard let definition = configuration.item(for: type) else { return nil }
+    return items.first { $0.id == definition.id }
+  }
+
+  private static func color(for tint: EntityPresentationTint) -> Color {
+    switch tint {
+    case .accent: .accentColor
+    case .blue: .blue
+    case .cyan: .cyan
+    case .green: .green
+    case .mint: .mint
+    case .orange: .orange
+    case .purple: .purple
+    case .red: .red
+    }
   }
 }
 

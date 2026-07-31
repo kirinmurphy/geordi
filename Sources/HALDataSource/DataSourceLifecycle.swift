@@ -82,13 +82,24 @@ public struct HALUserDataStore: Sendable {
   public func loadSnapshot(fileManager: FileManager = .default) throws -> GraphSnapshot? {
     let url = snapshotURL
     guard fileManager.fileExists(atPath: url.path) else { return nil }
-    return try JSONDecoder().decode(GraphSnapshot.self, from: Data(contentsOf: url))
+    do {
+      let snapshot = try JSONDecoder().decode(GraphSnapshot.self, from: Data(contentsOf: url))
+      try snapshot.graph.validate()
+      return snapshot
+    } catch {
+      throw HALUserDataStoreError.invalidSnapshot(String(describing: error))
+    }
   }
 
   public func saveSnapshot(
     _ snapshot: GraphSnapshot,
     fileManager: FileManager = .default
   ) throws {
+    do {
+      try snapshot.graph.validate()
+    } catch {
+      throw HALUserDataStoreError.invalidSnapshot(String(describing: error))
+    }
     try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
     let data = try JSONEncoder.sorted.encode(snapshot)
     try data.write(to: snapshotURL, options: .atomic)
@@ -134,6 +145,7 @@ public enum HALUserDataStoreError: Error, Equatable, Sendable {
   case noCompiledData
   case unsafeDestination
   case unsafeRoot
+  case invalidSnapshot(String)
 }
 
 extension HALUserDataStoreError: LocalizedError {
@@ -145,6 +157,8 @@ extension HALUserDataStoreError: LocalizedError {
       "The selected backup destination is inside HAL's managed data location."
     case .unsafeRoot:
       "HAL refused to remove an unexpected or unsafe data location."
+    case .invalidSnapshot(let diagnostic):
+      "HAL's compiled snapshot is invalid: \(diagnostic)"
     }
   }
 }

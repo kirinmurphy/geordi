@@ -5,6 +5,49 @@ import Testing
 
 @Suite("Domain")
 struct DomainTests {
+  @Test("Application defaults are schema-backed and semantically valid")
+  func applicationProfile() throws {
+    let profile = try AppConfiguration.bundled()
+    #expect(profile.schemaVersion == AppConfiguration.currentVersion)
+    #expect(profile.initialFixtureID == "familiar-mac")
+    try profile.layout.validate()
+    try profile.freshness.validate()
+  }
+
+  @Test("System graph index preserves identity, type, and adjacency lookups")
+  func graphIndex() {
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "indexed", name: "Indexed", summary: "Indexed"),
+      entities: [
+        Entity(id: "a", type: .application, name: "A", summary: "A"),
+        Entity(id: "b", type: .process, name: "B", summary: "B"),
+      ],
+      relationships: [
+        Relationship(
+          id: "a-b",
+          source: "a",
+          target: "b",
+          type: .launches,
+          confidence: .confirmed,
+          explanation: "A launches B",
+          evidence: [
+            Evidence(
+              id: "observed",
+              kind: .observed,
+              summary: "Observed",
+              source: "Test",
+              observedAt: Date(timeIntervalSince1970: 1)
+            )
+          ]
+        )
+      ]
+    )
+    let index = SystemGraphIndex(graph: graph)
+    #expect(index.entity("a")?.name == "A")
+    #expect(index.entities(ofType: .process).map(\.id) == ["b"])
+    #expect(index.relationships(connectedTo: "a").map(\.id) == ["a-b"])
+  }
+
   private let referenceDate = Date(timeIntervalSince1970: 1_753_545_600)
 
   @Test("Relationship direction and evidence remain explicit")

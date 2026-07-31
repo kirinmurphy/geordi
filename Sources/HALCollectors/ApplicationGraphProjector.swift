@@ -35,6 +35,17 @@ public struct ApplicationGraphProjector: Sendable {
         ($0.value.applicationPath, $0.value)
       }
     )
+    let provenanceObservationsByPath = Dictionary(
+      uniqueKeysWithValues: (provenance?.observations ?? []).map {
+        ($0.value.applicationPath, $0)
+      }
+    )
+    let homebrewInstallationsByPackage = Dictionary(
+      (homebrew?.observations ?? []).flatMap { inventory in
+        inventory.value.packages.map { ($0.name, inventory) }
+      },
+      uniquingKeysWith: { first, _ in first }
+    )
     let caskMatches:
       [String: (inventory: CollectedObservation<HomebrewInventoryValue>, cask: HomebrewCaskValue)] =
         Dictionary(
@@ -67,7 +78,7 @@ public struct ApplicationGraphProjector: Sendable {
       )
       if let match = caskMatches[value.path] {
         applicationDetails.append(
-          Detail("Installed with", "Homebrew cask \(match.cask.token)")
+          Detail(.installedWith, "Homebrew cask \(match.cask.token)")
         )
       }
       if let applicationClassifications {
@@ -76,7 +87,7 @@ public struct ApplicationGraphProjector: Sendable {
           platformBinary: signaturesByPath[value.path]?.platformBinary,
           details: applicationDetails
         )
-        applicationDetails.append(Detail("Display group", category.label))
+        applicationDetails.append(Detail(.displayGroup, category.label))
       }
       return Entity(
         id: entityID(for: observation),
@@ -113,9 +124,7 @@ public struct ApplicationGraphProjector: Sendable {
       ]
     let appStoreRelationships = appStoreApplications.compactMap { application -> Relationship? in
       guard
-        let provenanceObservation = provenance?.observations.first(where: {
-          $0.value.applicationPath == application.value.path
-        })
+        let provenanceObservation = provenanceObservationsByPath[application.value.path]
       else { return nil }
       return Relationship(
         id: RelationshipID("app-store-application:\(entityID(for: application).rawValue)"),
@@ -300,6 +309,16 @@ public struct ApplicationGraphProjector: Sendable {
         ($0.value.pid, $0)
       }
     )
+    let processesByResolvedExecutable = Dictionary(
+      grouping: (processes?.observations ?? []).compactMap {
+        process -> (String, CollectedObservation<ProcessValue>)? in
+        guard let executable = process.value.executablePath else { return nil }
+        let normalized = URL(filePath: executable)
+          .resolvingSymlinksInPath().standardizedFileURL.path
+        return (normalized, process)
+      },
+      by: \.0
+    ).mapValues { $0.map(\.1) }
     let correlatedProcessIDs = Set(
       (persistenceRuntimeCorrelations?.observations ?? []).flatMap(\.value.processIDs)
     )
@@ -330,11 +349,8 @@ public struct ApplicationGraphProjector: Sendable {
         < processGroupKey(resolution: $1[0], processesByPID: processesByPID)
     }
     let runtimeEntities = (runtimes?.observations ?? []).map { observation in
-      let matchingProcesses = (processes?.observations ?? []).filter { process in
-        guard let executable = process.value.executablePath else { return false }
-        return URL(filePath: executable).resolvingSymlinksInPath().standardizedFileURL.path
-          == observation.value.resolvedExecutablePath
-      }
+      let matchingProcesses =
+        processesByResolvedExecutable[observation.value.resolvedExecutablePath] ?? []
       let memory = matchingProcesses.compactMap(\.value.residentMemoryBytes).reduce(0, +)
       var details = [
         Detail("Availability", "Available"),
@@ -373,10 +389,7 @@ public struct ApplicationGraphProjector: Sendable {
       observation in
       observation.value.packageIdentities.compactMap { identity -> Relationship? in
         guard identity.managerID == "homebrew",
-          let installation = homebrew?.observations.first(where: {
-            inventory in
-            inventory.value.packages.contains { $0.name == identity.packageName }
-          })
+          let installation = homebrewInstallationsByPackage[identity.packageName]
         else { return nil }
         return Relationship(
           id: RelationshipID(
@@ -934,9 +947,7 @@ public struct ApplicationGraphProjector: Sendable {
           $0.value.packageManagerID == "homebrew" && $0.value.packageName != nil
         }),
         let packageName = packageObservation.value.packageName,
-        let installation = homebrew?.observations.first(where: {
-          $0.value.packages.contains { $0.name == packageName }
-        })
+        let installation = homebrewInstallationsByPackage[packageName]
       else { return nil }
       return Relationship(
         id: RelationshipID("package-command:homebrew:\(packageName):\(resolvedPath)"),
@@ -1233,7 +1244,7 @@ public struct ApplicationGraphProjector: Sendable {
   ) -> [Detail] {
     var details = [
       Detail("PID", "\(process.pid)"),
-      Detail("Application resolution", resolution.state.rawValue.capitalized),
+      Detail(.applicationResolution, resolution.state.rawValue.capitalized),
     ]
     if let parentPID = process.parentPID {
       details.append(Detail("Parent PID", "\(parentPID)"))
@@ -1247,7 +1258,7 @@ public struct ApplicationGraphProjector: Sendable {
       )
     }
     if let path = process.executablePath {
-      details.append(Detail("Executable", path))
+      details.append(Detail(.executable, path))
     }
     return details
   }
@@ -1411,9 +1422,9 @@ public struct ApplicationGraphProjector: Sendable {
     signature: ApplicationSignatureValue?,
     provenance: ApplicationProvenanceValue?
   ) -> [Detail] {
-    var details = [Detail("Path", value.path)]
+    var details = [Detail(.path, value.path)]
     let evidenceFactCount = (signature == nil ? 0 : 1) + (provenance?.facts.count ?? 0)
-    details.append(Detail("Evidence facts", "\(evidenceFactCount)"))
+    details.append(Detail(.evidenceFacts, "\(evidenceFactCount)"))
     if let bundleIdentifier = value.bundleIdentifier {
       details.append(Detail("Bundle identifier", bundleIdentifier))
     }

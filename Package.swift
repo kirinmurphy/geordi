@@ -23,7 +23,11 @@ let package = Package(
     )
   ],
   targets: [
-    .target(name: "HALDomain"),
+    .target(
+      name: "HALDomain",
+      dependencies: ["HALManifestKit"],
+      resources: [.process("Resources")]
+    ),
     .target(
       name: "HALManifestKit",
       dependencies: [

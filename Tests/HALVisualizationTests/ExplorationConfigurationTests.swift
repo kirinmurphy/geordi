@@ -6,6 +6,14 @@ import Testing
 
 @Suite("Exploration configuration")
 struct ExplorationConfigurationTests {
+  @Test("Reference concepts and entity mappings are manifest driven")
+  func referenceCatalog() throws {
+    let catalog = try ReferenceCatalogConfiguration.bundled()
+    #expect(catalog.item(for: .application)?.id == "software")
+    #expect(catalog.item(for: .process)?.id == "runtime")
+    #expect(catalog.item(for: .packageManager)?.id == "source")
+  }
+
   @Test("Exploration contexts are schema validated and cover every home question")
   func explorationContexts() throws {
     let configuration = try ExplorationContextConfiguration.bundled()

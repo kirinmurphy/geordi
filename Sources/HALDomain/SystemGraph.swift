@@ -100,6 +100,51 @@ public struct SystemGraph: Hashable, Codable, Sendable {
   }
 }
 
+public struct SystemGraphIndex: Sendable {
+  public let entitiesByID: [EntityID: Entity]
+  public let relationshipsByID: [RelationshipID: Relationship]
+  public let relationshipsByEntityID: [EntityID: [Relationship]]
+  public let entitiesByType: [EntityType: [Entity]]
+
+  public init(graph: SystemGraph) {
+    entitiesByID = Dictionary(
+      graph.entities.map { ($0.id, $0) },
+      uniquingKeysWith: { first, _ in first }
+    )
+    relationshipsByID = Dictionary(
+      graph.relationships.map { ($0.id, $0) },
+      uniquingKeysWith: { first, _ in first }
+    )
+    var adjacency: [EntityID: [Relationship]] = [:]
+    for relationship in graph.relationships {
+      adjacency[relationship.source, default: []].append(relationship)
+      if relationship.target != relationship.source {
+        adjacency[relationship.target, default: []].append(relationship)
+      }
+    }
+    relationshipsByEntityID = adjacency.mapValues {
+      $0.sorted { $0.id.rawValue < $1.id.rawValue }
+    }
+    entitiesByType = Dictionary(grouping: graph.entities, by: \.type)
+  }
+
+  public func entity(_ id: EntityID) -> Entity? {
+    entitiesByID[id]
+  }
+
+  public func relationship(_ id: RelationshipID) -> Relationship? {
+    relationshipsByID[id]
+  }
+
+  public func relationships(connectedTo id: EntityID) -> [Relationship] {
+    relationshipsByEntityID[id] ?? []
+  }
+
+  public func entities(ofType type: EntityType) -> [Entity] {
+    entitiesByType[type] ?? []
+  }
+}
+
 public enum GraphValidationError: Error, Equatable {
   case invalidVersion
   case duplicateEntity

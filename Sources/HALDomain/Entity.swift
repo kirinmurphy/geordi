@@ -125,6 +125,37 @@ public struct Detail: Identifiable, Hashable, Codable, Sendable {
     self.label = label
     self.value = value
   }
+
+  public init(_ key: DetailKey, _ value: String) {
+    self.init(key.rawValue, value)
+  }
+}
+
+public enum DetailKey: String, CaseIterable, Codable, Sendable {
+  case path = "Path"
+  case platformBinary = "Platform binary"
+  case evidenceFacts = "Evidence facts"
+  case applicationResolution = "Application resolution"
+  case rebuildability = "Rebuildability"
+  case classification = "Classification"
+  case displayGroup = "Display group"
+  case installedWith = "Installed with"
+  case package = "Package"
+  case discoveredFrom = "Discovered from"
+  case executable = "Executable"
+  case resolvedExecutable = "Resolved executable"
+  case currentState = "Current state"
+  case evidenceState = "Evidence state"
+  case appStoreReceipt = "App Store receipt"
+  case signature = "Signature"
+  case version = "Version"
+  case build = "Build"
+}
+
+extension Entity {
+  public func detail(_ key: DetailKey) -> String? {
+    details.first { $0.label == key.rawValue }?.value
+  }
 }
 
 /// One observed instance of a logical entity, containing only attributes whose

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "collectors": [
+    { "id": "applications", "enabled": true, "required": true },
+    { "id": "applicationSignatures", "enabled": true, "required": true },
+    { "id": "applicationProvenance", "enabled": true, "required": true },
+    { "id": "associatedLocations", "enabled": true, "required": true },
+    { "id": "rebuildableData", "enabled": true, "required": false },
+    { "id": "processes", "enabled": true, "required": true },
+    { "id": "persistence", "enabled": true, "required": true },
+    { "id": "persistenceRuntimeCorrelation", "enabled": true, "required": false },
+    { "id": "homebrew", "enabled": true, "required": false },
+    { "id": "runtimes", "enabled": true, "required": false },
+    { "id": "packageEcosystems", "enabled": true, "required": false },
+    { "id": "commandLineSoftware", "enabled": true, "required": false },
+    { "id": "shellFrameworks", "enabled": true, "required": false },
+    { "id": "applicationClassifications", "enabled": true, "required": true }
+  ]
+}

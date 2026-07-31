@@ -125,9 +125,10 @@ public struct DisplayPolicyPresenter: Sendable {
     centeredOn center: EntityID,
     policy: DisplayContextPolicy
   ) -> SystemGraph {
-    guard let centerEntity = graph.entity(center) else { return graph }
+    let index = SystemGraphIndex(graph: graph)
+    guard let centerEntity = index.entity(center) else { return graph }
     let rules = Dictionary(uniqueKeysWithValues: policy.relationships.map { ($0.type, $0) })
-    let eligible = graph.relationships(connectedTo: center).compactMap {
+    let eligible = index.relationships(connectedTo: center).compactMap {
       relationship -> (Relationship, RelationshipDisplayRule)? in
       guard
         let rule = rules[relationship.type],
@@ -156,14 +157,14 @@ public struct DisplayPolicyPresenter: Sendable {
           guard let detailLabel = rule.groupByDetailLabel else {
             return rule.groupLabel ?? rule.type.rawValue
           }
-          return counterpart(for: candidate.0, center: center, graph: graph)?
+          return counterpart(for: candidate.0, center: center, index: index)?
             .details.first { $0.label == detailLabel }?.value
             ?? rule.groupLabel ?? rule.type.rawValue
         }
         for label in partitions.keys.sorted().prefix(remaining) {
           guard let partition = partitions[label] else { continue }
           let members = partition.compactMap {
-            counterpart(for: $0.0, center: center, graph: graph)
+            counterpart(for: $0.0, center: center, index: index)
           }
           guard !members.isEmpty else { continue }
           let groupKey =
@@ -202,7 +203,7 @@ public struct DisplayPolicyPresenter: Sendable {
         }
       } else {
         for candidate in candidates.prefix(remaining) {
-          guard let entity = counterpart(for: candidate.0, center: center, graph: graph) else {
+          guard let entity = counterpart(for: candidate.0, center: center, index: index) else {
             continue
           }
           entities.append(entity)
@@ -236,7 +237,7 @@ public struct DisplayPolicyPresenter: Sendable {
           guard !visited.contains(counterpartID) else { continue }
           visited.insert(counterpartID)
           nextFrontier.insert(counterpartID)
-          guard !includedEntityIDs.contains(counterpartID), let entity = graph.entity(counterpartID)
+          guard !includedEntityIDs.contains(counterpartID), let entity = index.entity(counterpartID)
           else { continue }
           entities.append(entity)
           includedEntityIDs.insert(counterpartID)
@@ -259,9 +260,9 @@ public struct DisplayPolicyPresenter: Sendable {
   private func counterpart(
     for relationship: Relationship,
     center: EntityID,
-    graph: SystemGraph
+    index: SystemGraphIndex
   ) -> Entity? {
-    graph.entity(relationship.source == center ? relationship.target : relationship.source)
+    index.entity(relationship.source == center ? relationship.target : relationship.source)
   }
 
   private func meetsFloor(_ confidence: Confidence, floor: Confidence) -> Bool {

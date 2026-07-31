@@ -104,17 +104,17 @@ extension GraphSnapshot {
   }
 
   fileprivate func redactedDetail(_ detail: Detail) -> Detail? {
-    switch detail.label {
-    case "Build", "Version":
+    switch DetailKey(rawValue: detail.label) {
+    case .build, .version:
       guard detail.value.contains(where: \.isNumber) else { return nil }
       return Detail(detail.label, detail.value.diagnosticToken)
-    case "Evidence facts":
+    case .evidenceFacts:
       guard Int(detail.value) != nil else { return nil }
       return detail
-    case "App Store receipt", "Application resolution", "Current state", "Evidence state",
-      "Platform binary", "Signature":
+    case .appStoreReceipt, .applicationResolution, .currentState, .evidenceState,
+      .platformBinary, .signature:
       return Detail(detail.label, detail.value.diagnosticStatus)
-    default:
+    case .none, .some:
       return nil
     }
   }

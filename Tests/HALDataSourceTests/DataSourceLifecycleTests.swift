@@ -5,6 +5,51 @@ import Testing
 
 @Suite("Data source lifecycle")
 struct DataSourceLifecycleTests {
+  @Test("Stored snapshots are validated before use")
+  func invalidStoredSnapshotIsRejected() throws {
+    let temporary = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let store = HALUserDataStore(root: temporary.appending(path: "HAL"))
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    try FileManager.default.createDirectory(at: store.root, withIntermediateDirectories: true)
+    let invalid = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "invalid", name: "Invalid", summary: "Invalid"),
+        entities: [],
+        relationships: [
+          Relationship(
+            id: "missing",
+            source: "missing-a",
+            target: "missing-b",
+            type: .owns,
+            confidence: .confirmed,
+            explanation: "Invalid endpoints",
+            evidence: [
+              Evidence(
+                id: "evidence",
+                kind: .observed,
+                summary: "Observed",
+                source: "Test",
+                observedAt: Date(timeIntervalSince1970: 1)
+              )
+            ]
+          )
+        ]
+      ),
+      scan: ScanContext(
+        id: "invalid",
+        environment: .liveReadOnly,
+        startedAt: Date(timeIntervalSince1970: 1)
+      )
+    )
+    let data = try JSONEncoder().encode(invalid)
+    try data.write(to: store.root.appending(path: "latest-live-snapshot.json"))
+
+    #expect(throws: HALUserDataStoreError.self) {
+      try store.loadSnapshot()
+    }
+  }
+
   @Test("Mode defaults to synthetic and persists explicitly")
   func preferenceLifecycle() throws {
     let suite = "HALDataSourceTests.\(UUID().uuidString)"

@@ -13,44 +13,17 @@ struct HALApp: App {
   var body: some Scene {
     WindowGroup {
       ContentView(
-        configuration: .phaseZero,
-        applicationClassifications: try? ApplicationClassificationConfiguration.bundled(),
+        configuration: AppBootstrap.applicationProfile(),
+        applicationClassifications: AppBootstrap.applicationClassifications(),
         syntheticProvider: SyntheticGraphProvider(
           fixtureID: AppConfiguration.phaseZero.initialFixtureID
         ),
         preferences: UserDefaultsDataSourcePreferenceStore(),
         userDataStore: try? HALUserDataStore.applicationSupport(),
         liveSnapshot: {
-          let collectorConfiguration = try ApplicationCollectorConfiguration.bundled()
-          let provenanceConfiguration = try ApplicationProvenanceConfiguration.bundled()
-          let associatedLocationConfiguration =
-            try ApplicationAssociatedLocationConfiguration.bundled()
-          let rebuildableDataConfiguration = try RebuildableDataConfiguration.bundled()
-          let processConfiguration = try ProcessCollectorConfiguration.bundled()
-          let persistenceConfiguration = try PersistenceCollectorConfiguration.bundled()
-          let homebrewConfiguration = try HomebrewInstallationConfiguration.bundled()
-          let runtimeConfiguration = try RuntimeCollectorConfiguration.bundled()
-          let packageEcosystemConfiguration = try PackageEcosystemConfiguration.bundled()
-          let commandLineSoftwareConfiguration =
-            try CommandLineSoftwareConfiguration.bundled()
-          let shellFrameworkConfiguration = try ShellFrameworkConfiguration.bundled()
-          let applicationClassifications =
-            try ApplicationClassificationConfiguration.bundled()
-          return try ApplicationInventorySnapshotProvider(
-            scanID: ScanID("live-\(UUID().uuidString)"),
-            configuration: collectorConfiguration,
-            provenanceConfiguration: provenanceConfiguration,
-            associatedLocationConfiguration: associatedLocationConfiguration,
-            rebuildableDataConfiguration: rebuildableDataConfiguration,
-            processConfiguration: processConfiguration,
-            persistenceConfiguration: persistenceConfiguration,
-            homebrewConfiguration: homebrewConfiguration,
-            runtimeConfiguration: runtimeConfiguration,
-            packageEcosystemConfiguration: packageEcosystemConfiguration,
-            commandLineSoftwareConfiguration: commandLineSoftwareConfiguration,
-            shellFrameworkConfiguration: shellFrameworkConfiguration,
-            applicationClassifications: applicationClassifications
-          ).snapshot()
+          try LiveApplicationSnapshotFactory.bundled().snapshot(
+            scanID: ScanID("live-\(UUID().uuidString)")
+          )
         }
       )
       .frame(minWidth: 1_080, minHeight: 680)
@@ -103,6 +76,20 @@ final class AppModel {
     case filesystem
     case performance
     case entity(EntityID)
+
+    var profileID: String? {
+      switch self {
+      case .overview: "overview"
+      case .storage: "storage"
+      case .applications: "applications"
+      case .startup: "startup"
+      case .commandLine: "commandLine"
+      case .shellPath: "shellPath"
+      case .filesystem: "filesystem"
+      case .performance: "performance"
+      case .entity: nil
+      }
+    }
   }
 
   let configuration: AppConfiguration
@@ -111,9 +98,10 @@ final class AppModel {
   private let preferences: any DataSourcePreferenceStore
   private let userDataStore: HALUserDataStore?
   private let liveSnapshot: @Sendable () throws -> GraphSnapshot
-  private let displayPolicy: DisplayPolicy?
-  private let explorationContexts: ExplorationContextConfiguration?
+  private let displayPolicy: DisplayPolicy
+  private let explorationContexts: ExplorationContextConfiguration
   private var collectionTask: Task<Void, Never>?
+  private var collectionWorkerTask: Task<GraphSnapshot, Error>?
   private var collectionGeneration: UUID?
   var fixture: SystemGraph
   var scanContext: ScanContext
@@ -145,6 +133,8 @@ final class AppModel {
     syntheticProvider: any GraphSnapshotProvider,
     preferences: any DataSourcePreferenceStore,
     userDataStore: HALUserDataStore?,
+    displayPolicy: DisplayPolicy? = nil,
+    explorationContexts: ExplorationContextConfiguration? = nil,
     liveSnapshot: @escaping @Sendable () throws -> GraphSnapshot
   ) {
     self.configuration = configuration
@@ -154,8 +144,8 @@ final class AppModel {
     self.preferences = preferences
     self.userDataStore = userDataStore
     self.liveSnapshot = liveSnapshot
-    displayPolicy = try? DisplayPolicy.bundled()
-    explorationContexts = try? ExplorationContextConfiguration.bundled()
+    self.displayPolicy = displayPolicy ?? AppBootstrap.displayPolicy()
+    self.explorationContexts = explorationContexts ?? AppBootstrap.explorationContexts()
     let initialMode = preferences.mode()
     if initialMode == .linkedMac {
       selectedApplicationCategoryID = applicationClassifications?.defaultCategoryID
@@ -163,10 +153,17 @@ final class AppModel {
     dataSourceMode = initialMode
     welcomeDismissed = preferences.syntheticWelcomeDismissed()
     linkedCompletionDismissed = preferences.linkedCompletionDismissed()
-    let snapshot =
-      initialMode == .linkedMac
-      ? ((try? userDataStore?.loadSnapshot()) ?? nil) ?? Self.emptyLinkedSnapshot()
-      : syntheticProvider.snapshot()
+    let snapshot: GraphSnapshot
+    if initialMode == .linkedMac {
+      do {
+        snapshot = try userDataStore?.loadSnapshot() ?? Self.emptyLinkedSnapshot()
+      } catch {
+        snapshot = Self.emptyLinkedSnapshot()
+        collectionError = "HAL could not load its compiled snapshot: \(error.localizedDescription)"
+      }
+    } else {
+      snapshot = syntheticProvider.snapshot()
+    }
     fixture = snapshot.graph
     scanContext = snapshot.scan
   }
@@ -183,7 +180,7 @@ final class AppModel {
       fixture.entities.compactMap { application -> String? in
         guard
           application.type == .application,
-          let path = application.details.first(where: { $0.label == "Path" })?.value
+          let path = application.detail(.path)
         else {
           return nil
         }
@@ -213,7 +210,7 @@ final class AppModel {
       return applications
     }
     return applications.filter { application in
-      guard let path = application.details.first(where: { $0.label == "Path" })?.value else {
+      guard let path = application.detail(.path) else {
         return false
       }
       return categoryID == nil
@@ -228,7 +225,7 @@ final class AppModel {
   func applicationSourceLabel(_ application: Entity) -> String? {
     guard
       !isSynthetic,
-      let path = application.details.first(where: { $0.label == "Path" })?.value,
+      let path = application.detail(.path),
       let applicationClassifications
     else { return nil }
     guard
@@ -268,7 +265,7 @@ final class AppModel {
       }.map(\.id)
     )
     let uncertain = all.filter { application in
-      guard let path = application.details.first(where: { $0.label == "Path" })?.value else {
+      guard let path = application.detail(.path) else {
         return true
       }
       return fallbackIDs.contains(
@@ -288,7 +285,7 @@ final class AppModel {
   }
 
   func platformBinaryEvidence(for application: Entity) -> Bool? {
-    switch application.details.first(where: { $0.label == "Platform binary" })?.value {
+    switch application.detail(.platformBinary) {
     case "Yes": true
     case "No": false
     default: nil
@@ -306,8 +303,7 @@ final class AppModel {
   var applicationEvidenceFactCount: Int {
     applications(in: nil).reduce(into: 0) { count, application in
       count +=
-        application.details.first { $0.label == "Evidence facts" }
-        .flatMap { Int($0.value) } ?? 0
+        application.detail(.evidenceFacts).flatMap(Int.init) ?? 0
     }
   }
 
@@ -315,9 +311,7 @@ final class AppModel {
     fixture.entities.reduce(into: (unmatched: 0, inaccessible: 0)) { counts, entity in
       guard
         entity.type == .process,
-        let state = entity.details.first(where: {
-          $0.label == "Application resolution"
-        })?.value
+        let state = entity.detail(.applicationResolution)
       else {
         return
       }
@@ -356,6 +350,11 @@ final class AppModel {
 
   func linkToMac() {
     guard dataSourceMode == .synthetic else { return }
+    guard userDataStore != nil else {
+      collectionError =
+        "HAL cannot link this Mac because durable application-support storage is unavailable."
+      return
+    }
     refreshLiveData(linkOnSuccess: true)
   }
 
@@ -370,19 +369,30 @@ final class AppModel {
     collectionGeneration = generation
     collectionError = nil
     let collect = liveSnapshot
+    let worker = Task.detached { try collect() }
+    collectionWorkerTask = worker
     collectionTask = Task {
       defer {
         if collectionGeneration == generation {
           isCollecting = false
           collectionActivity = nil
           collectionTask = nil
+          collectionWorkerTask = nil
           collectionGeneration = nil
         }
       }
       do {
-        let snapshot = try await Task.detached { try collect() }.value
+        let snapshot = try await worker.value
         guard collectionGeneration == generation, !Task.isCancelled else { return }
-        try userDataStore?.saveSnapshot(snapshot)
+        try snapshot.graph.validate()
+        if linkOnSuccess {
+          guard let userDataStore else {
+            throw AppModelLifecycleError.durableStorageUnavailable
+          }
+          try userDataStore.saveSnapshot(snapshot)
+        } else {
+          try userDataStore?.saveSnapshot(snapshot)
+        }
         fixture = snapshot.graph
         scanContext = snapshot.scan
         dataSourceMode = .linkedMac
@@ -446,6 +456,8 @@ final class AppModel {
   func cancelInitialLink() {
     guard collectionActivity == .initialLink else { return }
     collectionGeneration = nil
+    collectionWorkerTask?.cancel()
+    collectionWorkerTask = nil
     collectionTask?.cancel()
     collectionTask = nil
     isCollecting = false
@@ -502,24 +514,6 @@ final class AppModel {
 
   var presentedGraph: SystemGraph {
     switch destination {
-    case .overview, .filesystem, .shellPath:
-      return fixture.filtered(to: [.application, .resource, .incident])
-    case .storage:
-      return isSynthetic
-        ? fixture.neighborhood(around: "resource.storage", depth: 2)
-        : fixture.filtered(to: [.file, .packageManager])
-    case .applications:
-      return fixture.filtered(to: [
-        .application, .packageManager, .shellFramework, .package, .persistence,
-      ])
-    case .startup:
-      return fixture.filtered(to: [.application, .persistence, .process])
-    case .commandLine:
-      return fixture.filtered(to: [.packageManager, .shellFramework, .package, .process])
-    case .performance:
-      return isSynthetic
-        ? fixture.neighborhood(around: "incident.build", depth: 2)
-        : fixture.filtered(to: [.process])
     case .entity(let id):
       let entity = fixture.entity(id)
       // A package manager is itself the center of an ownership map. Keep that
@@ -533,27 +527,32 @@ final class AppModel {
         return neighborhood
       }
       let contextID = entity?.type == .application ? "applicationDetail" : "entityDetail"
-      guard let policy = displayPolicy?.context(contextID) else { return neighborhood }
+      guard let policy = displayPolicy.context(contextID) else { return neighborhood }
       return DisplayPolicyPresenter().present(
         neighborhood,
         centeredOn: id,
         policy: policy
       )
+    default:
+      guard
+        let profileID = destination.profileID,
+        let profile = configuration.destination(profileID)
+      else { return fixture }
+      if isSynthetic, let focus = profile.syntheticFocusEntityID {
+        return fixture.neighborhood(
+          around: EntityID(focus),
+          depth: profile.syntheticNeighborhoodDepth ?? 1
+        )
+      }
+      return fixture.filtered(to: profile.entityTypes)
     }
   }
 
   var explorationContext: ExplorationContext? {
-    let id: String? =
-      switch destination {
-      case .applications: "applications"
-      case .startup: "startup"
-      case .storage: "storage"
-      case .commandLine: "command-line"
-      case .shellPath: "shell-path"
-      case .filesystem: "filesystem"
-      default: nil
-      }
-    return id.flatMap { explorationContexts?.context($0) }
+    let id = destination.profileID
+      .flatMap(configuration.destination)?
+      .explorationContextID
+    return id.flatMap { explorationContexts.context($0) }
   }
 
   var explorationPresentation: ExplorationPresentation? {
@@ -563,26 +562,23 @@ final class AppModel {
   }
 
   var breadcrumb: [String] {
-    switch destination {
-    case .overview: ["Home"]
-    case .storage: ["Home", "Storage"]
-    case .applications: ["Home", "Installed software"]
-    case .startup: ["Home", "Startup activity"]
-    case .commandLine: ["Home", "Command-line environment"]
-    case .shellPath: ["Home", "Command-line environment", "PATH Visualizer"]
-    case .filesystem: ["Home", "Filesystem Map"]
-    case .performance: ["Home", "Performance"]
-    case .entity(let id):
-      ["Home", fixture.entity(id)?.name ?? "Item"]
+    if case .entity(let id) = destination {
+      return ["Home", fixture.entity(id)?.name ?? "Item"]
     }
+    return destination.profileID
+      .flatMap(configuration.destination)?
+      .breadcrumb ?? ["Home"]
   }
 
   func dataFreshness(at currentDate: Date = Date()) -> FreshnessState {
     if scanContext.environment == .synthetic {
       return .fresh
     }
-    return FreshnessPolicy(agingAfter: 2 * 60, staleAfter: 15 * 60)
-      .state(for: scanContext, at: currentDate)
+    return FreshnessPolicy(
+      agingAfter: TimeInterval(configuration.freshness.agingAfterSeconds),
+      staleAfter: TimeInterval(configuration.freshness.staleAfterSeconds)
+    )
+    .state(for: scanContext, at: currentDate)
   }
 
   func navigate(to destination: Destination) {
@@ -598,7 +594,7 @@ final class AppModel {
     case .overview:
       selection = nil
     case .storage:
-      selection = isSynthetic ? GraphSelection(.entity("resource.storage")) : nil
+      selection = syntheticSelection(for: destination)
     case .applications:
       selection = nil
     case .startup, .commandLine, .shellPath:
@@ -606,12 +602,21 @@ final class AppModel {
     case .filesystem:
       selection = nil
     case .performance:
-      selection = isSynthetic ? GraphSelection(.entity("incident.build")) : nil
+      selection = syntheticSelection(for: destination)
     case .entity(let id):
       selection = GraphSelection(.entity(id))
     }
     focusedEntity = nil
     searchQuery = ""
+  }
+
+  private func syntheticSelection(for destination: Destination) -> GraphSelection? {
+    guard
+      isSynthetic,
+      let profileID = destination.profileID,
+      let focus = configuration.destination(profileID)?.syntheticFocusEntityID
+    else { return nil }
+    return GraphSelection(.entity(EntityID(focus)))
   }
 
   func focus(_ entity: Entity) {
@@ -666,5 +671,16 @@ final class AppModel {
     destination = .entity(entity.id)
     selection = GraphSelection(.entity(entity.id))
     focusedEntity = entity.id
+  }
+}
+
+enum AppModelLifecycleError: LocalizedError {
+  case durableStorageUnavailable
+
+  var errorDescription: String? {
+    switch self {
+    case .durableStorageUnavailable:
+      "Durable application-support storage is unavailable."
+    }
   }
 }

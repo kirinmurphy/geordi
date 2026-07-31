@@ -32,6 +32,12 @@ Lowest to highest precedence:
 Layout tuning belongs to a dedicated typed configuration object rather than
 being scattered through drawing code.
 
+These values live in `HALDomain/Resources/app-profile.json` and are validated
+against the adjacent versioned JSON Schema. The profile includes the synthetic
+fixture choice, feature behavior, layout tuning, and freshness thresholds.
+`AppConfiguration` is the typed projection and semantic validator; it is not
+the source of the default values.
+
 ## Later configuration
 
 - Collector enablement and intervals
@@ -59,6 +65,11 @@ small set of bounded status and version values. Manifests cannot opt paths,
 entity names, collector scopes, observation identifiers, or free-form evidence
 into the default diagnostic.
 
+Behavior-critical entity details use the closed `DetailKey` vocabulary.
+Human-readable detail values remain data, but application behavior no longer
+depends on repeated ad hoc label literals. The diagnostic allowlist remains in
+code because it is a privacy invariant rather than ordinary configuration.
+
 ## Storage
 
 Use platform-appropriate preferences for simple user choices and a versioned
@@ -73,6 +84,22 @@ Growable collections and entity resources are versioned manifests, not Swift
 arrays or entity-instance switches. Small related resources may share a
 collection manifest. Complicated or independently discoverable resources use
 individual manifest files.
+
+`HALCollectors/Resources/collection-profile.json` is the source of truth for
+which collector adapters participate in a live snapshot. The adjacent schema
+restricts entries to reviewed adapter identifiers; Swift supplies the adapter
+registry and safety invariants. Adding or disabling an optional collector does
+not require changing application composition code.
+
+`HALVisualization/Resources/reference-catalog.json` owns the user-facing
+reference concepts, symbols, tint tokens, and entity-type mappings. This keeps
+product content and semantic mappings out of SwiftUI view code while retaining
+closed, schema-validated presentation tokens.
+
+New bundled manifests use `BundledManifestResource` from `HALManifestKit` for
+consistent resource lookup, declarative validation, typed decoding, and
+diagnostics. Specialized loaders retain semantic safety checks in their owning
+configuration types.
 
 `HALProfileSchema/Resources/system-profile.schema.json` is the canonical,
 declarative Draft 2020-12 structural contract for synthetic and normalized

@@ -126,6 +126,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
     rebuildableDataConfiguration: RebuildableDataConfiguration? = nil,
     processConfiguration: ProcessCollectorConfiguration,
     persistenceConfiguration: PersistenceCollectorConfiguration,
+    persistenceRuntimeMatchingConfiguration: PersistenceRuntimeMatchingConfiguration? = nil,
     homebrewConfiguration: HomebrewInstallationConfiguration? = nil,
     runtimeConfiguration: RuntimeCollectorConfiguration? = nil,
     packageEcosystemConfiguration: PackageEcosystemConfiguration? = nil,
@@ -154,8 +155,7 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       rebuildableDataConfiguration: rebuildableDataConfiguration,
       processConfiguration: processConfiguration,
       persistenceRoots: try persistenceConfiguration.resolvedRoots(userHome: userHome),
-      persistenceRuntimeMatchingConfiguration:
-        try PersistenceRuntimeMatchingConfiguration.bundled(),
+      persistenceRuntimeMatchingConfiguration: persistenceRuntimeMatchingConfiguration,
       homebrewConfiguration: homebrewConfiguration,
       runtimeConfiguration: runtimeConfiguration,
       packageEcosystemConfiguration: packageEcosystemConfiguration,
@@ -175,7 +175,17 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
   }
 
   public func snapshot() -> GraphSnapshot {
+    do {
+      return try cancellableSnapshot()
+    } catch {
+      return unavailableSnapshot(error)
+    }
+  }
+
+  public func cancellableSnapshot() throws -> GraphSnapshot {
+    try Task.checkCancellation()
     let applications = collector.collect(scanID: scanID)
+    try Task.checkCancellation()
     let signatures = signatureCollector.collect(
       scanID: scanID,
       applications: applications.observations
@@ -184,18 +194,22 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       scanID: scanID,
       applications: applications.observations
     )
+    try Task.checkCancellation()
     let associatedLocations = associatedLocationCollector.collect(
       scanID: scanID,
       applications: applications.observations,
       signatures: signatures.observations
     )
+    try Task.checkCancellation()
     let rebuildableData = rebuildableDataCollector?.collect(scanID: scanID)
+    try Task.checkCancellation()
     let processes = processCollector.collect(scanID: scanID)
     let processResolutions = processResolver.resolve(
       scanID: scanID,
       processes: processes,
       applications: applications.observations
     )
+    try Task.checkCancellation()
     let persistence = persistenceCollector.collect(scanID: scanID)
     let persistenceResolutions = persistenceResolver.resolve(
       scanID: scanID,
@@ -207,12 +221,18 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       declarations: persistence,
       processes: processes
     )
+    try Task.checkCancellation()
     let homebrew = homebrewCollector?.collect(scanID: scanID)
+    try Task.checkCancellation()
     let runtimes = runtimeCollector?.collect(scanID: scanID)
+    try Task.checkCancellation()
     let packageEcosystems = packageEcosystemCollector?.collect(scanID: scanID)
+    try Task.checkCancellation()
     let commandLineSoftware = commandLineSoftwareCollector?.collect(scanID: scanID)
+    try Task.checkCancellation()
     let shellFrameworks = shellFrameworkCollector?.collect(scanID: scanID)
-    return projector.snapshot(
+    try Task.checkCancellation()
+    let snapshot = projector.snapshot(
       scanID: scanID,
       output: applications,
       signatures: signatures,
@@ -232,6 +252,46 @@ public struct ApplicationInventorySnapshotProvider: GraphSnapshotProvider {
       commandLineSoftware: commandLineSoftware,
       shellFrameworks: shellFrameworks,
       applicationClassifications: applicationClassifications
+    )
+    try snapshot.graph.validate()
+    return snapshot
+  }
+
+  private func unavailableSnapshot(_ error: Error) -> GraphSnapshot {
+    let now = Date()
+    return GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(
+          id: "live-applications-\(scanID.rawValue)",
+          name: "This Mac",
+          summary: "Application inventory collection was unavailable."
+        ),
+        entities: [],
+        relationships: []
+      ),
+      scan: ScanContext(
+        id: scanID,
+        environment: .liveReadOnly,
+        startedAt: now,
+        completedAt: now,
+        collectorRuns: [
+          CollectorRun(
+            collectorID: "application-inventory",
+            collectorVersion: 1,
+            availability: .unavailable,
+            state: .failed,
+            startedAt: now,
+            completedAt: now,
+            issues: [
+              CollectionIssue(
+                id: "application-inventory-failure",
+                severity: .error,
+                summary: String(describing: error)
+              )
+            ]
+          )
+        ]
+      )
     )
   }
 }

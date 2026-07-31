@@ -10,6 +10,27 @@ import Testing
 @Suite("Application collection state")
 @MainActor
 struct AppModelCollectionTests {
+  @Test("Initial linking requires durable storage")
+  func initialLinkRequiresDurableStorage() {
+    let preferences = MemoryPreferences()
+    let live = snapshot(id: "live", entityName: "Live")
+    let model = AppModel(
+      configuration: .phaseZero,
+      applicationClassifications: nil,
+      syntheticProvider: StaticProvider(snapshot(id: "synthetic", entityName: "Fictional")),
+      preferences: preferences,
+      userDataStore: nil,
+      liveSnapshot: { live }
+    )
+
+    model.linkToMac()
+
+    #expect(!model.isCollecting)
+    #expect(model.dataSourceMode == .synthetic)
+    #expect(model.collectionError?.contains("durable") == true)
+    #expect(preferences.mode() == .synthetic)
+  }
+
   @Test("Initial link succeeds and hands off to application exploration")
   func initialLinkSuccess() async throws {
     let preferences = MemoryPreferences()
@@ -431,12 +452,20 @@ struct AppModelCollectionTests {
     store: HALUserDataStore? = nil,
     live: @escaping @Sendable () throws -> GraphSnapshot
   ) -> AppModel {
-    AppModel(
+    let resolvedStore: HALUserDataStore
+    if let store {
+      resolvedStore = store
+    } else {
+      let parent = FileManager.default.temporaryDirectory
+        .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+      resolvedStore = HALUserDataStore(root: parent.appending(path: "HAL"))
+    }
+    return AppModel(
       configuration: .phaseZero,
       applicationClassifications: nil,
       syntheticProvider: StaticProvider(snapshot(id: "synthetic", entityName: "Fictional")),
       preferences: preferences,
-      userDataStore: store,
+      userDataStore: resolvedStore,
       liveSnapshot: live
     )
   }

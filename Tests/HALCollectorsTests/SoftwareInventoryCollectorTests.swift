@@ -5,6 +5,15 @@ import Testing
 
 @Suite("Runtime and package ecosystem collectors")
 struct SoftwareInventoryCollectorTests {
+  @Test("Collection composition is schema validated and contains required adapters")
+  func collectionCompositionProfile() throws {
+    let profile = try CollectionProfile.bundled()
+    #expect(profile.schemaVersion == CollectionProfile.currentVersion)
+    #expect(profile.collectors.contains { $0.id == "applications" && $0.enabled })
+    #expect(profile.collectors.contains { $0.id == "processes" && $0.enabled })
+    #expect(Set(profile.collectors.map(\.id)).count == profile.collectors.count)
+  }
+
   @Test("Runtime definitions and package ecosystems are schema validated")
   func bundledConfigurations() throws {
     let runtimes = try RuntimeCollectorConfiguration.bundled()
