@@ -96,6 +96,8 @@ struct ShellPathVisualizerView: View {
       .frame(maxWidth: 1_150)
       .frame(maxWidth: .infinity)
     }
+    .scrollIndicators(.visible)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
   private func symbol(for kind: ShellPathOperation.Kind) -> String {

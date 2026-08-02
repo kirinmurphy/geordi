@@ -11,7 +11,7 @@ public enum FilesystemObservationState: String, Codable, CaseIterable, Sendable 
 }
 
 public struct FilesystemLocationCatalog: Codable, Sendable {
-  public static let currentVersion = 1
+  public static let currentVersion = 2
   public let schemaVersion: Int
   public let locations: [FilesystemLocationDefinition]
 
@@ -54,6 +54,7 @@ public struct FilesystemLocationDefinition: Codable, Identifiable, Hashable, Sen
   public let pathTemplate: String
   public let displayLabel: String
   public let purpose: String
+  public let system: String
   public let sensitivity: String
   public let symbol: String
   public let enumerationAllowed: Bool
@@ -66,6 +67,7 @@ public struct FilesystemNode: Identifiable, Hashable, Sendable {
   public let path: String
   public let label: String
   public let purpose: String
+  public let system: String
   public let symbol: String
   public let state: FilesystemObservationState
   public let depth: Int
@@ -79,7 +81,8 @@ public struct FilesystemProjector: Sendable {
   public func project(
     graph: SystemGraph,
     catalog: FilesystemLocationCatalog,
-    homeDirectory: String
+    homeDirectory: String,
+    includeReferenceLocations: Bool = false
   ) -> [FilesystemNode] {
     let observed = graph.entities.compactMap { entity -> (EntityID, String)? in
       guard let path = entity.details.first(where: { $0.value.hasPrefix("/") })?.value else {
@@ -110,20 +113,23 @@ public struct FilesystemProjector: Sendable {
         } else {
           .observed
         }
-      let isAncestor = !associated.isEmpty
-      guard isAncestor || definition.pathTemplate == "/" else { return nil }
       let parent =
         definitions
         .filter { _, candidate in
           candidate != path && path.hasPrefix(candidate == "/" ? "/" : candidate + "/")
         }
         .max { $0.1.count < $1.1.count }
+      guard includeReferenceLocations || !associated.isEmpty || definition.pathTemplate == "/"
+      else {
+        return nil
+      }
       return FilesystemNode(
         id: definition.id,
         path: path,
         label: definition.displayLabel.replacingOccurrences(
           of: "{user}", with: URL(fileURLWithPath: homeDirectory).lastPathComponent),
         purpose: definition.purpose,
+        system: definition.system,
         symbol: definition.symbol,
         state: state,
         depth: max(0, path.split(separator: "/").count),

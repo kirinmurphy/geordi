@@ -2,6 +2,183 @@ import HALDomain
 import HALVisualization
 import SwiftUI
 
+private struct GuideNode: Identifiable {
+  let id: String
+  let title: String
+  let explanation: String
+  let symbol: String
+}
+
+private struct ConceptualSystemMap: View {
+  let destination: AppModel.Destination
+
+  private var nodes: [GuideNode] {
+    switch destination {
+    case .startup:
+      [
+        GuideNode(
+          id: "declaration", title: "Declaration",
+          explanation: "A plist records a request to launch something.", symbol: "doc.text"),
+        GuideNode(
+          id: "service", title: "Launch service",
+          explanation: "macOS evaluates scope, timing, and restart policy.", symbol: "gearshape.2"),
+        GuideNode(
+          id: "software", title: "Owning software",
+          explanation: "HAL connects the declaration to an app when evidence supports it.",
+          symbol: "app.badge"),
+        GuideNode(
+          id: "process", title: "Running process",
+          explanation: "A separate observation—configuration alone does not prove it ran.",
+          symbol: "waveform.path.ecg"),
+      ]
+    case .storage:
+      [
+        GuideNode(
+          id: "application", title: "Application",
+          explanation: "Software reads, writes, downloads, and derives data.", symbol: "app"),
+        GuideNode(
+          id: "support", title: "Working data",
+          explanation: "Settings and support data may be essential or user-authored.",
+          symbol: "folder.badge.gearshape"),
+        GuideNode(
+          id: "rebuildable", title: "Rebuildable data",
+          explanation: "Caches and derived artifacts can often be recreated.",
+          symbol: "arrow.triangle.2.circlepath"),
+        GuideNode(
+          id: "decision", title: "Evidence before action",
+          explanation: "Size and classification inform a decision; they do not authorize deletion.",
+          symbol: "checklist"),
+      ]
+    case .commandLine:
+      [
+        GuideNode(
+          id: "source", title: "Install source",
+          explanation: "A package manager, installer, or user-local location introduces software.",
+          symbol: "shippingbox"),
+        GuideNode(
+          id: "package", title: "Installed package",
+          explanation: "A package may be requested directly or pulled in as a dependency.",
+          symbol: "cube.box"),
+        GuideNode(
+          id: "capability", title: "Capability",
+          explanation: "Runtimes and tools provide commands used by other software.",
+          symbol: "hammer"),
+        GuideNode(
+          id: "path", title: "Command on PATH",
+          explanation: "Shell search order determines which executable a name resolves to.",
+          symbol: "terminal"),
+      ]
+    default: []
+    }
+  }
+
+  private var title: String {
+    switch destination {
+    case .startup: "How automatic startup actually works"
+    case .storage: "How reclaimable data fits into application storage"
+    case .commandLine: "How command-line software becomes available"
+    default: "How this system works"
+    }
+  }
+
+  var body: some View {
+    if !nodes.isEmpty {
+      VStack(alignment: .leading, spacing: 14) {
+        Text(title).font(.halSection.bold())
+        Text(
+          "Read left to right. The arrows describe the mechanism; the observations below show what HAL actually found."
+        )
+        .foregroundStyle(.secondary)
+        ViewThatFits(in: .horizontal) {
+          HStack(spacing: 8) { nodeSequence }
+          VStack(spacing: 8) { nodeSequence }
+        }
+      }
+      .padding(20)
+      .background(
+        LinearGradient(
+          colors: [.blue.opacity(0.10), .purple.opacity(0.06)], startPoint: .topLeading,
+          endPoint: .bottomTrailing),
+        in: RoundedRectangle(cornerRadius: 18)
+      )
+      .overlay { RoundedRectangle(cornerRadius: 18).stroke(.blue.opacity(0.25)) }
+    }
+  }
+
+  @ViewBuilder private var nodeSequence: some View {
+    ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
+      if index > 0 {
+        Image(systemName: "arrow.right")
+          .foregroundStyle(.blue)
+          .accessibilityHidden(true)
+      }
+      VStack(alignment: .leading, spacing: 8) {
+        Image(systemName: node.symbol).font(.halSection).foregroundStyle(.blue)
+        Text(node.title).font(.halRowTitle)
+        Text(node.explanation)
+          .font(.halSmall)
+          .foregroundStyle(.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      .padding(14)
+      .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+      .background(.background.opacity(0.82), in: RoundedRectangle(cornerRadius: 12))
+    }
+  }
+}
+
+private struct ApplicationAnatomyView: View {
+  let model: AppModel
+  let applications: [Entity]
+
+  private var sample: Entity? { applications.first }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      Text("An application is more than its icon").font(.halSection.bold())
+      Text(
+        "HAL treats an app as the center of a small system. Choose an app below to replace this anatomy lesson with its real evidence."
+      )
+      .foregroundStyle(.secondary)
+      HStack(spacing: 10) {
+        anatomyNode("Installed from", "Source and provenance", "shippingbox")
+        connector
+        anatomyNode(
+          sample?.name ?? "Application bundle", "Executable code and identity", "app.fill",
+          emphasized: true)
+        connector
+        VStack(spacing: 10) {
+          anatomyNode("Starts & runs", "Helpers, declarations, processes", "power")
+          anatomyNode("Reads & writes", "Support, settings, caches", "folder")
+        }
+      }
+      .padding(16)
+      .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14))
+    }
+  }
+
+  private var connector: some View {
+    Image(systemName: "arrow.left.and.right").foregroundStyle(.blue).accessibilityHidden(true)
+  }
+
+  private func anatomyNode(
+    _ title: String, _ detail: String, _ symbol: String, emphasized: Bool = false
+  ) -> some View {
+    VStack(spacing: 7) {
+      Image(systemName: symbol).font(.halSection).foregroundStyle(emphasized ? .white : .blue)
+      Text(title).font(.halRowTitle).multilineTextAlignment(.center)
+      Text(detail).font(.halSmall).foregroundStyle(emphasized ? .white.opacity(0.85) : .secondary)
+        .multilineTextAlignment(.center)
+    }
+    .padding(14)
+    .frame(maxWidth: .infinity, minHeight: 112)
+    .background(
+      emphasized ? Color.blue : Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 12)
+    )
+    .foregroundStyle(emphasized ? .white : .primary)
+  }
+}
+
 struct ApplicationBrowserView: View {
   let model: AppModel
   @State private var query = ""
@@ -27,52 +204,61 @@ struct ApplicationBrowserView: View {
         explanation:
           "Select an observed application to open its Application Story, evidence, and bounded relationships."
       )
-      HStack(spacing: 12) {
-        TextField("Search applications", text: $query)
-          .textFieldStyle(.roundedBorder)
-          .frame(maxWidth: 360)
-        if !model.applicationCategoryOptions.isEmpty {
-          Picker(
-            "Application group",
-            selection: Binding(
-              get: { model.selectedApplicationCategoryID },
-              set: { model.selectedApplicationCategoryID = $0 }
-            )
-          ) {
-            ForEach(model.applicationCategoryOptions) { category in
-              Text(category.label).tag(Optional(category.id))
+      ScrollView {
+        VStack(alignment: .leading, spacing: 22) {
+          ApplicationAnatomyView(model: model, applications: applications)
+          HStack(spacing: 12) {
+            TextField("Search applications", text: $query)
+              .textFieldStyle(.roundedBorder)
+              .frame(maxWidth: 360)
+            if !model.applicationCategoryOptions.isEmpty {
+              Picker(
+                "Application group",
+                selection: Binding(
+                  get: { model.selectedApplicationCategoryID },
+                  set: { model.selectedApplicationCategoryID = $0 }
+                )
+              ) {
+                ForEach(model.applicationCategoryOptions) { category in
+                  Text(category.label).tag(Optional(category.id))
+                }
+              }
+              .frame(maxWidth: 260)
             }
+            Spacer()
+            Text("\(applications.count) observed")
+              .font(.halSecondary)
+              .foregroundStyle(.secondary)
           }
-          .frame(maxWidth: 260)
+          if applications.isEmpty {
+            ContentUnavailableView(
+              model.explorationContext?.emptyTitle ?? "No applications observed",
+              systemImage: "app.dashed",
+              description: Text(
+                query.isEmpty
+                  ? model.explorationContext?.emptyMessage ?? ""
+                  : "No applications match “\(query)”.")
+            )
+          } else {
+            LazyVStack(spacing: 0) {
+              ForEach(applications) { application in
+                EntityBrowserRow(
+                  entity: application,
+                  subtitle: model.applicationSourceLabel(application) ?? application.summary,
+                  action: { model.focus(application) }
+                )
+                Divider()
+              }
+            }
+            .padding(.horizontal, 12)
+            .background(
+              Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14))
+          }
         }
-        Spacer()
-        Text("\(applications.count) applications")
-          .font(.halSecondary)
-          .foregroundStyle(.secondary)
+        .padding(20)
       }
-      .padding(.horizontal, 20)
-      .padding(.vertical, 12)
-
-      if applications.isEmpty {
-        ContentUnavailableView(
-          model.explorationContext?.emptyTitle ?? "No applications observed",
-          systemImage: "app.dashed",
-          description: Text(
-            query.isEmpty
-              ? model.explorationContext?.emptyMessage ?? ""
-              : "No applications match “\(query)”."
-          )
-        )
-      } else {
-        List(applications) { application in
-          EntityBrowserRow(
-            entity: application,
-            subtitle: model.applicationSourceLabel(application) ?? application.summary,
-            action: { model.focus(application) }
-          )
-        }
-        .listStyle(.inset)
-      }
+      .scrollIndicators(.visible)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .accessibilityIdentifier("applicationExplorationBrowser")
   }
@@ -89,9 +275,16 @@ struct ExplorationBrowserView: View {
         title: context?.title ?? "Explore",
         explanation: explanation
       )
-      if let context, let presentation, hasMembers(presentation) {
-        ScrollView {
-          LazyVStack(alignment: .leading, spacing: 14) {
+      ScrollView {
+        LazyVStack(alignment: .leading, spacing: 20) {
+          ConceptualSystemMap(destination: model.destination)
+          if let context, let presentation, hasMembers(presentation) {
+            VStack(alignment: .leading, spacing: 5) {
+              Text("What HAL observed on this Mac")
+                .font(.halSection.bold())
+              Text(observationLead)
+                .foregroundStyle(.secondary)
+            }
             ForEach(presentation.sections) { section in
               if !section.groups.isEmpty {
                 sectionView(section)
@@ -100,18 +293,34 @@ struct ExplorationBrowserView: View {
             if !presentation.unassignedEntityIDs.isEmpty {
               unclassifiedSection(presentation.unassignedEntityIDs, context: context)
             }
+          } else {
+            ContentUnavailableView(
+              context?.emptyTitle ?? "Nothing observed",
+              systemImage: emptySymbol,
+              description: Text(
+                context?.emptyMessage
+                  ?? "The explanatory map above remains available even when no observations exist.")
+            )
           }
-          .padding(20)
         }
-      } else {
-        ContentUnavailableView(
-          context?.emptyTitle ?? "Nothing observed",
-          systemImage: emptySymbol,
-          description: Text(context?.emptyMessage ?? "")
-        )
+        .padding(20)
       }
+      .scrollIndicators(.visible)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .accessibilityIdentifier("explorationContextBrowser")
+  }
+
+  private var observationLead: String {
+    switch model.destination {
+    case .startup:
+      "Declarations are grouped with the software HAL can connect them to; unresolved declarations stay explicit."
+    case .storage:
+      "Each location includes its classification, measured size when available, and the application relationship behind it."
+    case .commandLine:
+      "The inventory is organized as an ecosystem—sources and managers first, capabilities and installed artifacts second."
+    default: "Open an observed node to see its bounded evidence and relationships."
+    }
   }
 
   private var explanation: String {
@@ -216,6 +425,14 @@ struct ExplorationBrowserView: View {
   }
 
   private func entitySubtitle(_ entity: Entity) -> String {
+    if model.destination == .storage {
+      let size = entity.details.first { $0.label == "Size" }?.value
+      let classification = entity.details.first {
+        ["Classification", "Rebuildability", "Removal"].contains($0.label)
+      }?.value
+      let path = entity.details.first { ["Path", "Location"].contains($0.label) }?.value
+      return [size, classification, path].compactMap { $0 }.joined(separator: " · ")
+    }
     if entity.type == .persistence {
       let type = entity.details.first { $0.label == "Type" }?.value ?? "Startup declaration"
       let scope = entity.details.first { $0.label == "Scope" }?.value

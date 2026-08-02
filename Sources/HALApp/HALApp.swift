@@ -116,6 +116,7 @@ final class AppModel {
   var lastRefreshDuration: TimeInterval?
   var welcomeDismissed: Bool
   var destination: Destination = .overview
+  private(set) var destinationHistory: [Destination] = []
   var selection: GraphSelection?
   var focusedEntity: EntityID?
   var searchQuery = ""
@@ -585,6 +586,9 @@ final class AppModel {
   }
 
   func navigate(to destination: Destination) {
+    if self.destination != destination {
+      destinationHistory.append(self.destination)
+    }
     self.destination = destination
     if case .entity = destination {
       // Entity lifecycle history is recorded by focus(_:), where the concrete
@@ -608,6 +612,32 @@ final class AppModel {
       selection = syntheticSelection(for: destination)
     case .entity(let id):
       selection = GraphSelection(.entity(id))
+    }
+    focusedEntity = nil
+    searchQuery = ""
+  }
+
+  var canNavigateBack: Bool { !destinationHistory.isEmpty }
+
+  func navigateBack() {
+    guard let prior = destinationHistory.popLast() else { return }
+    setDestinationWithoutHistory(prior)
+  }
+
+  func navigateHome() {
+    destinationHistory.removeAll()
+    setDestinationWithoutHistory(.overview)
+  }
+
+  private func setDestinationWithoutHistory(_ destination: Destination) {
+    self.destination = destination
+    switch destination {
+    case .storage, .performance:
+      selection = syntheticSelection(for: destination)
+    case .entity(let id):
+      selection = GraphSelection(.entity(id))
+    default:
+      selection = nil
     }
     focusedEntity = nil
     searchQuery = ""
@@ -657,10 +687,10 @@ final class AppModel {
     guard graphHistory.indices.contains(graphHistoryIndex),
       let entity = fixture.entity(graphHistory[graphHistoryIndex])
     else { return }
-    showEntityUniverse(entity)
+    showEntityUniverse(entity, recordsDestination: false)
   }
 
-  private func showEntityUniverse(_ entity: Entity) {
+  private func showEntityUniverse(_ entity: Entity, recordsDestination: Bool = true) {
     visibleTypes.insert(entity.type)
     if entity.type == .packageManager {
       let connectedTypes = fixture.relationships(connectedTo: entity.id).compactMap {
@@ -671,7 +701,11 @@ final class AppModel {
       }
       visibleTypes.formUnion(connectedTypes)
     }
-    destination = .entity(entity.id)
+    let nextDestination = Destination.entity(entity.id)
+    if recordsDestination, destination != nextDestination {
+      destinationHistory.append(destination)
+    }
+    destination = nextDestination
     selection = GraphSelection(.entity(entity.id))
     focusedEntity = entity.id
   }

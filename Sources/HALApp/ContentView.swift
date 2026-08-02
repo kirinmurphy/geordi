@@ -35,42 +35,27 @@ struct ContentView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      NavigationSplitView {
-        sidebar
-      } detail: {
-        VStack(spacing: 0) {
-          notificationSlot
-          if model.destination != .overview {
-            header
-          }
-          switch model.destination {
-          case .overview:
-            OverviewView(
-              model: model,
-              diagnosticExportAction: exportRedactedDiagnostics
+      GeometryReader { viewport in
+        NavigationSplitView {
+          sidebar
+        } detail: {
+          detailColumn
+            .frame(
+              minWidth: 0,
+              maxWidth: .infinity,
+              minHeight: 0,
+              maxHeight: .infinity
             )
-          case .filesystem:
-            FilesystemMapView(model: model)
-          case .shellPath:
-            ShellPathVisualizerView()
-          case .applications:
-            ApplicationBrowserView(model: model)
-          case .startup, .storage, .commandLine:
-            ExplorationBrowserView(model: model)
-          case .entity(let id):
-            if let entity = model.fixture.entity(id), entity.type == .application {
-              ApplicationStoryView(model: model, application: entity)
-            } else {
-              AtlasDetailView(model: model)
-            }
-          case .performance:
-            AtlasDetailView(model: model)
-          }
+            .clipped()
         }
+        .navigationSplitViewStyle(.balanced)
+        .frame(width: viewport.size.width, height: viewport.size.height)
       }
-      .navigationSplitViewStyle(.balanced)
+      .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+      .layoutPriority(1)
 
       dataFreshnessFooter
+        .fixedSize(horizontal: false, vertical: true)
     }
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
@@ -183,6 +168,46 @@ struct ContentView: View {
     }
   }
 
+  @ViewBuilder private var detailColumn: some View {
+    VStack(spacing: 0) {
+      notificationSlot
+        .fixedSize(horizontal: false, vertical: true)
+      if model.destination != .overview {
+        header
+          .fixedSize(horizontal: false, vertical: true)
+      }
+      Group {
+        switch model.destination {
+        case .overview:
+          OverviewView(model: model, diagnosticExportAction: exportRedactedDiagnostics)
+        case .filesystem:
+          FilesystemMapView(model: model)
+        case .shellPath:
+          ShellPathVisualizerView()
+        case .applications:
+          ApplicationBrowserView(model: model)
+        case .startup, .storage, .commandLine:
+          ExplorationBrowserView(model: model)
+        case .entity(let id):
+          if let entity = model.fixture.entity(id), entity.type == .application {
+            ApplicationStoryView(model: model, application: entity)
+          } else {
+            AtlasDetailView(model: model)
+          }
+        case .performance:
+          AtlasDetailView(model: model)
+        }
+      }
+      .frame(
+        minWidth: 0,
+        maxWidth: .infinity,
+        minHeight: 0,
+        maxHeight: .infinity
+      )
+      .layoutPriority(1)
+    }
+  }
+
   private var sidebar: some View {
     VStack(alignment: .leading, spacing: 0) {
       VStack(alignment: .leading, spacing: 5) {
@@ -210,48 +235,8 @@ struct ContentView: View {
               destination: .performance)
           }
         }
-        Section("Installed applications") {
-          ForEach(model.fixture.entities.filter { $0.type == .application }) { application in
-            Button {
-              model.focus(application)
-            } label: {
-              HStack {
-                Image(systemName: application.presentation?.symbol ?? "app")
-                  .frame(width: 20)
-                VStack(alignment: .leading, spacing: 2) {
-                  Text(application.name)
-                  Text(application.details.first?.value ?? application.summary)
-                    .font(.halSmall)
-                    .foregroundStyle(.secondary)
-                }
-              }
-              .padding(.vertical, 2)
-            }
-            .buttonStyle(.plain)
-          }
-        }
-        Section("Developer tools") {
-          ForEach(
-            model.fixture.entities.filter {
-              [.packageManager, .shellFramework, .package].contains($0.type)
-            }
-          ) { tool in
-            Button {
-              model.focus(tool)
-            } label: {
-              HStack {
-                Image(systemName: "terminal")
-                  .frame(width: 20)
-                VStack(alignment: .leading, spacing: 2) {
-                  Text(tool.name)
-                  Text(tool.type.label)
-                    .font(.halSmall)
-                    .foregroundStyle(.secondary)
-                }
-              }
-            }
-            .buttonStyle(.plain)
-          }
+        Section("Tools") {
+          navigationButton("Shell PATH Lab", symbol: "terminal", destination: .shellPath)
         }
       }
 
@@ -290,10 +275,29 @@ struct ContentView: View {
       .padding(14)
     }
     .navigationSplitViewColumnWidth(min: 210, ideal: 235, max: 280)
+    .accessibilityIdentifier("globalSidebar")
   }
 
   private var header: some View {
     HStack(spacing: 12) {
+      Button {
+        model.navigateBack()
+      } label: {
+        Label("Back", systemImage: "chevron.left")
+      }
+      .buttonStyle(.borderless)
+      .disabled(!model.canNavigateBack)
+      .keyboardShortcut("[", modifiers: .command)
+
+      Button {
+        model.navigateHome()
+      } label: {
+        Label("Home", systemImage: "house")
+      }
+      .buttonStyle(.borderless)
+
+      Divider().frame(height: 22)
+
       HStack(spacing: 6) {
         ForEach(Array(model.breadcrumb.enumerated()), id: \.offset) { index, title in
           if index > 0 {
@@ -302,13 +306,9 @@ struct ContentView: View {
               .foregroundStyle(.tertiary)
           }
           if index == 0, title == "Home", model.destination != .overview {
-            Button("Home") {
-              model.navigate(to: .overview)
-            }
-            .buttonStyle(.plain)
-            .font(.halSecondary.weight(.medium))
-            .foregroundStyle(.secondary)
-            .accessibilityHint("Return to the inventory")
+            Text("Home")
+              .font(.halSecondary.weight(.medium))
+              .foregroundStyle(.secondary)
           } else {
             Text(title)
               .font(index == model.breadcrumb.count - 1 ? .halRowTitle : .halSecondary)
@@ -319,12 +319,13 @@ struct ContentView: View {
       Spacer()
     }
     .padding(.horizontal, 18)
-    .frame(maxWidth: .infinity, minHeight: 44)
-    .background(Color(nsColor: .windowBackgroundColor))
+    .frame(maxWidth: .infinity, minHeight: 54)
+    .background(.bar)
     .overlay(alignment: .bottom) {
       Divider()
     }
     .zIndex(1)
+    .accessibilityIdentifier("globalNavigationBar")
   }
 
   private var dataFreshnessFooter: some View {
@@ -838,6 +839,7 @@ private struct OverviewView: View {
       .frame(maxWidth: 1_050, alignment: .topLeading)
       .frame(maxWidth: .infinity, alignment: .top)
     }
+    .scrollIndicators(.visible)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .sheet(isPresented: $guidedProofPresented) {
       GuidedProofView(model: model) {
