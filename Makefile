@@ -32,8 +32,10 @@ format-check:
 
 verify: format-check test-unit fixtures build test-ui
 
-run: install-dev
-	open -n "$(HOME)/Applications/HAL.app"
+run:
+	./scripts/stop-dev.sh
+	$(MAKE) install-dev
+	./scripts/launch-dev.sh
 
 clean:
 	$(SWIFT) package clean

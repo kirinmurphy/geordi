@@ -29,7 +29,12 @@ build, debug, and Apple-platform integration.
 
 The stable Debug installation is `~/Applications/HAL.app`. `make run` refreshes
 that bundle on every invocation, so Spotlight and a Desktop shortcut remain
-valid across development updates.
+valid across development updates. It also stops any running HAL development
+copy before replacing the bundle, launches exactly one installed copy, and
+records that process in `.build/hal-dev.pids`. You do not need to quit or reopen
+HAL separately after source changes; use `make run` once. HAL also enforces
+single-instance behavior inside the application: launching another development
+bundle activates the existing process and immediately terminates the duplicate.
 
 ## Repository location
 

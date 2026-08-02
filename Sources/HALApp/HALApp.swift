@@ -37,7 +37,38 @@ struct HALApp: App {
 }
 
 final class HALApplicationDelegate: NSObject, NSApplicationDelegate {
+  private var isDuplicateInstance = false
+
+  func applicationWillFinishLaunching(_ notification: Notification) {
+    guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return }
+
+    let currentPID = ProcessInfo.processInfo.processIdentifier
+    let instances = NSRunningApplication.runningApplications(
+      withBundleIdentifier: bundleIdentifier
+    )
+    guard instances.count > 1 else { return }
+
+    // Keep the instance that launched first. PID is a deterministic tie-breaker
+    // for near-simultaneous launches where launchDate is unavailable or equal.
+    let keeper = instances.min { lhs, rhs in
+      switch (lhs.launchDate, rhs.launchDate) {
+      case (let left?, let right?) where left != right:
+        return left < right
+      default:
+        return lhs.processIdentifier < rhs.processIdentifier
+      }
+    }
+
+    guard let keeper, keeper.processIdentifier != currentPID else { return }
+    isDuplicateInstance = true
+    keeper.activate(options: [.activateAllWindows])
+    DispatchQueue.main.async {
+      NSApp.terminate(nil)
+    }
+  }
+
   func applicationDidFinishLaunching(_ notification: Notification) {
+    guard !isDuplicateInstance else { return }
     NSApp.activate(ignoringOtherApps: true)
   }
 
