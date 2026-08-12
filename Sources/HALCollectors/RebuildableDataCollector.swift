@@ -80,7 +80,7 @@ public struct RebuildableDataCollector: Sendable {
           CollectionIssue(
             id: "rebuildable-data-classification-\(detector.id)",
             severity: .error,
-            summary: "HAL could not resolve a rebuildable-data classification.",
+            summary: "\(AppBrand.displayName) could not resolve a rebuildable-data classification.",
             affectedScope: detector.id
           )
         )
@@ -96,7 +96,8 @@ public struct RebuildableDataCollector: Sendable {
               CollectionIssue(
                 id: "rebuildable-data-escaped-root-\(detector.id)-\(location.id)",
                 severity: .error,
-                summary: "HAL refused a rebuildable-data location outside the user home.",
+                summary:
+                  "\(AppBrand.displayName) refused a rebuildable-data location outside the user home.",
                 affectedScope: location.id
               )
             )
@@ -121,7 +122,8 @@ public struct RebuildableDataCollector: Sendable {
               CollectionIssue(
                 id: "rebuildable-data-symbolic-link-\(detector.id)-\(location.id)",
                 severity: .warning,
-                summary: "HAL will not treat a symbolic link as reclaimable data.",
+                summary:
+                  "\(AppBrand.displayName) will not treat a symbolic link as reclaimable data.",
                 affectedScope: url.path
               )
             )
@@ -132,7 +134,7 @@ public struct RebuildableDataCollector: Sendable {
           CollectionIssue(
             id: "rebuildable-data-path-\(detector.id)",
             severity: .error,
-            summary: "HAL refused an unsafe rebuildable-data location.",
+            summary: "\(AppBrand.displayName) refused an unsafe rebuildable-data location.",
             affectedScope: detector.id
           )
         )
@@ -205,8 +207,8 @@ public struct RebuildableDataCollector: Sendable {
       severity: .warning,
       summary:
         inspection.status == .permissionDenied
-        ? "HAL did not have permission to inspect a rebuildable-data location."
-        : "HAL could not inspect a rebuildable-data location.",
+        ? "\(AppBrand.displayName) did not have permission to inspect a rebuildable-data location."
+        : "\(AppBrand.displayName) could not inspect a rebuildable-data location.",
       affectedScope: location.id
     )
   }

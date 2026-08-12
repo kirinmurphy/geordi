@@ -1,6 +1,10 @@
 import Foundation
 import HALManifestKit
 
+/// Product-facing code imports HALDomain, so expose the canonical brand here
+/// without maintaining a second name constant.
+public typealias AppBrand = ProductBrand
+
 public enum EnvironmentMode: String, Codable, Sendable {
   case synthetic
   case liveReadOnly

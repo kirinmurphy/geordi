@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hal.local/schemas/file-facets/v1",
+  "title": "File facet classifications",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "categories", "fallback"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "categories": {"type":"array","minItems":1,"items":{"$ref":"#/$defs/category"}},
+    "fallback": {"$ref":"#/$defs/facets"}
+  },
+  "$defs": {
+    "category": {
+      "type":"object","additionalProperties":false,"required":["label","facets"],
+      "properties":{"label":{"type":"string","minLength":1},"facets":{"$ref":"#/$defs/facets"}}
+    },
+    "facets": {
+      "type":"object","additionalProperties":false,
+      "required":["role","rebuildability","ownership","sensitivity","kind"],
+      "properties": {
+        "role":{"enum":["Configuration","Durable application state","Cache","Logs","Web storage","Saved state","Container","Shared container","Build output","User-created work","Other"]},
+        "rebuildability":{"enum":["Rebuildable","Durable","Mixed","Unknown"]},
+        "ownership":{"enum":["Exclusive","Associated","Shared","Unresolved"]},
+        "sensitivity":{"enum":["User value","Potentially sensitive","Operational","Unknown"]},
+        "kind":{"enum":["File","Directory","Container","Unknown"]}
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/profile-catalog.schema.json",
-  "title": "HAL Synthetic Profile Catalog",
+  "title": "{{productName}} Synthetic Profile Catalog",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "profiles"],

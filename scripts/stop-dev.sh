@@ -2,7 +2,8 @@
 set -euo pipefail
 
 project_dir="${0:A:h:h}"
-installed_executable="$HOME/Applications/HAL.app/Contents/MacOS/HALApp"
+source "$project_dir/scripts/product-brand.sh"
+installed_executable="$HOME/Applications/$product_display_name.app/Contents/MacOS/HALApp"
 pid_file="$project_dir/.build/hal-dev.pids"
 
 is_hal_development_command() {
@@ -38,7 +39,7 @@ done
 
 if (( ${#hal_pids} == 0 )); then
   rm -f "$pid_file"
-  print "No running HAL development process."
+  print "No running $product_display_name development process."
   exit 0
 fi
 
@@ -66,10 +67,10 @@ for _ in {1..50}; do
 done
 
 if (( ${#remaining} > 0 )); then
-  print -u2 "HAL did not exit after SIGTERM: ${remaining[*]}"
+  print -u2 "$product_display_name did not exit after SIGTERM: ${remaining[*]}"
   print -u2 "Refusing to force-kill it; quit those processes manually and retry."
   exit 1
 fi
 
 rm -f "$pid_file"
-print "Stopped HAL development process(es): ${hal_pids[*]}"
+print "Stopped $product_display_name development process(es): ${hal_pids[*]}"

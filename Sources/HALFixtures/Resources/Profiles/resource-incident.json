@@ -179,7 +179,7 @@
           "summary" : "Temporal proximity supports correlation, not causation."
         }
       ],
-      "explanation" : "Opening the large document happened shortly before pressure rose; HAL has not established causation.",
+      "explanation" : "Opening the large document happened shortly before pressure rose; {{productName}} has not established causation.",
       "id" : "document-near",
       "source" : "event.document",
       "target" : "incident.memory",

@@ -2,12 +2,13 @@
 set -euo pipefail
 
 project_dir="${0:A:h:h}"
-installed_bundle="$HOME/Applications/HAL.app"
+source "$project_dir/scripts/product-brand.sh"
+installed_bundle="$HOME/Applications/$product_display_name.app"
 installed_executable="$installed_bundle/Contents/MacOS/HALApp"
 pid_file="$project_dir/.build/hal-dev.pids"
 
 if [[ ! -x "$installed_executable" ]]; then
-  print -u2 "HAL is not installed at $installed_bundle"
+  print -u2 "$product_display_name is not installed at $installed_bundle"
   print -u2 "Run 'make install-dev' first."
   exit 1
 fi
@@ -29,11 +30,11 @@ for _ in {1..50}; do
 done
 
 if (( ${#launched_pids} != 1 )); then
-  print -u2 "Expected one installed HAL process; found ${#launched_pids}."
+  print -u2 "Expected one installed $product_display_name process; found ${#launched_pids}."
   (( ${#launched_pids} > 0 )) && print -u2 "PIDs: ${launched_pids[*]}"
   exit 1
 fi
 
 mkdir -p "${pid_file:h}"
 print -r -- "$launched_pids[1]" > "$pid_file"
-print "Launched HAL development build (PID $launched_pids[1])."
+print "Launched $product_display_name development build (PID $launched_pids[1])."

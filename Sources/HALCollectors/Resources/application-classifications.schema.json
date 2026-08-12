@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/application-classifications/v9",
-  "title": "HAL application classifications",
+  "title": "{{productName}} application classifications",
   "type": "object",
   "additionalProperties": false,
   "required": [

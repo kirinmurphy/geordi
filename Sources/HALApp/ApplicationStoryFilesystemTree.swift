@@ -20,6 +20,7 @@ struct ApplicationStoryTreeItem: Identifiable {
 struct ApplicationStoryFilesystemTree: View {
   let items: [ApplicationStoryTreeItem]
   let inspect: (Entity) -> Void
+  var emphasizesUncertainty = false
 
   private var roots: [ApplicationStoryTreeNode] {
     ApplicationStoryTreeNode.build(items)
@@ -27,13 +28,23 @@ struct ApplicationStoryFilesystemTree: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
+      if items.contains(where: { $0.path != nil }) {
+        Label(
+          "Path grouping — folders organize observed endpoints; they are not separate observations.",
+          systemImage: "folder.badge.questionmark"
+        )
+        .font(.halSmall)
+        .foregroundStyle(.secondary)
+        .padding(12)
+      }
       ForEach(roots) { node in
         ApplicationStoryTreeBranch(
           node: node,
           ancestorContinuations: [],
           isLast: true,
           isRoot: true,
-          inspect: inspect
+          inspect: inspect,
+          emphasizesUncertainty: emphasizesUncertainty
         )
       }
     }
@@ -112,6 +123,7 @@ private struct ApplicationStoryTreeBranch: View {
   let isLast: Bool
   let isRoot: Bool
   let inspect: (Entity) -> Void
+  let emphasizesUncertainty: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -141,7 +153,8 @@ private struct ApplicationStoryTreeBranch: View {
           item: item,
           ancestorContinuations: childAncestorContinuations,
           isLast: index == node.items.count - 1 && node.children.isEmpty,
-          inspect: inspect
+          inspect: inspect,
+          emphasizesUncertainty: emphasizesUncertainty
         )
       }
       ForEach(Array(node.children.enumerated()), id: \.element.id) { index, child in
@@ -150,7 +163,8 @@ private struct ApplicationStoryTreeBranch: View {
           ancestorContinuations: childAncestorContinuations,
           isLast: index == node.children.count - 1,
           isRoot: false,
-          inspect: inspect
+          inspect: inspect,
+          emphasizesUncertainty: emphasizesUncertainty
         )
       }
     }
@@ -166,6 +180,7 @@ private struct ApplicationStoryTreeLeaf: View {
   let ancestorContinuations: [Bool]
   let isLast: Bool
   let inspect: (Entity) -> Void
+  let emphasizesUncertainty: Bool
 
   var body: some View {
     HStack(alignment: .top, spacing: 10) {
@@ -180,6 +195,12 @@ private struct ApplicationStoryTreeLeaf: View {
       VStack(alignment: .leading, spacing: 4) {
         Text(item.entity.name)
           .font(.halRowTitle)
+          .foregroundStyle(emphasizesUncertainty ? .secondary : .primary)
+        if emphasizesUncertainty, let relationship = item.relationship {
+          Label(relationship.confidence.plainLanguage, systemImage: "questionmark.circle")
+            .font(.halSmall.bold())
+            .foregroundStyle(.orange)
+        }
         if let explanation = item.relationship?.explanation {
           Text(explanation)
             .foregroundStyle(.secondary)
@@ -190,7 +211,7 @@ private struct ApplicationStoryTreeLeaf: View {
             .textSelection(.enabled)
         }
         if let relationship = item.relationship {
-          Text("Why HAL connects these: \(evidenceExplanation(relationship))")
+          Text("Why \(AppBrand.displayName) connects these: \(evidenceExplanation(relationship))")
             .font(.halSmall)
             .foregroundStyle(
               relationship.confidence == .ambiguous ? Color.orange : Color.secondary
@@ -199,6 +220,15 @@ private struct ApplicationStoryTreeLeaf: View {
         }
         if let path = item.path {
           PathActionMenu(path: path)
+        }
+        let facets = item.entity.details.filter {
+          ["Role", "Durability", "Ownership", "Sensitivity", "Kind"].contains($0.label)
+        }
+        if !facets.isEmpty {
+          Text(facets.map { "\($0.label): \($0.value)" }.joined(separator: " · "))
+            .font(.halSmall)
+            .foregroundStyle(.secondary)
+            .textSelection(.enabled)
         }
       }
       Spacer()
@@ -209,6 +239,7 @@ private struct ApplicationStoryTreeLeaf: View {
     .padding(.trailing, 12)
     .padding(.vertical, 10)
     .background(.background.opacity(0.45))
+    .opacity(emphasizesUncertainty ? 0.78 : 1)
     .overlay(alignment: .bottom) {
       HStack(spacing: 0) {
         // Keep the row separator from painting over the vertical tree trunks.
@@ -223,7 +254,7 @@ private struct ApplicationStoryTreeLeaf: View {
   private func evidenceExplanation(_ relationship: Relationship) -> String {
     let summaries = relationship.evidence.map(\.summary)
     return summaries.isEmpty
-      ? "HAL retained no supporting evidence details."
+      ? "\(AppBrand.displayName) retained no supporting evidence details."
       : summaries.prefix(2).joined(separator: " ")
   }
 }

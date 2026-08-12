@@ -141,7 +141,7 @@ struct ContentView: View {
       Button("Cancel", role: .cancel) {}
     } message: {
       Text(
-        "HAL will disconnect live collection and return to the fictional profile. A backup contains the last compiled application inventory."
+        "\(AppBrand.displayName) will disconnect live collection and return to the fictional profile. A backup contains the last compiled application inventory."
       )
     }
     .alert(
@@ -211,7 +211,7 @@ struct ContentView: View {
   private var sidebar: some View {
     VStack(alignment: .leading, spacing: 0) {
       VStack(alignment: .leading, spacing: 5) {
-        Text("HAL")
+        Text(AppBrand.displayName)
           .font(.halDisplay.bold())
         Text("Understand this Mac")
           .foregroundStyle(.secondary)
@@ -361,7 +361,7 @@ struct ContentView: View {
       .help(
         model.scanContext.environment == .synthetic
           ? "This is a deterministic fixture, not a reading from this Mac."
-          : "Freshness reflects when HAL collected this snapshot and whether collection was complete."
+          : "Freshness reflects when \(AppBrand.displayName) collected this snapshot and whether collection was complete."
       )
       .accessibilityElement(children: .combine)
       .accessibilityLabel(freshnessText(freshness))
@@ -451,7 +451,7 @@ struct ContentView: View {
           severity: .warning,
           title: "Fictional Mac",
           message:
-            "Everything shown is deterministic synthetic data. HAL is not scanning this Mac.",
+            "Everything shown is deterministic synthetic data. \(AppBrand.displayName) is not scanning this Mac.",
           allowsDismissal: true,
           actionTitle: model.isCollecting ? "Linking…" : "Link to your Mac",
           action: model.linkToMac
@@ -470,7 +470,7 @@ struct ContentView: View {
 
   private func exportAndUnlink() {
     let panel = NSSavePanel()
-    panel.nameFieldStringValue = "HAL-live-data-backup.json"
+    panel.nameFieldStringValue = "\(AppBrand.displayName)-live-data-backup.json"
     panel.allowedContentTypes = [.json]
     guard panel.runModal() == .OK, let url = panel.url else { return }
     do {
@@ -482,7 +482,7 @@ struct ContentView: View {
 
   private func exportRedactedDiagnostics() {
     let panel = NSSavePanel()
-    panel.nameFieldStringValue = "HAL-redacted-diagnostic.json"
+    panel.nameFieldStringValue = "\(AppBrand.displayName)-redacted-diagnostic.json"
     panel.allowedContentTypes = [.json]
     guard panel.runModal() == .OK, let url = panel.url else { return }
     do {
@@ -1362,7 +1362,7 @@ private struct WelcomePrompt: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
-        Label("Welcome to HAL", systemImage: "sparkles")
+        Label("Welcome to \(AppBrand.displayName)", systemImage: "sparkles")
           .font(.halSection.bold())
         Spacer()
         Button(action: dismissAction) {
@@ -1372,7 +1372,7 @@ private struct WelcomePrompt: View {
         .accessibilityLabel("Dismiss welcome")
       }
       Text(
-        "HAL explains the software and activity on a Mac while keeping observations, evidence, and uncertainty visible."
+        "\(AppBrand.displayName) explains the software and activity on a Mac while keeping observations, evidence, and uncertainty visible."
       )
       Text(
         "You are currently exploring a fictional operating system. Link your Mac when you are ready to collect a read-only application inventory."
@@ -1405,7 +1405,7 @@ private struct InitialLinkOverlay: View {
           VStack(alignment: .leading, spacing: 3) {
             Text("Linking this Mac")
               .font(.halSection.bold())
-            Text("HAL is building a read-only application atlas.")
+            Text("\(AppBrand.displayName) is building a read-only application atlas.")
               .foregroundStyle(.secondary)
           }
         }
@@ -1422,7 +1422,7 @@ private struct InitialLinkOverlay: View {
         .font(.halSmall)
 
         Text(
-          "HAL is reading application bundles, signing facts, conventional related locations, current processes, and startup declarations. It will not modify applications or machine data."
+          "\(AppBrand.displayName) is reading application bundles, signing facts, conventional related locations, current processes, and startup declarations. It will not modify applications or machine data."
         )
         .font(.halSecondary)
         .foregroundStyle(.secondary)
@@ -1470,7 +1470,7 @@ private struct LiveCoverageNotice: View {
         Text("This Mac is linked")
           .font(.halRowTitle)
         Text(
-          "HAL found your installed software and built a read-only map. Start exploring, or check the observation details."
+          "\(AppBrand.displayName) found your installed software and built a read-only map. Start exploring, or check the observation details."
         )
         .foregroundStyle(.secondary)
         if model.collectionActivity == .refresh {
@@ -1583,9 +1583,11 @@ private struct CollectionHealthPanel: View {
           RoundedRectangle(cornerRadius: 10)
             .stroke(statusColor(freshness).opacity(0.28))
         }
-        Text("HAL only read configured sources. It did not change applications or machine data.")
-          .foregroundStyle(.secondary)
-          .textSelection(.enabled)
+        Text(
+          "\(AppBrand.displayName) only read configured sources. It did not change applications or machine data."
+        )
+        .foregroundStyle(.secondary)
+        .textSelection(.enabled)
         ForEach(Array(model.scanContext.collectorRuns.enumerated()), id: \.offset) { _, run in
           VStack(alignment: .leading, spacing: 4) {
             HStack {
@@ -1657,11 +1659,11 @@ private struct CollectionHealthPanel: View {
     let explanation =
       switch freshness {
       case .fresh:
-        "HAL completed a recent read-only check."
+        "\(AppBrand.displayName) completed a recent read-only check."
       case .aging:
         "The retained snapshot may no longer reflect recent changes. You can check again now."
       case .stale:
-        "The retained snapshot is old enough that HAL recommends checking again."
+        "The retained snapshot is old enough that \(AppBrand.displayName) recommends checking again."
       case .partial:
         "One or more configured sources did not complete normally. Existing observations remain usable."
       case .unavailable:
@@ -1703,7 +1705,8 @@ private struct CollectionHealthPanel: View {
       return "macOS access limits this source; granting access may improve coverage."
     }
     if run.issues.allSatisfy({ $0.severity == .information }) {
-      return "HAL logged a parser or coverage detail; no Mac repair is required."
+      return
+        "\(AppBrand.displayName) logged a parser or coverage detail; no Mac repair is required."
     }
     return "Some observations from this source may be missing. Existing results remain usable."
   }
@@ -2025,7 +2028,7 @@ private struct SystemReferenceView: View {
       VStack(alignment: .leading, spacing: 26) {
         HStack(alignment: .top, spacing: 20) {
           VStack(alignment: .leading, spacing: 8) {
-            Text("How HAL fits together")
+            Text("How \(AppBrand.displayName) fits together")
               .font(.halDisplay.bold())
             Text(
               "The complete user-facing model, from what exists on a Mac to an informed decision. Select any section for context. Collector and implementation internals are intentionally omitted."
@@ -2045,8 +2048,10 @@ private struct SystemReferenceView: View {
 
         VStack(alignment: .leading, spacing: 18) {
           VStack(alignment: .leading, spacing: 16) {
-            Label("What HAL observes on this Mac", systemImage: "desktopcomputer")
-              .font(.halRowTitle)
+            Label(
+              "What \(AppBrand.displayName) observes on this Mac", systemImage: "desktopcomputer"
+            )
+            .font(.halRowTitle)
 
             HStack(spacing: 12) {
               referenceCard("mac")
@@ -2110,10 +2115,10 @@ private struct SystemReferenceView: View {
           }
 
           VStack(alignment: .leading, spacing: 12) {
-            Text("How HAL turns observations into guidance")
+            Text("How \(AppBrand.displayName) turns observations into guidance")
               .font(.halRowTitle)
             Text(
-              "This is HAL’s review workflow, not another set of components inside the computer."
+              "This is \(AppBrand.displayName)’s review workflow, not another set of components inside the computer."
             )
             .font(.halSmall)
             .foregroundStyle(.secondary)
@@ -2151,7 +2156,7 @@ private struct SystemReferenceView: View {
             "An event can overlap a slowdown without proving that it caused the slowdown.")
           distinction(
             "Uncertain ownership stays protected",
-            "HAL should expose ambiguous or shared data instead of making a confident-looking guess."
+            "\(AppBrand.displayName) should expose ambiguous or shared data instead of making a confident-looking guess."
           )
         }
       }
@@ -2573,27 +2578,27 @@ struct AtlasDetailView: View {
       if model.isSynthetic {
         "24.4 GB is likely rebuildable or redownloadable. Profiles, configuration, and application data remain protected."
       } else {
-        "HAL observed configured rebuildable or redownloadable roots using metadata only. Sizes were not collected, and no removal action is enabled."
+        "\(AppBrand.displayName) observed configured rebuildable or redownloadable roots using metadata only. Sizes were not collected, and no removal action is enabled."
       }
     case .applications:
       if model.isSynthetic {
         "Explore familiar applications alongside Homebrew, Oh My Zsh, and an npm-installed TypeScript package."
       } else {
-        "HAL observed \(model.applicationScopeCounts.total) application bundles in the configured read-only search roots."
+        "\(AppBrand.displayName) observed \(model.applicationScopeCounts.total) application bundles in the configured read-only search roots."
       }
     case .startup:
       "Startup declarations are shown separately from running processes. A declaration means software may start automatically; it does not prove the software is running now."
     case .commandLine:
       "Package managers, packages, shell frameworks, and observed processes are connected by retained ownership and runtime evidence."
     case .shellPath:
-      "Analyze explicitly pasted shell configuration as a deterministic sequence. Variables HAL cannot resolve remain visible instead of being guessed."
+      "Analyze explicitly pasted shell configuration as a deterministic sequence. Variables \(AppBrand.displayName) cannot resolve remain visible instead of being guessed."
     case .filesystem:
-      "A curated hierarchy of explanatory locations and observed paths; HAL has not indexed the whole disk."
+      "A curated hierarchy of explanatory locations and observed paths; \(AppBrand.displayName) has not indexed the whole disk."
     case .performance:
       if model.isSynthetic {
-        "A Docker build, VS Code indexing, and restored Brave tabs overlapped; HAL does not claim timing alone proves causation."
+        "A Docker build, VS Code indexing, and restored Brave tabs overlapped; \(AppBrand.displayName) does not claim timing alone proves causation."
       } else {
-        "HAL retained a bounded point-in-time process sample. It has not collected performance history or inferred a past incident."
+        "\(AppBrand.displayName) retained a bounded point-in-time process sample. It has not collected performance history or inferred a past incident."
       }
     case .entity(let id):
       model.fixture.entity(id)?.summary ?? "Select a connected item to understand its role."

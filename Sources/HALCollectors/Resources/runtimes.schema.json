@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/runtimes/v2",
-  "title": "HAL runtime definitions",
+  "title": "{{productName}} runtime definitions",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "runtimes"],

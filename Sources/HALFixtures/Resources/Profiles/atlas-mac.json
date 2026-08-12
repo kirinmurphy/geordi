@@ -349,7 +349,7 @@
       ],
       "id" : "resource.storage",
       "name" : "Reclaimable storage",
-      "summary" : "HAL estimates 13.9 GB can be safely rebuilt.",
+      "summary" : "{{productName}} estimates 13.9 GB can be safely rebuilt.",
       "type" : "resource"
     },
     {
@@ -500,7 +500,7 @@
           "summary" : "Cutline accessed this shared location."
         }
       ],
-      "explanation" : "Cutline uses this shared media folder, but HAL cannot assign exclusive ownership.",
+      "explanation" : "Cutline uses this shared media folder, but {{productName}} cannot assign exclusive ownership.",
       "id" : "cutline-shared",
       "source" : "app.cutline",
       "target" : "file.shared-media",
@@ -676,7 +676,7 @@
           "summary" : "The project event occurred four minutes earlier."
         }
       ],
-      "explanation" : "The workspace opened four minutes earlier; HAL has not established that it caused the spike.",
+      "explanation" : "The workspace opened four minutes earlier; {{productName}} has not established that it caused the spike.",
       "id" : "project-near",
       "source" : "event.project",
       "target" : "incident.render",

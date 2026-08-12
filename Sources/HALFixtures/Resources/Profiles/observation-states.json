@@ -98,7 +98,7 @@
       "target": "file.ambiguous",
       "type": "may belong to",
       "confidence": "ambiguous",
-      "explanation": "The naming convention is plausible, but HAL cannot establish exclusive ownership.",
+      "explanation": "The naming convention is plausible, but {{productName}} cannot establish exclusive ownership.",
       "evidence": [
         {
           "id": "evidence.ambiguous-owner",

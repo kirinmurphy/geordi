@@ -163,8 +163,8 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
                 severity: .warning,
                 summary:
                   inspection.status == .permissionDenied
-                  ? "HAL did not have permission to inspect a conventional application location."
-                  : "HAL could not inspect a conventional application location.",
+                  ? "\(AppBrand.displayName) did not have permission to inspect a conventional application location."
+                  : "\(AppBrand.displayName) could not inspect a conventional application location.",
                 affectedScope: url.path
               )
             )
@@ -174,7 +174,7 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
             CollectionIssue(
               id: "associated-location-invalid-\(location.id)-\(application.id.rawValue)",
               severity: .error,
-              summary: "HAL refused an unsafe associated-location candidate.",
+              summary: "\(AppBrand.displayName) refused an unsafe associated-location candidate.",
               affectedScope: location.id
             )
           )
@@ -250,7 +250,8 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
             CollectionIssue(
               id: "associated-location-unsafe-child-\(root.id)",
               severity: .error,
-              summary: "HAL refused an unsafe associated-location enumeration result.",
+              summary:
+                "\(AppBrand.displayName) refused an unsafe associated-location enumeration result.",
               affectedScope: root.id
             )
           )
@@ -272,7 +273,8 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
           CollectionIssue(
             id: "associated-location-budget-\(root.id)",
             severity: .warning,
-            summary: "HAL stopped associated-location enumeration at its configured budget.",
+            summary:
+              "\(AppBrand.displayName) stopped associated-location enumeration at its configured budget.",
             affectedScope: rootURL.path
           )
         )
@@ -282,7 +284,8 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
         CollectionIssue(
           id: "associated-location-enumeration-\(root.id)",
           severity: .warning,
-          summary: "HAL could not enumerate a configured associated-location root.",
+          summary:
+            "\(AppBrand.displayName) could not enumerate a configured associated-location root.",
           affectedScope: root.id
         )
       )
@@ -400,8 +403,8 @@ public struct ApplicationAssociatedLocationCollector: Sendable {
       severity: .warning,
       summary:
         status == .permissionDenied
-        ? "HAL did not have permission to enumerate an associated-location root."
-        : "HAL could not inspect an associated-location root.",
+        ? "\(AppBrand.displayName) did not have permission to enumerate an associated-location root."
+        : "\(AppBrand.displayName) could not inspect an associated-location root.",
       affectedScope: scope
     )
   }

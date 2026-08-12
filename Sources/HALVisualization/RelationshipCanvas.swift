@@ -199,7 +199,8 @@ public struct RelationshipCanvas: View {
           continue
         }
         let isHighlighted = highlightedRelationships.contains(edge.id)
-        let color = edge.confidence == .ambiguous ? Color.orange : Color.accentColor
+        let isUncertain = [.ambiguous, .possible, .probable].contains(edge.confidence)
+        let color = isUncertain ? Color.orange : Color.accentColor
         var path = Path()
         path.move(to: start)
         let midpoint = (start.x + end.x) / 2
@@ -213,7 +214,7 @@ public struct RelationshipCanvas: View {
           with: .color(color.opacity(selection == nil || isHighlighted ? 0.8 : 0.12)),
           style: StrokeStyle(
             lineWidth: isHighlighted ? 4 : 2,
-            dash: edge.confidence == .ambiguous ? [8, 6] : []
+            dash: isUncertain ? [8, 6] : []
           )
         )
         let direction = Path { arrow in
@@ -259,11 +260,11 @@ public struct RelationshipCanvas: View {
               ? entity.type.label.uppercased()
               : entity.type.label.dropLast(entity.type == .persistence ? 0 : 1).description
           )
-          .font(.system(size: HALTypeSize.sm, weight: .semibold))
+          .font(.system(size: HALTypeSize.sm, weight: .regular))
         }
         .foregroundStyle(EntityVisualStyle.color(for: entity.type))
         Text(entity.name)
-          .font(.system(size: HALTypeSize.large, weight: .semibold))
+          .font(.system(size: HALTypeSize.base, weight: .regular))
           .lineLimit(2)
           .multilineTextAlignment(.leading)
       }
@@ -471,7 +472,7 @@ public struct RelationshipCanvas: View {
   }
 }
 
-/// A single, calm semantic palette for entity types wherever they appear in HAL.
+/// A single, calm semantic palette for entity types wherever they appear in \(AppBrand.displayName).
 /// Red and orange remain available exclusively for warnings, findings, and status.
 public enum EntityVisualStyle {
   /// The shared icon size for semantic nodes in maps, diagrams, and inspectors.

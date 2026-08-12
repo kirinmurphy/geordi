@@ -359,6 +359,27 @@ struct AppModelCollectionTests {
     #expect(model.destination == .entity(second.id))
   }
 
+  @Test("Prepared page data refreshes when the graph changes")
+  func preparedPageDataRefreshesWithGraph() {
+    let unused = snapshot(id: "unused", entityName: "Unused")
+    let model = makeModel(preferences: MemoryPreferences()) { unused }
+    let application = Entity(
+      id: "prepared-app",
+      type: .application,
+      name: "Prepared App",
+      summary: "Application",
+      details: [Detail("Path", "/Applications/Prepared App.app")]
+    )
+
+    model.fixture = SystemGraph(
+      metadata: FixtureMetadata(id: "prepared", name: "Prepared", summary: "Prepared"),
+      entities: [application],
+      relationships: []
+    )
+
+    #expect(model.filesystemNodes.contains { $0.entityIDs.contains(application.id) })
+  }
+
   @Test("Linked storage and performance views use collected entity types")
   func linkedDestinationScopes() throws {
     let date = Date(timeIntervalSince1970: 1_700_000_000)

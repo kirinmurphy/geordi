@@ -1,11 +1,13 @@
 #!/bin/zsh
 set -euo pipefail
 
-installed_bundle="$HOME/Applications/HAL.app"
-shortcut="$HOME/Desktop/HAL.app"
+project_dir="${0:A:h:h}"
+source "$project_dir/scripts/product-brand.sh"
+installed_bundle="$HOME/Applications/$product_display_name.app"
+shortcut="$HOME/Desktop/$product_display_name.app"
 
 if [[ ! -d "$installed_bundle" ]]; then
-  print -u2 "HAL is not installed at $installed_bundle"
+  print -u2 "$product_display_name is not installed at $installed_bundle"
   print -u2 "Run 'make install-dev' first."
   exit 1
 fi

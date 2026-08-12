@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/app-profile/v1",
-  "title": "HAL application profile",
+  "title": "{{productName}} application profile",
   "type": "object",
   "additionalProperties": false,
   "required": [

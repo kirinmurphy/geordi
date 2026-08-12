@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/exploration-contexts-v1.json",
-  "title": "HAL exploration contexts",
+  "title": "{{productName}} exploration contexts",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "contexts"],

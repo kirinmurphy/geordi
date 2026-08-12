@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/application-associated-locations/v3",
-  "title": "HAL application associated locations",
+  "title": "{{productName}} application associated locations",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "locations", "enumerationRoots"],

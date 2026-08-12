@@ -27,6 +27,12 @@ enum AppBootstrap {
     }
   }
 
+  static func filesystemLocations() -> FilesystemLocationCatalog {
+    required("filesystem location catalog") {
+      try FilesystemLocationCatalog.bundled()
+    }
+  }
+
   private static func required<Value>(
     _ name: String,
     load: () throws -> Value

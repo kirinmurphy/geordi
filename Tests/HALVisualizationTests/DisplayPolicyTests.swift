@@ -150,6 +150,33 @@ struct DisplayPolicyTests {
     #expect(result.entities.count == 3)
   }
 
+  @Test("Presenter keeps possible associations in a distinct inspectable group")
+  func confidencePartitions() throws {
+    let source = graph()
+    let policy = DisplayContextPolicy(
+      id: "confidence-groups",
+      nodeBudget: 5,
+      relationships: [
+        RelationshipDisplayRule(
+          type: .mayBelongTo,
+          priority: 50,
+          minimumConfidence: .possible,
+          groupAfter: 2,
+          groupLabel: "support locations",
+          groupByConfidence: true
+        )
+      ]
+    )
+
+    let result = DisplayPolicyPresenter().present(source, centeredOn: "app", policy: policy)
+    let strong = try #require(result.entities.first { $0.name == "2 support locations" })
+    let possible = try #require(
+      result.entities.first { $0.name == "1 possible support locations" })
+    #expect(Set(DisplayGroupMetadata.memberIDs(in: strong)) == ["file-a", "file-b"])
+    #expect(Set(DisplayGroupMetadata.memberIDs(in: possible)) == ["weak-file"])
+    #expect(result.relationships.first { $0.target == possible.id }?.confidence == .possible)
+  }
+
   private func graph() -> SystemGraph {
     let entities = [
       Entity(id: "app", type: .application, name: "App", summary: "App"),

@@ -1,4 +1,5 @@
 import AppKit
+import HALDomain
 import HALVisualization
 import SwiftUI
 import UniformTypeIdentifiers
@@ -224,7 +225,7 @@ struct PathActionMenu: View {
     alert.messageText =
       "Open this folder with \(applicationURL.deletingPathExtension().lastPathComponent)?"
     alert.informativeText =
-      "HAL has not reviewed this application's folder-opening behavior. You chose it explicitly."
+      "\(AppBrand.displayName) has not reviewed this application's folder-opening behavior. You chose it explicitly."
     alert.addButton(withTitle: "Open Once")
     alert.addButton(withTitle: "Open and Remember")
     alert.addButton(withTitle: "Cancel")

@@ -48,8 +48,16 @@ public struct BundledManifestResource<Manifest: Decodable> {
       )
     }
     do {
-      let data = try Data(contentsOf: manifestURL)
-      let schema = try Data(contentsOf: schemaURL)
+      let rawData = try Data(contentsOf: manifestURL)
+      let data =
+        manifestName == ProductBrand.manifestName
+        ? rawData
+        : try ProductBrand.current.expandingTokens(in: rawData)
+      let rawSchema = try Data(contentsOf: schemaURL)
+      let schema =
+        schemaName == "product-brand.schema"
+        ? rawSchema
+        : try ProductBrand.current.expandingTokens(in: rawSchema)
       try DeclarativeManifestValidator.validate(instance: data, against: schema)
       let manifest = try decoder.decode(Manifest.self, from: data)
       try validateSemantics(manifest)

@@ -65,6 +65,27 @@ struct ApplicationStoryModelTests {
     #expect(story.unknowns.count == 4)
   }
 
+  @Test("Story keeps possible associations separate from strong associations")
+  func possibleAssociations() {
+    let application = Entity(id: "app", type: .application, name: "Example", summary: "App")
+    let strong = Entity(id: "strong", type: .file, name: "Bundle match", summary: "Strong")
+    let possible = Entity(id: "possible", type: .file, name: "Name match", summary: "Possible")
+    let graph = SystemGraph(
+      metadata: FixtureMetadata(id: "confidence", name: "Confidence", summary: "Confidence"),
+      entities: [application, strong, possible],
+      relationships: [
+        relationship("strong", source: "app", target: "strong", type: .mayBelongTo),
+        relationship(
+          "possible", source: "app", target: "possible", type: .mayBelongTo,
+          confidence: .possible),
+      ]
+    )
+
+    let story = ApplicationStoryModel(application: application, graph: graph)
+    #expect(story.associatedItems.map(\.entity.id) == ["strong"])
+    #expect(story.possibleAssociatedItems.map(\.entity.id) == ["possible"])
+  }
+
   @Test("Story turns App Store receipt evidence into a useful source conclusion")
   func appStoreSource() {
     let application = Entity(
@@ -121,14 +142,15 @@ struct ApplicationStoryModelTests {
     _ id: String,
     source: EntityID,
     target: EntityID,
-    type: RelationshipType
+    type: RelationshipType,
+    confidence: Confidence = .confirmed
   ) -> Relationship {
     Relationship(
       id: RelationshipID(id),
       source: source,
       target: target,
       type: type,
-      confidence: .confirmed,
+      confidence: confidence,
       explanation: "Evidence-backed connection.",
       evidence: [
         Evidence(

@@ -27,6 +27,7 @@ struct ApplicationStoryModel: Equatable {
   let processes: [Connection]
   let startupItems: [Connection]
   let associatedItems: [Connection]
+  let possibleAssociatedItems: [Connection]
   let owners: [Connection]
   let provenance: [Detail]
   let unknowns: [String]
@@ -42,8 +43,14 @@ struct ApplicationStoryModel: Equatable {
     }
     processes = connections.filter { $0.entity.type == .process }
     startupItems = connections.filter { $0.entity.type == .persistence }
-    associatedItems = connections.filter {
+    let associationCandidates = connections.filter {
       [.file, .package, .shellFramework].contains($0.entity.type)
+    }
+    associatedItems = associationCandidates.filter {
+      [.confirmed, .high].contains($0.relationship.confidence)
+    }
+    possibleAssociatedItems = associationCandidates.filter {
+      ![.confirmed, .high].contains($0.relationship.confidence)
     }
     owners = connections.filter {
       $0.relationship.target == application.id
@@ -67,20 +74,22 @@ struct ApplicationStoryModel: Equatable {
 
     var missing: [String] = []
     if processes.isEmpty {
-      missing.append("HAL did not observe a running process for this application.")
+      missing.append(
+        "\(AppBrand.displayName) did not observe a running process for this application.")
     }
     if startupItems.isEmpty {
-      missing.append("HAL did not find a connected startup declaration.")
+      missing.append("\(AppBrand.displayName) did not find a connected startup declaration.")
     }
     if provenance.isEmpty && owners.isEmpty {
       missing.append("Installation-source evidence is unavailable.")
     }
-    if associatedItems.isEmpty {
+    if associatedItems.isEmpty && possibleAssociatedItems.isEmpty {
       missing.append("No strongly associated support locations or tools were observed.")
     }
     if connections.contains(where: { $0.relationship.confidence == .ambiguous }) {
       missing.append(
-        "At least one connection remains ambiguous; HAL shows it without claiming ownership.")
+        "At least one connection remains ambiguous; \(AppBrand.displayName) shows it without claiming ownership."
+      )
     }
     unknowns = missing
   }

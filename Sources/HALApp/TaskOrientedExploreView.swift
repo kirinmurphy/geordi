@@ -1,3 +1,4 @@
+import HALDomain
 import SwiftUI
 
 struct TaskOrientedExploreView: View {
@@ -10,8 +11,10 @@ struct TaskOrientedExploreView: View {
         VStack(alignment: .leading, spacing: 3) {
           Text("What do you want to understand?")
             .font(.halSection.bold())
-          Text("Start with a question. HAL will show the summary before the technical evidence.")
-            .foregroundStyle(.secondary)
+          Text(
+            "Start with a question. \(AppBrand.displayName) will show the summary before the technical evidence."
+          )
+          .foregroundStyle(.secondary)
         }
         Spacer()
         if model.isSynthetic {
@@ -35,7 +38,7 @@ struct TaskOrientedExploreView: View {
         questionCard(
           "Understand an application",
           explanation:
-            "See why it may be active, where it came from, and what HAL associates with it.",
+            "See why it may be active, where it came from, and what \(AppBrand.displayName) associates with it.",
           symbol: "app.badge.checkmark"
         ) {
           model.navigate(to: .applications)

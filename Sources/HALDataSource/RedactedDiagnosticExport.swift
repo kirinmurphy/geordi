@@ -87,7 +87,7 @@ extension GraphSnapshot {
         metadata: FixtureMetadata(
           id: "redacted-diagnostic",
           version: graph.metadata.version,
-          name: "Redacted HAL Diagnostic",
+          name: "Redacted \(AppBrand.displayName) Diagnostic",
           summary: "Identifiers, names, paths, scopes, and free-form values were redacted."
         ),
         entities: entities,

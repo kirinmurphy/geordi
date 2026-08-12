@@ -32,7 +32,8 @@ let package = Package(
       name: "HALManifestKit",
       dependencies: [
         .product(name: "JSONSchema", package: "swift-json-schema")
-      ]
+      ],
+      resources: [.process("Resources")]
     ),
     .target(
       name: "HALCollectors",
@@ -69,6 +70,7 @@ let package = Package(
       dependencies: ["HALDomain", "HALFixtures", "HALProfileSchema"]
     ),
     .testTarget(name: "HALDomainTests", dependencies: ["HALDomain"]),
+    .testTarget(name: "HALManifestKitTests", dependencies: ["HALManifestKit"]),
     .testTarget(
       name: "HALDataSourceTests",
       dependencies: ["HALDataSource", "HALDomain"]

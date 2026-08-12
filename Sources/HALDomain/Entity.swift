@@ -150,6 +150,11 @@ public enum DetailKey: String, CaseIterable, Codable, Sendable {
   case signature = "Signature"
   case version = "Version"
   case build = "Build"
+  case fileRole = "Role"
+  case fileRebuildability = "Durability"
+  case fileOwnership = "Ownership"
+  case fileSensitivity = "Sensitivity"
+  case fileKind = "Kind"
 }
 
 extension Entity {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/persistence-roots/v1",
-  "title": "HAL persistence roots",
+  "title": "{{productName}} persistence roots",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "roots"],

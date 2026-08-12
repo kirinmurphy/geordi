@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "title": "How HAL explains an application",
+  "title": "How {{productName}} explains an application",
   "storyEntityID": "app.vscode",
   "steps": [
     {
       "id": "identity",
       "title": "Start with the application story",
-      "summary": "HAL begins with a readable explanation of identity, activity, source, and confidence—not a wall of collector output.",
+      "summary": "{{productName}} begins with a readable explanation of identity, activity, source, and confidence—not a wall of collector output.",
       "symbol": "app.badge.checkmark",
       "takeaway": "You should understand the main story without opening a map."
     },
@@ -15,7 +15,7 @@
       "title": "Separate observation from inference",
       "summary": "A running process is an observed instance. Its connection to an application includes direction, confidence, and supporting evidence.",
       "symbol": "play.circle",
-      "takeaway": "HAL shows why a connection exists instead of presenting it as magic."
+      "takeaway": "{{productName}} shows why a connection exists instead of presenting it as magic."
     },
     {
       "id": "startup",

@@ -21,7 +21,7 @@
       "drillIn": "applicationStory",
       "initialItemBudget": 30,
       "emptyTitle": "No applications observed",
-      "emptyMessage": "HAL did not receive any application entities from this data source.",
+      "emptyMessage": "{{productName}} did not receive any application entities from this data source.",
       "unresolvedTitle": "Other applications"
     },
     {
@@ -35,7 +35,7 @@
         {
           "id": "unresolved-declarations",
           "title": "Unresolved declarations",
-          "explanation": "HAL could not connect these declarations to one software entity. They remain visible and navigable.",
+          "explanation": "{{productName}} could not connect these declarations to one software entity. They remain visible and navigable.",
           "entityTypes": ["persistence"],
           "grouping": "detail",
           "detailLabel": "Type",
@@ -97,7 +97,7 @@
       "drillIn": "boundedRelationships",
       "initialItemBudget": 20,
       "emptyTitle": "No reclaimable locations observed",
-      "emptyMessage": "HAL did not observe any configured rebuildable or redownloadable roots.",
+      "emptyMessage": "{{productName}} did not observe any configured rebuildable or redownloadable roots.",
       "unresolvedTitle": "Reclaimability not classified"
     },
     {
@@ -151,7 +151,7 @@
         {
           "id": "commands",
           "title": "Unclassified commands",
-          "explanation": "Commands are grouped only by observed discovery source; HAL does not guess purpose from names.",
+          "explanation": "Commands are grouped only by observed discovery source; {{productName}} does not guess purpose from names.",
           "entityTypes": ["package"],
           "grouping": "detail",
           "detailLabel": "Discovered from"
@@ -174,7 +174,7 @@
       "drillIn": "none",
       "initialItemBudget": 1,
       "emptyTitle": "Paste shell configuration",
-      "emptyMessage": "HAL analyzes only the text you explicitly provide."
+      "emptyMessage": "{{productName}} analyzes only the text you explicitly provide."
     },
     {
       "id": "filesystem",
@@ -187,7 +187,7 @@
       "drillIn": "boundedRelationships",
       "initialItemBudget": 30,
       "emptyTitle": "No observed paths",
-      "emptyMessage": "HAL has not indexed the disk and did not receive any configured paths."
+      "emptyMessage": "{{productName}} has not indexed the disk and did not receive any configured paths."
     }
   ]
 }

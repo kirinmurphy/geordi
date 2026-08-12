@@ -6,7 +6,7 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>HAL</string>
+  <string>__PRODUCT_NAME__</string>
   <key>CFBundleExecutable</key>
   <string>HALApp</string>
   <key>CFBundleIconFile</key>
@@ -16,7 +16,7 @@
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>HAL</string>
+  <string>__PRODUCT_NAME__</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

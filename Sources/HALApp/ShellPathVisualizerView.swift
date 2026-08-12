@@ -1,3 +1,4 @@
+import HALDomain
 import HALVisualization
 import SwiftUI
 
@@ -5,7 +6,7 @@ struct ShellPathVisualizerView: View {
   private let configuration = try? ShellPathConfiguration.bundled()
   @State private var source =
     """
-    # Paste a shell profile here. HAL analyzes only this editor.
+    # Paste a shell profile here. \(AppBrand.displayName) analyzes only this editor.
     export PATH="$HOME/bin:$PATH"
     source "$HOME/.tooling/path.sh"
     PATH="$PATH:/opt/example/bin"
@@ -18,7 +19,7 @@ struct ShellPathVisualizerView: View {
         VStack(alignment: .leading, spacing: 6) {
           Text("Shell & PATH Visualizer").font(.halDisplay.bold())
           GlossaryAwareText(
-            "Paste a shell profile to see how each statement changes PATH. HAL does not read your shell configuration automatically.",
+            "Paste a shell profile to see how each statement changes PATH. \(AppBrand.displayName) does not read your shell configuration automatically.",
             context: "shell"
           )
           .foregroundStyle(.secondary)

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/package-ecosystems/v1",
-  "title": "HAL package ecosystems",
+  "title": "{{productName}} package ecosystems",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "ecosystems"],

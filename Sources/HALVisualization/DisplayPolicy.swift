@@ -88,6 +88,7 @@ public struct RelationshipDisplayRule: Codable, Hashable, Sendable {
   public let groupAfter: Int?
   public let groupLabel: String?
   public let groupByDetailLabel: String?
+  public let groupByConfidence: Bool?
   public let traversalDepth: Int?
 
   public init(
@@ -97,6 +98,7 @@ public struct RelationshipDisplayRule: Codable, Hashable, Sendable {
     groupAfter: Int? = nil,
     groupLabel: String? = nil,
     groupByDetailLabel: String? = nil,
+    groupByConfidence: Bool = false,
     traversalDepth: Int = 1
   ) {
     self.type = type
@@ -105,6 +107,7 @@ public struct RelationshipDisplayRule: Codable, Hashable, Sendable {
     self.groupAfter = groupAfter
     self.groupLabel = groupLabel
     self.groupByDetailLabel = groupByDetailLabel
+    self.groupByConfidence = groupByConfidence
     self.traversalDepth = traversalDepth
   }
 }
@@ -154,6 +157,11 @@ public struct DisplayPolicyPresenter: Sendable {
       }
       if let threshold = rule.groupAfter, candidates.count >= threshold {
         let partitions = Dictionary(grouping: candidates) { candidate in
+          if rule.groupByConfidence == true {
+            return [.confirmed, .high].contains(candidate.0.confidence)
+              ? (rule.groupLabel ?? rule.type.rawValue)
+              : "possible \(rule.groupLabel ?? rule.type.rawValue)"
+          }
           guard let detailLabel = rule.groupByDetailLabel else {
             return rule.groupLabel ?? rule.type.rawValue
           }
@@ -172,6 +180,7 @@ public struct DisplayPolicyPresenter: Sendable {
           let groupID = EntityID(
             "display-group:\(center.rawValue):\(rule.type.rawValue):\(groupKey)"
           )
+          let first = partition[0].0
           entities.append(
             Entity(
               id: groupID,
@@ -182,11 +191,14 @@ public struct DisplayPolicyPresenter: Sendable {
                 Detail(
                   DisplayGroupMetadata.memberIDsLabel,
                   members.map(\.id.rawValue).sorted().joined(separator: "\n")
-                )
+                ),
+                Detail(
+                  "Group confidence",
+                  (partition.map(\.0.confidence).min() ?? first.confidence).plainLanguage
+                ),
               ]
             )
           )
-          let first = partition[0].0
           relationships.append(
             Relationship(
               id: RelationshipID("display-group:\(first.id.rawValue)"),

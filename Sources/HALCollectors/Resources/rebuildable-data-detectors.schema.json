@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/rebuildable-data-detectors-v3.json",
-  "title": "HAL rebuildable-data detectors",
+  "title": "{{productName}} rebuildable-data detectors",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "measurementPolicy", "classifications", "detectors"],

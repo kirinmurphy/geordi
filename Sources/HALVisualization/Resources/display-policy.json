@@ -28,9 +28,10 @@
         {
           "type": "may belong to",
           "priority": 50,
-          "minimumConfidence": "high",
+          "minimumConfidence": "possible",
           "groupAfter": 3,
-          "groupLabel": "support locations"
+          "groupLabel": "support locations",
+          "groupByConfidence": true
         }
       ]
     },

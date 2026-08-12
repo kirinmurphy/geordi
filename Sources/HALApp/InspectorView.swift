@@ -215,7 +215,7 @@ struct InspectorView: View {
               NSPasteboard.general.clearContents()
               NSPasteboard.general.setString(command, forType: .string)
             }
-            .help("Copies guidance only. HAL never runs package removal.")
+            .help("Copies guidance only. \(AppBrand.displayName) never runs package removal.")
           }
         }
       }
@@ -380,7 +380,7 @@ struct InspectorView: View {
           .font(.halRowTitle)
         ForEach(relationship.evidence) { evidence in
           VStack(alignment: .leading, spacing: 4) {
-            Text(evidence.kind == .observed ? "OBSERVED FACT" : "HAL INFERENCE")
+            Text(evidence.kind == .observed ? "OBSERVED FACT" : "\(AppBrand.displayName) INFERENCE")
               .font(.halSmall.bold())
               .foregroundStyle(evidence.kind == .observed ? .green : .blue)
             Text(evidence.summary)

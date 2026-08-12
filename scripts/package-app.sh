@@ -2,6 +2,7 @@
 set -euo pipefail
 
 project_dir="${0:A:h:h}"
+source "$project_dir/scripts/product-brand.sh"
 configuration="${1:-debug}"
 binary="$project_dir/.build/$configuration/HALApp"
 bundle="$project_dir/.build/$configuration/HALApp.app"
@@ -18,6 +19,8 @@ install -m 755 "$binary" "$contents/MacOS/HALApp"
 install -m 644 "$project_dir/Resources/HALApp-Info.plist" "$contents/Info.plist"
 install -m 644 "$project_dir/Resources/HALApp.icns" "$contents/Resources/HALApp.icns"
 
+plutil -replace CFBundleDisplayName -string "$product_display_name" "$contents/Info.plist"
+plutil -replace CFBundleName -string "$product_display_name" "$contents/Info.plist"
 plutil -lint "$contents/Info.plist" >/dev/null
 codesign --force --sign - --identifier com.hal.dev "$bundle"
 print "Packaged $bundle"

@@ -112,7 +112,8 @@ public struct ApplicationBundleCollector: Sendable {
             CollectionIssue(
               id: "enumeration-error-\(url.path)",
               severity: .error,
-              summary: "HAL could not read part of an application search location.",
+              summary:
+                "\(AppBrand.displayName) could not read part of an application search location.",
               affectedScope: url.path
             )
           )
@@ -124,7 +125,7 @@ public struct ApplicationBundleCollector: Sendable {
         CollectionIssue(
           id: "enumerator-unavailable-\(root.url.path)",
           severity: .error,
-          summary: "HAL could not enumerate an application search location.",
+          summary: "\(AppBrand.displayName) could not enumerate an application search location.",
           affectedScope: root.url.path
         )
       )

@@ -87,6 +87,21 @@ struct VisualizationTests {
     #expect(result.positions.count == FixtureCatalog.familiarMac.entities.count)
   }
 
+  @Test("Semantic columns retain padding below their final node")
+  func stageBottomPadding() throws {
+    let result = SemanticLayout(configuration: configuration)
+      .layout(FixtureCatalog.familiarMac)
+
+    for group in result.groups {
+      let nodeCenters = result.positions.values.filter { center in
+        abs(center.x - group.frame.midX) < 0.001
+      }
+      let finalCenter = try #require(nodeCenters.max(by: { $0.y < $1.y }))
+      let finalNodeBottom = finalCenter.y + configuration.nodeHeight / 2
+      #expect(group.frame.maxY - finalNodeBottom >= 32)
+    }
+  }
+
   @Test("Entity selection highlights only direct context")
   func highlightsDirectContext() {
     let graph = FixtureCatalog.helperRichApplication

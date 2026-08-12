@@ -1,3 +1,4 @@
+import HALDomain
 import HALVisualization
 import SwiftUI
 
@@ -6,15 +7,7 @@ struct FilesystemMapView: View {
   @State private var selectedSystem = "applications"
   @State private var selectedNodeID: String?
 
-  private var nodes: [FilesystemNode] {
-    guard let catalog = try? FilesystemLocationCatalog.bundled() else { return [] }
-    return FilesystemProjector().project(
-      graph: model.fixture,
-      catalog: catalog,
-      homeDirectory: FileManager.default.homeDirectoryForCurrentUser.path,
-      includeReferenceLocations: true
-    )
-  }
+  private var nodes: [FilesystemNode] { model.filesystemNodes }
 
   private var systems: [String] {
     Array(Set(nodes.map(\.system))).sorted { systemTitle($0) < systemTitle($1) }
@@ -142,7 +135,7 @@ struct FilesystemMapView: View {
         Text("Your data riding here").font(.halRowTitle)
         if node.entityIDs.isEmpty {
           Text(
-            "HAL has no associated observation here. The location is shown to explain the system, not to claim the folder is empty."
+            "\(AppBrand.displayName) has no associated observation here. The location is shown to explain the system, not to claim the folder is empty."
           )
           .font(.halSecondary).foregroundStyle(.secondary)
         } else {

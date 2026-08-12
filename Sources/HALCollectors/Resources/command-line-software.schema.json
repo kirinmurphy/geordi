@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/command-line-software/v1",
-  "title": "HAL command-line software roots",
+  "title": "{{productName}} command-line software roots",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "roots"],

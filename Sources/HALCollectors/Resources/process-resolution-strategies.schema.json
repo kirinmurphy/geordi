@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/process-resolution-strategies/v3",
-  "title": "HAL process resolution strategies",
+  "title": "{{productName}} process resolution strategies",
   "type": "object",
   "additionalProperties": false,
   "required": [

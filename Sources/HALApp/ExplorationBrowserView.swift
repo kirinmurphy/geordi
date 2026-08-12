@@ -24,7 +24,8 @@ private struct ConceptualSystemMap: View {
           explanation: "macOS evaluates scope, timing, and restart policy.", symbol: "gearshape.2"),
         GuideNode(
           id: "software", title: "Owning software",
-          explanation: "HAL connects the declaration to an app when evidence supports it.",
+          explanation:
+            "\(AppBrand.displayName) connects the declaration to an app when evidence supports it.",
           symbol: "app.badge"),
         GuideNode(
           id: "process", title: "Running process",
@@ -86,12 +87,12 @@ private struct ConceptualSystemMap: View {
       VStack(alignment: .leading, spacing: 14) {
         Text(title).font(.halSection.bold())
         Text(
-          "Read left to right. The arrows describe the mechanism; the observations below show what HAL actually found."
+          "Follow the arrows through the system. The observations below show what \(AppBrand.displayName) actually found."
         )
         .foregroundStyle(.secondary)
         ViewThatFits(in: .horizontal) {
-          HStack(spacing: 8) { nodeSequence }
-          VStack(spacing: 8) { nodeSequence }
+          wideWorkflow
+          compactWorkflow
         }
       }
       .padding(20)
@@ -105,26 +106,55 @@ private struct ConceptualSystemMap: View {
     }
   }
 
-  @ViewBuilder private var nodeSequence: some View {
-    ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
-      if index > 0 {
-        Image(systemName: "arrow.right")
-          .foregroundStyle(.blue)
-          .accessibilityHidden(true)
+  private var wideWorkflow: some View {
+    HStack(spacing: 8) {
+      ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
+        if index > 0 { connector("arrow.right") }
+        workflowNode(node).frame(width: 172)
       }
-      VStack(alignment: .leading, spacing: 8) {
-        Image(systemName: node.symbol).font(.halSection).foregroundStyle(.blue)
-        Text(node.title).font(.halRowTitle)
-        Text(node.explanation)
-          .font(.halSmall)
-          .foregroundStyle(.secondary)
-          .fixedSize(horizontal: false, vertical: true)
-      }
-      .padding(14)
-      .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
-      .background(.background.opacity(0.82), in: RoundedRectangle(cornerRadius: 12))
     }
   }
+
+  private var compactWorkflow: some View {
+    Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+      GridRow {
+        workflowNode(nodes[0])
+        connector("arrow.right")
+        workflowNode(nodes[1])
+      }
+      GridRow {
+        Color.clear.frame(height: 18)
+        Color.clear.frame(height: 18)
+        connector("arrow.down")
+      }
+      GridRow {
+        workflowNode(nodes[3])
+        connector("arrow.left")
+        workflowNode(nodes[2])
+      }
+    }
+  }
+
+  private func connector(_ symbol: String) -> some View {
+    Image(systemName: symbol)
+      .foregroundStyle(.blue)
+      .accessibilityHidden(true)
+  }
+
+  private func workflowNode(_ node: GuideNode) -> some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Image(systemName: node.symbol).font(.halSection).foregroundStyle(.blue)
+      Text(node.title).font(.halRowTitle)
+      Text(node.explanation)
+        .font(.halSmall)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .padding(14)
+    .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+    .background(.background.opacity(0.82), in: RoundedRectangle(cornerRadius: 12))
+  }
+
 }
 
 private struct ApplicationAnatomyView: View {
@@ -137,7 +167,7 @@ private struct ApplicationAnatomyView: View {
     VStack(alignment: .leading, spacing: 14) {
       Text("An application is more than its icon").font(.halSection.bold())
       Text(
-        "HAL treats an app as the center of a small system. Choose an app below to replace this anatomy lesson with its real evidence."
+        "\(AppBrand.displayName) treats an app as the center of a small system. Choose an app below to replace this anatomy lesson with its real evidence."
       )
       .foregroundStyle(.secondary)
       HStack(spacing: 10) {
@@ -280,7 +310,7 @@ struct ExplorationBrowserView: View {
           ConceptualSystemMap(destination: model.destination)
           if let context, let presentation, hasMembers(presentation) {
             VStack(alignment: .leading, spacing: 5) {
-              Text("What HAL observed on this Mac")
+              Text("What \(AppBrand.displayName) observed on this Mac")
                 .font(.halSection.bold())
               Text(observationLead)
                 .foregroundStyle(.secondary)
@@ -314,7 +344,7 @@ struct ExplorationBrowserView: View {
   private var observationLead: String {
     switch model.destination {
     case .startup:
-      "Declarations are grouped with the software HAL can connect them to; unresolved declarations stay explicit."
+      "Declarations are grouped with the software \(AppBrand.displayName) can connect them to; unresolved declarations stay explicit."
     case .storage:
       "Each location includes its classification, measured size when available, and the application relationship behind it."
     case .commandLine:
@@ -330,7 +360,7 @@ struct ExplorationBrowserView: View {
     case .storage:
       "Rebuildable or redownloadable data may be recreated, but that classification does not mean it is automatically safe to delete."
     case .commandLine:
-      "Browse retained roles and discovery sources. HAL does not infer a command’s purpose from its name."
+      "Browse retained roles and discovery sources. \(AppBrand.displayName) does not infer a command’s purpose from its name."
     default:
       model.explorationContext?.question ?? ""
     }

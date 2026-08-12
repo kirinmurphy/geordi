@@ -368,6 +368,10 @@
     {
       "details" : [
         {
+          "label" : "Category",
+          "value" : "Application support"
+        },
+        {
           "label" : "Synthetic size",
           "value" : "180 MB"
         },
@@ -582,7 +586,7 @@
       ],
       "id" : "resource.storage",
       "name" : "Reclaimable developer storage",
-      "summary" : "HAL estimates 24.4 GB is rebuildable or redownloadable.",
+      "summary" : "{{productName}} estimates 24.4 GB is rebuildable or redownloadable.",
       "type" : "resource"
     },
     {
@@ -668,7 +672,7 @@
           "summary" : "The retained declaration and process executable paths were exactly equal."
         }
       ],
-      "explanation" : "HAL observed the declared executable running during this snapshot.",
+      "explanation" : "{{productName}} observed the declared executable running during this snapshot.",
       "id" : "docker-runtime-observed",
       "source" : "persistence.docker",
       "target" : "process.docker",
@@ -1228,7 +1232,7 @@
           "summary" : "Synthetic indexing overlapped the incident."
         }
       ],
-      "explanation" : "VS Code indexing overlapped the slowdown; HAL does not claim it caused the incident.",
+      "explanation" : "VS Code indexing overlapped the slowdown; {{productName}} does not claim it caused the incident.",
       "id" : "index-event",
       "source" : "event.vscode-index",
       "target" : "incident.build",

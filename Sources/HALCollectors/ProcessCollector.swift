@@ -132,7 +132,8 @@ public struct ProcessCollector: Sendable {
             CollectionIssue(
               id: "process-snapshot-failed",
               severity: .error,
-              summary: "HAL could not collect the point-in-time process snapshot."
+              summary:
+                "\(AppBrand.displayName) could not collect the point-in-time process snapshot."
             )
           ]
         ),

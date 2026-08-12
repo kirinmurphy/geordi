@@ -2,7 +2,11 @@ import Foundation
 import HALDomain
 
 public struct ApplicationGraphProjector: Sendable {
-  public init() {}
+  private let fileFacets: FileFacetConfiguration
+
+  public init(fileFacets: FileFacetConfiguration = .required) {
+    self.fileFacets = fileFacets
+  }
 
   public func snapshot(
     scanID: ScanID,
@@ -167,6 +171,10 @@ public struct ApplicationGraphProjector: Sendable {
                 associationBasis(value.match)
               ),
             ]
+              + fileFacets.facets(for: value.categoryLabel).overriding(
+                ownership: value.match == .applicationName ? "Unresolved" : nil,
+                kind: value.isDirectory.map { $0 ? "Directory" : "File" }
+              ).details
           )
         )
       },
@@ -199,7 +207,7 @@ public struct ApplicationGraphProjector: Sendable {
           ? "The application's signed entitlements authorize access to this shared group container."
           : exact
             ? "This location uses the application's exact bundle identifier, a strong conventional association that may be stale."
-            : "This location matches the application name, but HAL cannot establish exclusive ownership.",
+            : "This location matches the application name, but \(AppBrand.displayName) cannot establish exclusive ownership.",
         evidence: [
           Evidence(
             id: "\(association.id.rawValue):observed",
@@ -255,7 +263,7 @@ public struct ApplicationGraphProjector: Sendable {
                 Detail("Evidence rule", value.evidenceRuleID),
                 Detail("Evidence confidence", value.evidenceConfidence.plainLanguage),
                 Detail("Evidence explanation", value.evidenceExplanation),
-              ]
+              ] + fileFacets.facets(for: value.classificationLabel).details
             )
           )
         },
@@ -591,7 +599,8 @@ public struct ApplicationGraphProjector: Sendable {
           Evidence(
             id: "\(resolution.id.rawValue):declaration",
             kind: .observed,
-            summary: "HAL read the declaration label and executable without retaining arguments.",
+            summary:
+              "\(AppBrand.displayName) read the declaration label and executable without retaining arguments.",
             source: "Read-only launchd property list",
             observationID: declaration.id,
             observedAt: declaration.observedAt
@@ -628,7 +637,8 @@ public struct ApplicationGraphProjector: Sendable {
             target: processID,
             type: .observedRunning,
             confidence: correlation.value.confidence ?? .confirmed,
-            explanation: "HAL observed the declared executable running during this snapshot.",
+            explanation:
+              "\(AppBrand.displayName) observed the declared executable running during this snapshot.",
             evidence: [
               Evidence(
                 id: "\(process.id.rawValue):persistence-runtime",
@@ -986,7 +996,7 @@ public struct ApplicationGraphProjector: Sendable {
         Detail(
           "Installation explanation",
           value.installationStatus == .observed
-            ? "Expected framework and Git metadata were observed. This is consistent with a Git/bootstrap installation; HAL did not witness the original install command."
+            ? "Expected framework and Git metadata were observed. This is consistent with a Git/bootstrap installation; \(AppBrand.displayName) did not witness the original install command."
             : "The framework location was incomplete, unreadable, or did not match all declared identity markers."
         ),
       ]
@@ -1000,7 +1010,7 @@ public struct ApplicationGraphProjector: Sendable {
         summary:
           value.installationStatus == .observed
           ? "A Git-backed shell framework observed through bounded local metadata."
-          : "A possible shell framework installation that HAL could not fully establish.",
+          : "A possible shell framework installation that \(AppBrand.displayName) could not fully establish.",
         details: frameworkDetails
       )
     }
@@ -1044,7 +1054,7 @@ public struct ApplicationGraphProjector: Sendable {
         type: .provides,
         confidence: .possible,
         explanation:
-          "This observed shell may load the active framework reference. HAL did not inspect its environment or prove that this process sourced the configuration.",
+          "This observed shell may load the active framework reference. \(AppBrand.displayName) did not inspect its environment or prove that this process sourced the configuration.",
         evidence: [
           Evidence(
             id: "\(framework.id.rawValue):configuration-reference",

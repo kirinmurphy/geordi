@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://hal.local/schemas/semantic-stages/v1",
-  "title": "HAL semantic graph stages",
+  "title": "{{productName}} semantic graph stages",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "stages"],

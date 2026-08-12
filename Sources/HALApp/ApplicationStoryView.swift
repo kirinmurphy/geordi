@@ -43,11 +43,20 @@ struct ApplicationStoryView: View {
             connections: story.processes + story.startupItems
           )
           storySection(
-            title: "What HAL associates with it",
+            title: "What \(AppBrand.displayName) associates with it",
             symbol: "link",
             emptyMessage: "No strong support-location, package, or tool association was observed.",
             connections: story.associatedItems
           )
+          if !story.possibleAssociatedItems.isEmpty {
+            storySection(
+              title: "Possible associations",
+              symbol: "questionmark.folder",
+              emptyMessage: "",
+              connections: story.possibleAssociatedItems,
+              emphasizesUncertainty: true
+            )
+          }
           unknownSection
         }
         .padding(28)
@@ -131,7 +140,9 @@ struct ApplicationStoryView: View {
     VStack(alignment: .leading, spacing: 14) {
       sectionTitle("Origin story", symbol: "arrow.down.to.line.compact")
       if story.provenance.isEmpty && story.owners.isEmpty {
-        calmEmpty("HAL does not have enough retained evidence to name an installation source.")
+        calmEmpty(
+          "\(AppBrand.displayName) does not have enough retained evidence to name an installation source."
+        )
       } else {
         ForEach(orderedProvenance) { detail in
           originRow(label: detail.label) {
@@ -184,7 +195,8 @@ struct ApplicationStoryView: View {
     title: String,
     symbol: String,
     emptyMessage: String,
-    connections: [ApplicationStoryModel.Connection]
+    connections: [ApplicationStoryModel.Connection],
+    emphasizesUncertainty: Bool = false
   ) -> some View {
     VStack(alignment: .leading, spacing: 14) {
       sectionTitle(title, symbol: symbol)
@@ -195,15 +207,23 @@ struct ApplicationStoryView: View {
           items: connections.map {
             ApplicationStoryTreeItem(entity: $0.entity, relationship: $0.relationship)
           },
-          inspect: model.focus
+          inspect: model.focus,
+          emphasizesUncertainty: emphasizesUncertainty
         )
+        if emphasizesUncertainty {
+          Text(
+            "These locations match a naming convention or incomplete signal. They remain visible, but \(AppBrand.displayName) has not established strong ownership."
+          )
+          .font(.halSmall)
+          .foregroundStyle(.secondary)
+        }
       }
     }
   }
 
   private var unknownSection: some View {
     VStack(alignment: .leading, spacing: 12) {
-      sectionTitle("What HAL does not know", symbol: "questionmark.diamond")
+      sectionTitle("What \(AppBrand.displayName) does not know", symbol: "questionmark.diamond")
       if story.unknowns.isEmpty {
         calmEmpty("No important missing state was identified in this point-in-time explanation.")
       } else {

@@ -77,7 +77,7 @@ public struct PersistenceCollector: Sendable {
       issues.append(
         issue(
           id: "unreadable-persistence-root-\(root.id)",
-          summary: "HAL could not read a persistence search root.",
+          summary: "\(AppBrand.displayName) could not read a persistence search root.",
           path: root.url.path
         )
       )
@@ -107,7 +107,7 @@ public struct PersistenceCollector: Sendable {
         issues.append(
           issue(
             id: "empty-persistence-placeholder-\(file.lastPathComponent)",
-            summary: "HAL ignored an empty persistence placeholder.",
+            summary: "\(AppBrand.displayName) ignored an empty persistence placeholder.",
             path: file.path,
             severity: .information
           )
@@ -125,7 +125,7 @@ public struct PersistenceCollector: Sendable {
         issues.append(
           issue(
             id: "malformed-persistence-declaration-\(file.lastPathComponent)",
-            summary: "HAL could not decode a persistence property list.",
+            summary: "\(AppBrand.displayName) could not decode a persistence property list.",
             path: file.path,
             severity: .warning
           )

@@ -3,6 +3,7 @@ set -euo pipefail
 unsetopt BG_NICE
 
 project_dir="${0:A:h:h}"
+source "$project_dir/scripts/product-brand.sh"
 app_bundle="$project_dir/.build/debug/HALApp.app"
 app_binary="$app_bundle/Contents/MacOS/HALApp"
 
@@ -14,5 +15,6 @@ swift build --disable-sandbox --product HALApp >/dev/null
 [[ -x "$app_binary" ]]
 [[ "$(plutil -extract CFBundlePackageType raw "$app_bundle/Contents/Info.plist")" == "APPL" ]]
 [[ "$(plutil -extract CFBundleIdentifier raw "$app_bundle/Contents/Info.plist")" == "com.hal.dev" ]]
+[[ "$(plutil -extract CFBundleDisplayName raw "$app_bundle/Contents/Info.plist")" == "$product_display_name" ]]
 
-print "✓ HALApp is packaged as a valid native application bundle."
+print "✓ $product_display_name is packaged as a valid native application bundle."

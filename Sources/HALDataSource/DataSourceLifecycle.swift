@@ -76,7 +76,9 @@ public struct HALUserDataStore: Sendable {
       appropriateFor: nil,
       create: true
     )
-    return Self(root: base.appending(path: "HAL", directoryHint: .isDirectory))
+    return Self(
+      root: base.appending(path: AppBrand.dataDirectoryName, directoryHint: .isDirectory)
+    )
   }
 
   public func loadSnapshot(fileManager: FileManager = .default) throws -> GraphSnapshot? {
@@ -154,11 +156,11 @@ extension HALUserDataStoreError: LocalizedError {
     case .noCompiledData:
       "There is no compiled live snapshot to export."
     case .unsafeDestination:
-      "The selected backup destination is inside HAL's managed data location."
+      "The selected backup destination is inside \(AppBrand.displayName)'s managed data location."
     case .unsafeRoot:
-      "HAL refused to remove an unexpected or unsafe data location."
+      "\(AppBrand.displayName) refused to remove an unexpected or unsafe data location."
     case .invalidSnapshot(let diagnostic):
-      "HAL's compiled snapshot is invalid: \(diagnostic)"
+      "\(AppBrand.displayName)'s compiled snapshot is invalid: \(diagnostic)"
     }
   }
 }

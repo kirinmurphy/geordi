@@ -172,7 +172,7 @@ public struct HomebrewCollector: Sendable {
           CollectionIssue(
             id: "unreadable-homebrew-cellar-\(installation.id)",
             severity: .warning,
-            summary: "HAL could not read an installed Homebrew inventory.",
+            summary: "\(AppBrand.displayName) could not read an installed Homebrew inventory.",
             affectedScope: prefix.path
           )
         )

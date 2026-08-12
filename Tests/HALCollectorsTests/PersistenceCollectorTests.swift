@@ -78,7 +78,10 @@ struct PersistenceCollectorTests {
     #expect(output.observations.isEmpty)
     #expect(output.run.issues.count == 1)
     #expect(output.run.issues.first?.severity == .information)
-    #expect(output.run.issues.first?.summary == "HAL ignored an empty persistence placeholder.")
+    #expect(
+      output.run.issues.first?.summary
+        == "\(AppBrand.displayName) ignored an empty persistence placeholder."
+    )
   }
 
   @Test("Undecodable property lists remain partial outcomes")
@@ -96,7 +99,7 @@ struct PersistenceCollectorTests {
     #expect(output.run.issues.first?.severity == .warning)
     #expect(
       output.run.issues.first?.summary
-        == "HAL could not decode a persistence property list."
+        == "\(AppBrand.displayName) could not decode a persistence property list."
     )
   }
 

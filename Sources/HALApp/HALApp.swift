@@ -131,10 +131,17 @@ final class AppModel {
   private let liveSnapshot: @Sendable () async throws -> GraphSnapshot
   private let displayPolicy: DisplayPolicy
   private let explorationContexts: ExplorationContextConfiguration
+  private let fileFacets: FileFacetConfiguration
+  private let filesystemLocations: FilesystemLocationCatalog
+  private let homeDirectory: String
+  private var preparedExplorationPresentations: [String: ExplorationPresentation] = [:]
+  private(set) var filesystemNodes: [FilesystemNode] = []
   private var collectionTask: Task<Void, Never>?
   private var collectionWorkerTask: Task<GraphSnapshot, Error>?
   private var collectionGeneration: UUID?
-  var fixture: SystemGraph
+  var fixture: SystemGraph {
+    didSet { preparePageData() }
+  }
   var scanContext: ScanContext
   var dataSourceMode: DataSourceMode
   var isCollecting = false
@@ -167,6 +174,7 @@ final class AppModel {
     userDataStore: HALUserDataStore?,
     displayPolicy: DisplayPolicy? = nil,
     explorationContexts: ExplorationContextConfiguration? = nil,
+    fileFacets: FileFacetConfiguration = .required,
     liveSnapshot: @escaping @Sendable () async throws -> GraphSnapshot
   ) {
     self.configuration = configuration
@@ -178,6 +186,9 @@ final class AppModel {
     self.liveSnapshot = liveSnapshot
     self.displayPolicy = displayPolicy ?? AppBootstrap.displayPolicy()
     self.explorationContexts = explorationContexts ?? AppBootstrap.explorationContexts()
+    self.fileFacets = fileFacets
+    filesystemLocations = AppBootstrap.filesystemLocations()
+    homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
     let initialMode = preferences.mode()
     if initialMode == .linkedMac {
       selectedApplicationCategoryID = applicationClassifications?.defaultCategoryID
@@ -194,13 +205,14 @@ final class AppModel {
         dataSourceMode = .synthetic
         preferences.setMode(.synthetic)
         collectionError =
-          "HAL could not load its compiled snapshot, so it returned to the fictional profile without deleting the stored file: \(error.localizedDescription)"
+          "\(AppBrand.displayName) could not load its compiled snapshot, so it returned to the fictional profile without deleting the stored file: \(error.localizedDescription)"
       }
     } else {
       snapshot = syntheticProvider.snapshot()
     }
-    fixture = snapshot.graph
+    fixture = fileFacets.enriching(snapshot.graph)
     scanContext = snapshot.scan
+    preparePageData()
   }
 
   var isSynthetic: Bool { dataSourceMode == .synthetic }
@@ -387,7 +399,7 @@ final class AppModel {
     guard dataSourceMode == .synthetic else { return }
     guard userDataStore != nil else {
       collectionError =
-        "HAL cannot link this Mac because durable application-support storage is unavailable."
+        "\(AppBrand.displayName) cannot link this Mac because durable application-support storage is unavailable."
       return
     }
     refreshLiveData(linkOnSuccess: true)
@@ -428,7 +440,7 @@ final class AppModel {
         } else {
           try userDataStore?.saveSnapshot(snapshot)
         }
-        fixture = snapshot.graph
+        fixture = fileFacets.enriching(snapshot.graph)
         scanContext = snapshot.scan
         dataSourceMode = .linkedMac
         if activity == .initialLink {
@@ -485,7 +497,7 @@ final class AppModel {
       (error as? LocalizedError)?.errorDescription
       ?? String(describing: error)
     return
-      "HAL could not \(stage): \(detail) No applications or machine data were changed."
+      "\(AppBrand.displayName) could not \(stage): \(detail) No applications or machine data were changed."
   }
 
   func cancelInitialLink() {
@@ -534,7 +546,7 @@ final class AppModel {
     lastRefreshCompletedAt = nil
     lastRefreshDuration = nil
     let snapshot = syntheticProvider.snapshot()
-    fixture = snapshot.graph
+    fixture = fileFacets.enriching(snapshot.graph)
     scanContext = snapshot.scan
     navigate(to: .overview)
   }
@@ -591,9 +603,24 @@ final class AppModel {
   }
 
   var explorationPresentation: ExplorationPresentation? {
-    explorationContext.map {
-      ExplorationPresenter().present(graph: fixture, context: $0)
-    }
+    explorationContext.flatMap { preparedExplorationPresentations[$0.id] }
+  }
+
+  /// Prepares manifest-backed projections when the graph changes, keeping file I/O,
+  /// schema validation, and whole-graph transforms out of SwiftUI body evaluation.
+  private func preparePageData() {
+    filesystemNodes = FilesystemProjector().project(
+      graph: fixture,
+      catalog: filesystemLocations,
+      homeDirectory: homeDirectory,
+      includeReferenceLocations: true
+    )
+    let presenter = ExplorationPresenter()
+    preparedExplorationPresentations = Dictionary(
+      uniqueKeysWithValues: explorationContexts.contexts.map { context in
+        (context.id, presenter.present(graph: fixture, context: context))
+      }
+    )
   }
 
   var breadcrumb: [String] {

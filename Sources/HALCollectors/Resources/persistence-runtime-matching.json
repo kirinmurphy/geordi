@@ -11,11 +11,11 @@
       "applicableKinds": ["launchAgent", "launchDaemon"],
       "relationshipType": "observed running",
       "confidence": "confirmed",
-      "explanation": "HAL observed the declared executable running during this snapshot."
+      "explanation": "{{productName}} observed the declared executable running during this snapshot."
     }
   ],
   "outcomes": [
-    {"state": "matched", "label": "Observed running", "explanation": "HAL observed the declared executable running during this snapshot."},
+    {"state": "matched", "label": "Observed running", "explanation": "{{productName}} observed the declared executable running during this snapshot."},
     {"state": "ambiguous", "label": "Correlation ambiguous", "explanation": "Retained identity was insufficient or exceeded the bounded match budget."},
     {"state": "unmatched", "label": "Not observed in this snapshot", "explanation": "Absence from one process snapshot is inconclusive."},
     {"state": "partial", "label": "Process evidence partial", "explanation": "The process snapshot was incomplete."},

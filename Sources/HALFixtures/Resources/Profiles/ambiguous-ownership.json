@@ -121,7 +121,7 @@
           "summary" : "The helper serves document features used by Quill."
         }
       ],
-      "explanation" : "Quill Review is equally plausible; HAL cannot select a confident owner.",
+      "explanation" : "Quill Review is equally plausible; {{productName}} cannot select a confident owner.",
       "id" : "quill-helper",
       "source" : "persistence.shared",
       "target" : "app.quill",
@@ -169,7 +169,7 @@
           "summary" : "Quill accessed files in the shared folder."
         }
       ],
-      "explanation" : "Quill also accesses this folder, so HAL cannot assign exclusive ownership.",
+      "explanation" : "Quill also accesses this folder, so {{productName}} cannot assign exclusive ownership.",
       "id" : "quill-folder",
       "source" : "app.quill",
       "target" : "file.shared",

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "categories": [
+    {"label":"Application support","facets":{"role":"Durable application state","rebuildability":"Mixed","ownership":"Associated","sensitivity":"Potentially sensitive","kind":"Directory"}},
+    {"label":"Cache","facets":{"role":"Cache","rebuildability":"Rebuildable","ownership":"Associated","sensitivity":"Operational","kind":"Directory"}},
+    {"label":"Preferences","facets":{"role":"Configuration","rebuildability":"Durable","ownership":"Associated","sensitivity":"Potentially sensitive","kind":"File"}},
+    {"label":"Logs","facets":{"role":"Logs","rebuildability":"Rebuildable","ownership":"Associated","sensitivity":"Potentially sensitive","kind":"Directory"}},
+    {"label":"Saved application state","facets":{"role":"Saved state","rebuildability":"Mixed","ownership":"Associated","sensitivity":"Potentially sensitive","kind":"Directory"}},
+    {"label":"Sandbox container","facets":{"role":"Container","rebuildability":"Mixed","ownership":"Associated","sensitivity":"Potentially sensitive","kind":"Container"}},
+    {"label":"Group container","facets":{"role":"Shared container","rebuildability":"Mixed","ownership":"Shared","sensitivity":"Potentially sensitive","kind":"Container"}},
+    {"label":"HTTP storage","facets":{"role":"Web storage","rebuildability":"Mixed","ownership":"Associated","sensitivity":"Potentially sensitive","kind":"Directory"}},
+    {"label":"WebKit data","facets":{"role":"Web storage","rebuildability":"Mixed","ownership":"Associated","sensitivity":"Potentially sensitive","kind":"Directory"}},
+    {"label":"Build output","facets":{"role":"Build output","rebuildability":"Rebuildable","ownership":"Associated","sensitivity":"Operational","kind":"Directory"}},
+    {"label":"Download cache","facets":{"role":"Cache","rebuildability":"Rebuildable","ownership":"Associated","sensitivity":"Operational","kind":"Directory"}},
+    {"label":"User-created work","facets":{"role":"User-created work","rebuildability":"Durable","ownership":"Exclusive","sensitivity":"User value","kind":"Directory"}}
+  ],
+  "fallback": {"role":"Other","rebuildability":"Unknown","ownership":"Unresolved","sensitivity":"Unknown","kind":"Unknown"}
+}

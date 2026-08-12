@@ -61,8 +61,11 @@ public struct SemanticLayout: Sendable {
     let rowSpacing = max(configuration.nodeHeight + 22, min(configuration.rowSpacing, 104))
     let columnSpacing = max(configuration.nodeWidth + 32, min(configuration.columnSpacing, 224))
     let maximumRows = populatedStages.map { $0.1.count }.max() ?? 1
+    // Keep the final row comfortably inside its stage wrapper. The node centers
+    // begin at y=76; 128 leaves 34 points below the final node after accounting
+    // for the wrapper's 18-point outer inset.
     let contentHeight =
-      configuration.nodeHeight + 92 + Double(max(maximumRows - 1, 0)) * rowSpacing
+      configuration.nodeHeight + 128 + Double(max(maximumRows - 1, 0)) * rowSpacing
 
     var positions: [EntityID: CGPoint] = [:]
     var groups: [LayoutGroup] = []

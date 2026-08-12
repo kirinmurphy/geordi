@@ -122,7 +122,7 @@ public struct ShellPathAnalyzer: Sendable {
       }
       if pieces.contains(where: { $0.contains("$") && $0 != "$PATH" && $0 != "${PATH}" }) {
         diagnostics.append(
-          "Line \(lineNumber) contains a variable HAL did not expand; it remains literal."
+          "Line \(lineNumber) contains a variable \(ProductBrand.displayName) did not expand; it remains literal."
         )
       }
     }
