@@ -1,14 +1,14 @@
-# HAL Product Discovery and Exploration Plan
+# geordi Product Discovery and Exploration Plan
 
 Status: Completed phases 1–5; retained as the authoritative historical specification
 Scope: Homepage organization, actionable paths, glossary, map usability,
 collection health, command-line software, and filesystem exploration  
-Implementation rule: Preserve HAL's manifest-driven composition, central schema,
+Implementation rule: Preserve geordi's manifest-driven composition, central schema,
 synthetic/live parity, and read-only-by-default collection model.
 
 ## 1. Purpose
 
-HAL currently proves that collected system facts can be represented as entities
+geordi currently proves that collected system facts can be represented as entities
 and evidence-bearing relationships. The next product step is to turn that atlas
 into a clear explanation and a useful jumping-off point.
 
@@ -17,11 +17,11 @@ This plan addresses two related goals:
 1. Make the current inventory and monitoring experience understandable,
    actionable, and quiet by default.
 2. Add a complementary filesystem-oriented view that explains where observed
-   entities live without pretending HAL has indexed the entire filesystem.
+   entities live without pretending geordi has indexed the entire filesystem.
 
 The guiding principle is:
 
-> HAL should first show what matters, explain why it matters, and provide a safe
+> geordi should first show what matters, explain why it matters, and provide a safe
 > path to investigate further. Raw collector output remains available, but it
 > should not define the primary user experience.
 
@@ -63,13 +63,13 @@ These should not have equal visual weight.
    - redacted diagnostic export.
 
 This hierarchy separates “what is installed” from “what changed or needs
-attention” and from “how HAL gathered the information.”
+attention” and from “how geordi gathered the information.”
 
 ## 3. Homepage and Reclaimable Manager Data
 
 ### 3.1 Current behavior
 
-`OverviewView` in `Sources/HALApp/ContentView.swift` builds homepage sections
+`OverviewView` in `Sources/GeordiApp/ContentView.swift` builds homepage sections
 directly from graph entities. Rebuildable roots are file entities connected to
 package-manager entities with `owns` relationships. The row title currently
 comes from the final path component. Manager provenance is placed in the
@@ -231,18 +231,18 @@ Interacting with a command-line item should answer:
 - What package or system source owns it?
 - Where is it?
 - Is it currently active?
-- What capability, if any, did HAL derive?
+- What capability, if any, did geordi derive?
 - What aliases resolve to the same executable?
 - How would the owning package manager describe or remove it?
 
-HAL may display or copy a package-manager removal command after validating the
+geordi may display or copy a package-manager removal command after validating the
 ownership relationship. This phase must not execute removal commands.
 
 ## 5. Paths as actions
 
 ### 5.1 Use cases
 
-From any path shown by HAL, a user should be able to:
+From any path shown by geordi, a user should be able to:
 
 - reveal the item in Finder;
 - open a new Terminal window at the folder or containing folder;
@@ -268,12 +268,12 @@ Every path click opens this options menu. “Show in Filesystem Map” may be ad
 after the filesystem prototype has a stable navigation contract.
 
 The menu should identify the terminal target when known, for example “Open in
-Ghostty.” If HAL cannot identify a suitable terminal, use “Open in Terminal…”
+Ghostty.” If geordi cannot identify a suitable terminal, use “Open in Terminal…”
 and allow the user to choose.
 
 ### 5.2.1 Terminal selection policy
 
-HAL should support terminal applications through versioned terminal adapters,
+geordi should support terminal applications through versioned terminal adapters,
 not one hardcoded application.
 
 When the user opens the path menu:
@@ -281,13 +281,13 @@ When the user opens the path menu:
 1. Find running applications that match validated terminal adapters.
 2. If one is running, use it.
 3. If several are running, prefer the terminal most recently activated while
-   HAL has been running.
+   geordi has been running.
 4. Show a chooser or submenu so the user can override that selection.
 5. If none is running, use the user's saved terminal preference.
 6. If there is no preference, present a chooser and remember the selection only
    with the user's consent.
 
-HAL can track activation through
+geordi can track activation through
 `NSWorkspace.didActivateApplicationNotification`. It should not request
 Accessibility permission or inspect terminal windows merely to guess which
 terminal is preferred.
@@ -346,7 +346,7 @@ Actions must be derived from graph relationships, typed details, and validated
 adapters. Do not hardcode product instances in Swift.
 
 An entity with no external action should still offer graph and evidence
-navigation. HAL should not manufacture a path or action merely to fill the
+navigation. geordi should not manufacture a path or action merely to fill the
 section.
 
 ## 7. Glossary and contextual terminology
@@ -460,7 +460,7 @@ Dropbox launch-agent property lists:
 - `com.dropbox.dropboxmacupdate.agent.plist`
 - `com.dropbox.dropboxmacupdate.xpcservice.plist`
 
-Both were valid empty plist dictionaries. HAL had parsed them but incorrectly
+Both were valid empty plist dictionaries. geordi had parsed them but incorrectly
 treated the absence of launchd fields as a decode failure. Collector version 2
 now records them as informational placeholders without limiting collection.
 This historical example demonstrates why non-actionable parser diagnostics
@@ -499,17 +499,17 @@ state whether the user can do anything, and offer any applicable action.
 Remove the application evidence-fact count from the persistent homepage. It is
 diagnostic/provenance metadata, not a user goal.
 
-In this document, a **collector limitation** means HAL observed a source but
+In this document, a **collector limitation** means geordi observed a source but
 could not completely interpret or access it. It does not automatically mean
 the Mac or the observed software is malfunctioning. Examples include:
 
-- a startup property list whose structure HAL does not yet parse;
-- a protected location HAL cannot read;
+- a startup property list whose structure geordi does not yet parse;
+- a protected location geordi cannot read;
 - a configured root that exceeds a bounded observation budget;
 - a platform capability unavailable on this macOS version.
 
 The UI should avoid exposing “collector limitation” without an explanation.
-Prefer a concrete sentence such as “HAL could not interpret two Dropbox startup
+Prefer a concrete sentence such as “geordi could not interpret two Dropbox startup
 files.”
 
 ### 9.2.1 Completion-card content
@@ -518,7 +518,7 @@ Recommended hierarchy:
 
 **Success:** “This Mac is linked”
 
-**Next step:** “HAL found your installed software and built a read-only map.
+**Next step:** “geordi found your installed software and built a read-only map.
 Start exploring, or check the observation details.”
 
 Primary action:
@@ -533,7 +533,7 @@ Secondary actions and links:
 - Observation History (introduced by the deferred history phase)
 
 “More Info” contains the longer explanation of sources, collection boundaries,
-and what HAL did not collect. Keep the primary card brief. Buttons already
+and what geordi did not collect. Keep the primary card brief. Buttons already
 available in the linked experience should remain available rather than being
 removed during the redesign.
 
@@ -543,13 +543,13 @@ Classify issues:
 
 - **Action required**: user permission or configuration can resolve it.
 - **Retry suggested**: transient collection problem.
-- **HAL limitation**: parser/coverage gap; user cannot fix it.
+- **geordi limitation**: parser/coverage gap; user cannot fix it.
 - **Informational**: incomplete evidence with no meaningful product impact.
 
 For the Dropbox declarations, show:
 
-> HAL could not interpret two Dropbox startup declarations. Other startup items
-> were collected normally. This is a HAL parser limitation; no Mac repair is
+> geordi could not interpret two Dropbox startup declarations. Other startup items
+> were collected normally. This is a geordi parser limitation; no Mac repair is
 > required.
 
 Non-actionable parser gaps do not need a cluster of homepage actions. Represent
@@ -566,7 +566,7 @@ impact changes.
 
 ### 9.4 Parser-gap dogfooding loop
 
-HAL should turn collection gaps into privacy-preserving engineering inputs:
+geordi should turn collection gaps into privacy-preserving engineering inputs:
 
 1. Classify the failure precisely: unreadable bytes, invalid plist, unexpected
    root type, missing required launchd field, empty placeholder, or unsupported
@@ -689,7 +689,7 @@ depth cue should communicate folder nesting rather than serve as decoration.
   independently. Keep stable entity and path identifiers so future integration
   remains possible.
 - Offer Finder, Terminal, and Copy Path actions.
-- Clearly mark “HAL has not enumerated this folder” versus “observed empty.”
+- Clearly mark “geordi has not enumerated this folder” versus “observed empty.”
 
 ### 10.5 Data model
 
@@ -833,33 +833,33 @@ Phase 6 was not implemented. See
 ## 13. Current code touchpoints
 
 - Homepage and linked coverage:
-  `Sources/HALApp/ContentView.swift`
+  `Sources/GeordiApp/ContentView.swift`
 - App state, collector counts, refresh lifecycle:
-  `Sources/HALApp/HALApp.swift`
+  `Sources/GeordiApp/GeordiApp.swift`
 - Inspector details, instances, relationships:
-  `Sources/HALApp/InspectorView.swift`
+  `Sources/GeordiApp/InspectorView.swift`
 - Zoom, pan, node interaction:
-  `Sources/HALVisualization/RelationshipCanvas.swift`
+  `Sources/GeordiVisualization/RelationshipCanvas.swift`
 - Graph projection:
-  `Sources/HALCollectors/ApplicationGraphProjector.swift`
+  `Sources/GeordiCollectors/ApplicationGraphProjector.swift`
 - Rebuildable detectors:
-  `Sources/HALCollectors/Resources/rebuildable-data-detectors.json`
+  `Sources/GeordiCollectors/Resources/rebuildable-data-detectors.json`
 - Known capabilities:
-  `Sources/HALCollectors/Resources/runtimes.json`
+  `Sources/GeordiCollectors/Resources/runtimes.json`
 - Open-ended executable roots:
-  `Sources/HALCollectors/Resources/command-line-software.json`
+  `Sources/GeordiCollectors/Resources/command-line-software.json`
 - Persistence parsing:
-  `Sources/HALCollectors/PersistenceCollector.swift`
+  `Sources/GeordiCollectors/PersistenceCollector.swift`
 - Canonical graph schema:
-  `Sources/HALProfileSchema/Resources/system-profile.schema.json`
+  `Sources/GeordiProfileSchema/Resources/system-profile.schema.json`
 - Display policy:
-  `Sources/HALVisualization/Resources/display-policy.json`
+  `Sources/GeordiVisualization/Resources/display-policy.json`
 
 ## 14. Confirmed product decisions
 
 1. Path clicks always expose an options menu containing Copy Path, Reveal in
    Finder, and Open in Terminal.
-2. HAL supports multiple terminal applications and prefers a running terminal,
+2. geordi supports multiple terminal applications and prefers a running terminal,
    using the most recently activated supported terminal when several are open.
    The user can override the choice.
 3. Keep the current homepage section ordering for now.

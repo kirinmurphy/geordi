@@ -1,4 +1,19 @@
-# HAL Repository Rules
+# Geordi Repository Rules
+
+## Unified project
+
+- This repository contains the desktop app (`Sources/`, `Tests/`), CLI
+  (`bin/`, `cli/`), and Mac setup engine (`bootstrap/`). Do not split these
+  into separate repositories.
+- Product identity belongs in the versioned product-brand manifest, not
+  duplicated UI strings, launch scripts, or CLI command registries.
+- CLI sidekicks retain the admission and safety rules in `cli/AGENTS.md`.
+- Bootstrap inventory refresh is explicit and read-only with respect to the
+  machine. Package installation requires an explicit apply action and
+  confirmation; never uninstall packages merely to match the manifest.
+- Keep observed installed inventory distinct from desired bootstrap defaults.
+- Verify desktop, CLI, and bootstrap together after cross-cutting changes.
+  Preserve synthetic-first desktop launch behavior.
 
 These rules apply to every implementation task in this repository.
 

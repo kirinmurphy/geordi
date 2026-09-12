@@ -1,6 +1,6 @@
 # Real Machine Data Field Availability Matrix
 
-This reference classifies the important data HAL currently presents or plans to
+This reference classifies the important data geordi currently presents or plans to
 present. The implementation sequence and architectural plan live separately in
 `REAL_DATA_ASSESSMENT.md`.
 
@@ -38,7 +38,7 @@ More than one classification can apply to a field.
 | Installer-package provenance | Directly observable or heuristically inferred | Installer receipts, package metadata, BOM records, `pkgutil` adapter | Package-to-app mapping can be ambiguous. |
 | Homebrew provenance | Directly observable or deterministically derived | Homebrew JSON output and Caskroom/Cellar metadata | Multiple prefixes and versions are possible; prevent automatic updates. |
 | Web download or disk-image provenance | Heuristically inferred; sometimes directly observable | Quarantine extended attributes and download-origin metadata | Frequently missing after copy, move, or metadata stripping. |
-| User approval and trust | Not realistically available as observation | HAL decision history | Never infer from source, signature, or Gatekeeper status. |
+| User approval and trust | Not realistically available as observation | geordi decision history | Never infer from source, signature, or Gatekeeper status. |
 | Current fixture footprint, source, state, and summaries | Currently hardcoded/demo-only | Fixture literals | Retain for demonstrations only. |
 
 ## Processes and runtime activity
@@ -80,7 +80,7 @@ More than one classification can apply to a field.
 | Cache, log, configuration, or support category | Deterministically derived or heuristically inferred | Known roots and versioned path rules | Arbitrary names are weak evidence. |
 | User document or project classification | Heuristically inferred; sometimes directly observable by selected scope | User-selected roots, declared document types, conventional directories | File contents should not be inspected for ordinary classification. |
 | Last modified | Directly observable | Filesystem metadata | Not the same as last used. |
-| Recently used or stale | Requires historical collection; heuristically inferred | HAL observation history plus weak filesystem evidence | Access time is often unreliable. |
+| Recently used or stale | Requires historical collection; heuristically inferred | geordi observation history plus weak filesystem evidence | Access time is often unreliable. |
 | Reads or writes relationship | Requires historical collection; often elevated | FSEvents for coarse changes; Endpoint Security for later high-fidelity attribution | FSEvents does not reliably identify the writing process. |
 | Exact ownership | Deterministically derived for containment and authoritative package paths; otherwise inferred | Bundle containment, receipts, containers, bundle-ID conventions, historical writers | Shared support and documents often have multiple consumers. |
 | Current conventional application association | Direct path observation plus derived or inferred match | Manifest-selected user-Library candidates using exact bundle IDs or application names | Implemented metadata-only; exact bundle-ID paths are strong associations, name matches are weak, and neither proves current access or exclusive ownership. |
@@ -110,7 +110,7 @@ More than one classification can apply to a field.
 | Volume capacity and available space | Directly observable | Volume resource values and `statfs` | Raw free and available-for-important-usage are different. |
 | Network interface totals | Directly observable or deterministically derived | Interface counters | Lower sensitivity at aggregate level. |
 | Per-process destinations and sockets | Requires consent/elevated capability; incomplete | Later Network Extension or privileged inspection | Explicitly deferred by current privacy policy. |
-| Baseline, peak, anomaly, and sustained pressure | Requires historical collection; derived or inferred | HAL time series and versioned rules | Requires retention, sampling intervals, gaps, and sleep handling. |
+| Baseline, peak, anomaly, and sustained pressure | Requires historical collection; derived or inferred | geordi time series and versioned rules | Requires retention, sampling intervals, gaps, and sleep handling. |
 | Current activity and incident fixture values | Currently hardcoded/demo-only | Fixture/UI values | Not observations. |
 
 ## Events and incidents
@@ -118,14 +118,14 @@ More than one classification can apply to a field.
 | Concept or field | Classification | Preferred source | Constraints |
 |---|---|---|---|
 | Scan start, completion, partial result, and failure | Directly observable | Collector orchestration clock and result | Must be first-class. |
-| Wake and sleep | Requires historical collection | `NSWorkspace` notifications or IOKit while HAL runs | No complete retroactive history. |
+| Wake and sleep | Requires historical collection | `NSWorkspace` notifications or IOKit while geordi runs | No complete retroactive history. |
 | Application install, update, and removal | Requires historical collection; deterministically derived | Completed snapshot comparison; FSEvents as a trigger only | Scope and scan completeness matter. |
 | Process start and exit | Requires historical collection | Snapshot observation initially; Endpoint Security later if justified | Say “first observed” when exact start was not seen. |
 | File change and growth | Requires historical collection; deterministically derived | Size snapshots; FSEvents for rescan scheduling | Event streams can coalesce or drop events. |
 | Incident start, duration, and peak | Requires historical collection; deterministically derived | Versioned threshold state machine | Threshold and rule version are evidence. |
 | Contributing process ranking | Deterministically derived but incomplete | Time-aligned resource samples | Describe as largest observed contributor, not cause. |
 | Occurred near | Deterministically derived from history | Versioned time-window rule | Temporal proximity does not imply causation. |
-| Caused incident | Not realistically available in general | None | HAL should report correlation and possible triggers only. |
+| Caused incident | Not realistically available in general | None | geordi should report correlation and possible triggers only. |
 | Current events, incidents, times, and durations | Currently hardcoded/demo-only | Fixture literals | Useful scenario coverage, not history. |
 
 ## Signing, receipts, provenance, ownership, evidence, and confidence

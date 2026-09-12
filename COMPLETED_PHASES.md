@@ -1,4 +1,4 @@
-# HAL Completed Phases
+# geordi Completed Phases
 
 Status: historical record  
 Updated: July 29, 2026
@@ -81,7 +81,7 @@ implicitly.
 ## Intentionally not completed
 
 Completion of a prototype phase does not claim product-market validation or
-final visual quality. HAL still needs user evaluation to prove that its
+final visual quality. geordi still needs user evaluation to prove that its
 explanations are clearer than existing macOS tools.
 
 The following are not part of the completed boundary:

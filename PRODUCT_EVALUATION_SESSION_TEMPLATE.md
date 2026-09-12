@@ -1,4 +1,4 @@
-# HAL Product Evaluation Session
+# geordi Product Evaluation Session
 
 Session ID:
 Date:
@@ -36,7 +36,7 @@ Did the filesystem map add clarity? How?
 
 What did the guided tour clarify or repeat?
 
-Participant's one-sentence description of HAL:
+Participant's one-sentence description of geordi:
 
 ## Outcome
 

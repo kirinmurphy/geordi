@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-brand_manifest="${0:A:h:h}/Sources/HALManifestKit/Resources/product-brand.json"
+brand_manifest="${0:A:h:h}/Sources/GeordiManifestKit/Resources/product-brand.json"
 product_display_name="$(plutil -extract displayName raw "$brand_manifest")"
 
 if [[ -z "$product_display_name" || "$product_display_name" == *"/"* ]]; then

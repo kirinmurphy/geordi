@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geordi.local/schemas/shell-frameworks/v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "frameworks"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "frameworks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "rootPath",
+          "configurationPath",
+          "requiredRelativePaths",
+          "configurationReferenceTokens",
+          "repositoryHosts",
+          "repositoryPathSuffixes",
+          "associatedShellExecutablePaths",
+          "maximumAssociatedProcesses"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "rootPath": { "type": "string", "pattern": "^\\$USER_HOME/[^.].*|^\\$USER_HOME/\\.[^./].*" },
+          "configurationPath": { "type": "string", "pattern": "^\\$USER_HOME/[^.].*|^\\$USER_HOME/\\.[^./].*" },
+          "requiredRelativePaths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "configurationReferenceTokens": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "repositoryHosts": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "repositoryPathSuffixes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "associatedShellExecutablePaths": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^/" }
+          },
+          "maximumAssociatedProcesses": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32
+          }
+        }
+      }
+    }
+  }
+}

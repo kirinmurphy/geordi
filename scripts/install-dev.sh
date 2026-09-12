@@ -3,7 +3,7 @@ set -euo pipefail
 
 project_dir="${0:A:h:h}"
 source "$project_dir/scripts/product-brand.sh"
-source_bundle="$project_dir/.build/debug/HALApp.app"
+source_bundle="$project_dir/.build/debug/GeordiApp.app"
 applications_dir="$HOME/Applications"
 installed_bundle="$applications_dir/$product_display_name.app"
 

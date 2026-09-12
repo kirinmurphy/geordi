@@ -5,7 +5,7 @@ Earliest reconsideration: after the next user-facing product-validation phase
 
 ## Why this is not next
 
-HAL has not yet proved that its current inventory, application explanation, and
+geordi has not yet proved that its current inventory, application explanation, and
 maps are compelling enough to justify more persistence infrastructure.
 Observation History would add schemas, retention, migration, recovery,
 redaction, and UI obligations before the core product story is validated.

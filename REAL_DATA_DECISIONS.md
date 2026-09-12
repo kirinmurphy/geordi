@@ -32,13 +32,13 @@ under a live label.
 ## 2026-07-27: compiled-data scope is intentionally narrow
 
 The only compiled live artifact is
-`Application Support/HAL/latest-live-snapshot.json`. Data-source mode and the
+`Application Support/geordi/latest-live-snapshot.json`. Data-source mode and the
 synthetic welcome dismissal are the only related preferences. Unlink removes
-the HAL application-support directory, resets both preferences to first-launch
+the geordi application-support directory, resets both preferences to first-launch
 values, and restores the deterministic fixture.
 
 An elected backup is a copy of the last normalized `GraphSnapshot`, written
-atomically to a user-selected location outside HAL's managed scope. HAL does
+atomically to a user-selected location outside geordi's managed scope. geordi does
 not retain a pointer to that backup.
 
 ## 2026-07-27: collector paths use explicit tokens
@@ -83,7 +83,7 @@ filesystem observation preserved as separate evidence. Missing, unreadable,
 and permission-denied candidates remain collector outcomes even though only
 present locations become graph nodes.
 
-Group containers are deferred until HAL collects team/group identifiers.
+Group containers are deferred until geordi collects team/group identifiers.
 Guessing them from the application bundle identifier would overstate ownership.
 
 The version 2 associated-location manifest adds bounded immediate-child
@@ -96,7 +96,7 @@ group-identifier-unavailable basis and no ownership candidate.
 
 Version 3 reads the `com.apple.security.application-groups` array from validated
 code-signing information. An exact entitlement/container-name match establishes
-shared membership for every entitled application. HAL does not infer group
+shared membership for every entitled application. geordi does not infer group
 membership from a team-ID prefix or bundle identifier, and group containers
 without an exact entitlement remain unresolved observations.
 
@@ -115,7 +115,7 @@ traversal but do not authorize traversal today.
 
 ## 2026-07-27: the primary atlas is relevance-bounded
 
-Collector completeness and graph prominence are separate concerns. HAL may
+Collector completeness and graph prominence are separate concerns. geordi may
 retain ordinary components, paths, negative observations, and technical
 metadata without rendering each record as a default graph node.
 
@@ -152,7 +152,7 @@ user and local `/Library` LaunchAgent and LaunchDaemon roots selected by
 manifest. Apple’s `/System/Library` declarations are excluded from the default
 application atlas to avoid overwhelming it with operating-system infrastructure.
 
-HAL retains only the declaration label, first executable, `RunAtLoad`, and
+geordi retains only the declaration label, first executable, `RunAtLoad`, and
 `KeepAlive`. It never retains the remaining `ProgramArguments`, which may
 contain sensitive values. A persistence node enters the primary graph only
 when its absolute executable path is contained inside an observed application
@@ -170,14 +170,14 @@ Other / Unclassified and All Applications.
 These categories, their labels, matching priority, path rules, fallback, and
 default selection are a schema-validated manifest rather than presentation-code
 switches. “User Installed” is concise interface language for apps outside
-macOS system locations; HAL explicitly does not treat folder location as proof
+macOS system locations; geordi explicitly does not treat folder location as proof
 of who installed an app. Platform-signature evidence can refine this
 classification later without changing the filter contract.
 
 ## 2026-07-28: refresh change detection compares normalized graphs
 
 Manual **Check this Mac again** collection reruns the same configured read-only
-collectors while leaving the last successful graph interactive. HAL reports
+collectors while leaving the last successful graph interactive. geordi reports
 whether the newly normalized graph differs from the displayed graph and records
 the check time and duration in the interface.
 
@@ -190,5 +190,5 @@ claiming an update merely because it produced a new scan envelope.
 Initial link runs behind a focused setup overlay while the fictional profile
 remains the committed data source. Cancelling requests task cancellation and
 invalidates the collection generation. A collector that cannot stop
-immediately may finish its read-only work, but HAL ignores that late result and
+immediately may finish its read-only work, but geordi ignores that late result and
 does not save it or switch data-source mode.

@@ -1,0 +1,17 @@
+{
+  "name": "geordi-bootstrap",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "geordi-bootstrap": "./bin/geordi-bootstrap.js"
+  },
+  "scripts": {
+    "check": "node ./bin/geordi-bootstrap.js --check",
+    "validate": "node ./bin/geordi-bootstrap.js validate",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

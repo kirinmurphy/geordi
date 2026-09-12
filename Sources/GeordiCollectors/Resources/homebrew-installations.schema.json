@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geordi.local/schemas/homebrew-installations/v2",
+  "title": "{{productName}} Homebrew installations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "installations"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "installations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "prefix", "cellarRelativePath", "caskroomRelativePath"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "prefix": { "type": "string", "minLength": 1 },
+          "cellarRelativePath": { "type": "string", "minLength": 1 },
+          "caskroomRelativePath": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

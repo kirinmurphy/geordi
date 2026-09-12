@@ -1,4 +1,4 @@
-# HAL Configuration Model
+# geordi Configuration Model
 
 ## Principles
 
@@ -32,7 +32,7 @@ Lowest to highest precedence:
 Layout tuning belongs to a dedicated typed configuration object rather than
 being scattered through drawing code.
 
-These values live in `HALDomain/Resources/app-profile.json` and are validated
+These values live in `GeordiDomain/Resources/app-profile.json` and are validated
 against the adjacent versioned JSON Schema. The profile includes the synthetic
 fixture choice, feature behavior, layout tuning, and freshness thresholds.
 `AppConfiguration` is the typed projection and semantic validator; it is not
@@ -85,7 +85,7 @@ arrays or entity-instance switches. Small related resources may share a
 collection manifest. Complicated or independently discoverable resources use
 individual manifest files.
 
-`HALCollectors/Resources/collection-profile.json` is the source of truth for
+`GeordiCollectors/Resources/collection-profile.json` is the source of truth for
 which collector adapters participate in a live snapshot. The adjacent schema
 restricts entries to reviewed adapter identifiers; Swift supplies the adapter
 registry and safety invariants. Adding or disabling an optional collector does
@@ -95,19 +95,19 @@ collector stages then run within that bound, and application-dependent
 resolution and projection remain ordered. Result assembly preserves manifest
 submission order regardless of task completion order.
 
-`HALVisualization/Resources/reference-catalog.json` owns the user-facing
+`GeordiVisualization/Resources/reference-catalog.json` owns the user-facing
 reference concepts, symbols, tint tokens, and entity-type mappings. This keeps
 product content and semantic mappings out of SwiftUI view code while retaining
 closed, schema-validated presentation tokens.
 
-New bundled manifests use `BundledManifestResource` from `HALManifestKit` for
+New bundled manifests use `BundledManifestResource` from `GeordiManifestKit` for
 consistent resource lookup, declarative validation, typed decoding, and
 diagnostics. Specialized loaders retain semantic safety checks in their owning
 configuration types.
 
-`HALProfileSchema/Resources/system-profile.schema.json` is the canonical,
+`GeordiProfileSchema/Resources/system-profile.schema.json` is the canonical,
 declarative Draft 2020-12 structural contract for synthetic and normalized
-live system profiles. `HALProfileSchema/SystemProfileSchema.swift` is its
+live system profiles. `GeordiProfileSchema/SystemProfileSchema.swift` is its
 generic Swift validation adapter, typed decoder, semantic graph-integrity
 validator, and domain projector. It does not maintain a second list of allowed
 fields. Tests keep schema enums in parity with their Swift domain projections.
@@ -120,7 +120,7 @@ The fixture validator runs as part of `make verify` and validates every
 committed synthetic profile manifest. An invalid or stale manifest is a build
 failure, not a runtime warning.
 
-`HALFixtures/Resources/profile-catalog.json` is the versioned source of truth
+`GeordiFixtures/Resources/profile-catalog.json` is the versioned source of truth
 for synthetic profile membership and ordering. Its adjacent JSON Schema rejects
 unknown fields and invalid resource names. Every catalog entry must resolve to
 a system-profile manifest with the same identifier, and validation fails for
@@ -136,7 +136,7 @@ those features are enabled in the application. Security invariants remain in
 code and cannot be weakened by manifest configuration.
 
 The application inventory collector reads its default roots from
-`HALCollectors/Resources/application-search-roots.json`, validated by the
+`GeordiCollectors/Resources/application-search-roots.json`, validated by the
 adjacent `application-search-roots.schema.json`. System roots must be absolute.
 User roots use the explicit `$USER_HOME/` token and cannot contain parent-path
 traversal. Tests may still inject temporary roots directly without reading the
@@ -144,7 +144,7 @@ machine-wide defaults.
 
 Homepage software categories, labels, ordering priority, fallback behavior,
 and the default linked-data filter are defined by
-`HALCollectors/Resources/application-classifications.json`, validated by its
+`GeordiCollectors/Resources/application-classifications.json`, validated by its
 adjacent versioned schema. The first rules classify bundle paths into User
 Installed, Bundled Software, System Utilities, or Other / Unclassified.
 Version 2 adds `platformBinaryWhenKnown`: observed platform-signature evidence
@@ -158,7 +158,7 @@ instance-bearing evidence such as **Installed with: Homebrew cask warp** can
 select a generic category without hardcoding cask names in Swift.
 
 Application provenance adapters are selected and labeled by
-`HALCollectors/Resources/application-provenance-adapters.json`, validated by
+`GeordiCollectors/Resources/application-provenance-adapters.json`, validated by
 its adjacent versioned schema. The current adapters observe App Store receipt
 presence and retained download-origin metadata. Adapter manifests select
 bounded collector implementations; they cannot add arbitrary executable code.
@@ -166,7 +166,7 @@ Version 3 removes resolved-path Homebrew cask detection; cask ownership now
 comes exclusively from the distinct Homebrew inventory and receipt evidence.
 
 Conventional application-associated locations are defined by
-`HALCollectors/Resources/application-associated-locations.json` and its
+`GeordiCollectors/Resources/application-associated-locations.json` and its
 adjacent versioned schema. Templates are restricted to `$USER_HOME/` and the
 explicit `$BUNDLE_ID` or `$APP_NAME` match token. Parent traversal, unknown
 tokens, unsafe application-name components, and paths outside the resolved user
@@ -182,7 +182,7 @@ or bundle identifier alone is never treated as group-container evidence.
 
 Process-to-application strategies, the per-application presentation budget,
 and the bounded unmatched-process retention budget are defined by
-`HALCollectors/Resources/process-resolution-strategies.json` and its adjacent
+`GeordiCollectors/Resources/process-resolution-strategies.json` and its adjacent
 versioned schema. Exact main-executable matches take priority over application
 bundle containment. Version 2 adds `maxUnmatchedProcesses`; inaccessible
 records rank first, followed by unmatched records by observed memory. These
@@ -191,7 +191,7 @@ disconnected nodes in the default atlas.
 
 Rebuildable-data classifications, bounded tool-managed roots, descendant-name
 exclusions, and evidence rules are defined by
-`HALCollectors/Resources/rebuildable-data-detectors.json` and its adjacent
+`GeordiCollectors/Resources/rebuildable-data-detectors.json` and its adjacent
 versioned schema. The initial contract names Xcode DerivedData, Homebrew
 downloads, and npm cache roots but does not authorize collection or deletion.
 Swift permanently rejects parent traversal, wildcards, NULs, unsafe exclusion
@@ -207,7 +207,7 @@ in `SIZE_MEASUREMENT_CONTRACT.md`. The policy is validated today but is not yet
 executed; the live collector still performs root metadata checks only.
 
 Persistence search roots are defined by
-`HALCollectors/Resources/persistence-roots.json` and its adjacent versioned
+`GeordiCollectors/Resources/persistence-roots.json` and its adjacent versioned
 schema. The default scope includes the user and local-domain LaunchAgent and
 LaunchDaemon directories, but excludes Apple’s `/System/Library` declarations
 from the application-focused atlas. The collector reads only immediate plist
@@ -215,19 +215,19 @@ files and retains labels, declared executable paths, `RunAtLoad`, and
 `KeepAlive`; full argument arrays are never normalized.
 
 Homebrew prefixes, Cellar locations, and Caskroom locations are defined by
-`HALCollectors/Resources/homebrew-installations.json`. Version 2 keeps
+`GeordiCollectors/Resources/homebrew-installations.json`. Version 2 keeps
 formulae and casks distinct, reads bounded local Caskroom install receipts,
 and correlates declared application artifacts by name or bundle identifier.
 The manifest cannot enable a Homebrew subprocess, update, install, or
 uninstall.
 
 Reviewed terminal identities and capabilities are defined by
-`HALVisualization/Resources/terminal-adapters.json`. Version 2 declares exact
+`GeordiVisualization/Resources/terminal-adapters.json`. Version 2 declares exact
 bundle identifiers, required URL schemes, and one of a closed set of Swift
 launch strategies. The manifest cannot supply commands or executable paths.
 
 Shell-framework identities are defined by
-`HALCollectors/Resources/shell-frameworks.json`. Each definition has a
+`GeordiCollectors/Resources/shell-frameworks.json`. Each definition has a
 user-home-scoped root, expected relative identity markers, one specific shell
 configuration path, reference tokens, and sanitized repository identities.
 Swift enforces user-home containment, symlink boundaries, and metadata-size

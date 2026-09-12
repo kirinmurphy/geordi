@@ -22,7 +22,7 @@ test-ui:
 	./scripts/ui-smoke.sh
 
 fixtures:
-	$(SWIFT) run $(SWIFT_FLAGS) hal-fixture-validator
+	$(SWIFT) run $(SWIFT_FLAGS) geordi-fixture-validator
 
 format:
 	xcrun swift-format format --in-place --recursive Package.swift Sources Tests

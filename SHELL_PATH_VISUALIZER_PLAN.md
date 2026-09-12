@@ -149,7 +149,7 @@ diagnostics, and a preview of what will be read.
 ### Phase 4 — Effective-path comparison
 
 Compare the derived result with a separately observed environment only when its
-provenance is known. Explain differences instead of treating the current HAL
+provenance is known. Explain differences instead of treating the current geordi
 process environment as the user's shell truth.
 
 ### Phase 5 — Optional explanation adapter
@@ -165,7 +165,7 @@ explicitly chosen Bash/Zsh configuration and answer:
 - which files participated;
 - where each visible `PATH` entry came from;
 - what order mutations occurred in;
-- which parts HAL could not resolve; and
+- which parts geordi could not resolve; and
 - why the displayed result may differ from another terminal session.
 
 It must do so without executing shell code, collecting history, or claiming

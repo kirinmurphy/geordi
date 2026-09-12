@@ -15,7 +15,7 @@ conceptual reference that is not tied to one application.
 - Support pinch and Command-scroll zoom, visible zoom controls, reset, and
   double-click focus.
 - Keep interaction hints visible but visually secondary.
-- Add a generic “How HAL fits together” reference:
+- Add a generic “How geordi fits together” reference:
   installation source → software → runtime/persistence/data →
   resources/events/incidents.
 - Keep important data distinctions visible: user data, configuration,

@@ -43,7 +43,7 @@ budget. If identity cannot be read, the entry is retained as unavailable rather
 than guessed.
 
 APFS clone extents may share physical storage without exposing enough
-user-space information to attribute uniquely reclaimable blocks. HAL therefore
+user-space information to attribute uniquely reclaimable blocks. geordi therefore
 reports allocated bytes as potentially overlapping for clones and must not call
 their sum "bytes that will be freed." Expected reclaimed bytes remain
 unavailable until a separately reviewed filesystem-aware estimator exists.

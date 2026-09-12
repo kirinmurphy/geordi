@@ -1,4 +1,4 @@
-# HAL Engineering Operating Agreement
+# geordi Engineering Operating Agreement
 
 ## Roles
 

@@ -1,4 +1,4 @@
-# HAL Future Phase Plans
+# geordi Future Phase Plans
 
 Status: prioritized parking lot  
 Current phase: `NEXT_PRODUCT_VALIDATION_PLAN.md`
@@ -72,7 +72,7 @@ applications placed in `/Applications`; see `USER_FACING_TODO.md`.
 
 ## Candidate product phase — Portable Mac profiles and guided bootstrap
 
-Companion prototype: sibling repository `../hal-bootstrap`
+Companion prototype: sibling repository `../geordi-bootstrap`
 
 Potential outcome:
 
@@ -81,15 +81,15 @@ Potential outcome:
 - describe applications, command-line tools, bundles, dependencies,
   installation adapters, shell-environment requirements, and verification
   checks;
-- compare a captured HAL profile with the desired profile;
+- compare a captured geordi profile with the desired profile;
 - preview a deterministic, dependency-ordered migration plan;
 - move a reviewed laptop profile to another Mac without treating the source
   machine's incidental state as universally desired; and
 - generate or execute an auditable bootstrap plan only after explicit review.
 
-The existing `hal-bootstrap` starter validates the separation between
+The existing `geordi-bootstrap` starter validates the separation between
 detection and installation and uses a stub installer by default. Preserve that
-separation if the projects converge: HAL observations are evidence about what
+separation if the projects converge: geordi observations are evidence about what
 exists, while a portable profile is an explicit user-authored decision about
 what should be installed.
 
@@ -103,7 +103,7 @@ installing Go on macOS does not itself make `$HOME/go/bin` discoverable. A
 default-tools profile should be able to declare that PATH contribution,
 explain why it is needed, detect an equivalent existing entry, preview an
 idempotent `.zshrc` change, distinguish persistent configuration from the
-current shell process, and provide rollback for HAL-managed edits.
+current shell process, and provide rollback for geordi-managed edits.
 
 Safety boundary:
 
@@ -117,11 +117,11 @@ Safety boundary:
 - secrets and machine-specific paths are excluded or represented by validated
   placeholders;
 - destructive replacement and cleanup are outside the first phase; and
-- bootstrap execution remains a separate authorization boundary from HAL's
+- bootstrap execution remains a separate authorization boundary from geordi's
   ordinary synthetic or linked read-only collection.
 
 Entry signal: users want to reproduce an understood machine configuration on a
-new Mac, and the `hal-bootstrap` prototype demonstrates deterministic planning,
+new Mac, and the `geordi-bootstrap` prototype demonstrates deterministic planning,
 idempotent environment changes, verification, and rollback without arbitrary
 command execution.
 

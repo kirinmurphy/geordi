@@ -1,4 +1,4 @@
-# HAL Status
+# geordi Status
 
 ## Current phase
 
@@ -56,7 +56,7 @@ persistence infrastructure.
   launch
 - Map supports drag and two-finger panning, pinch and Command-scroll zoom,
   double-click focus, reset controls, and an interaction legend
-- Generic **How HAL fits together** reference with a hierarchical conceptual
+- Generic **How geordi fits together** reference with a hierarchical conceptual
   model and important safety distinctions
 - Reference is contextual map help presented in a same-window closable sheet;
   it is not a sidebar destination or breadcrumb namespace
@@ -89,7 +89,7 @@ persistence infrastructure.
 - Type filters that preserve selection and context
 - Complete text navigator independent of the map
 - Detail inspector and plain-language explanations
-- Expandable observed-fact and HAL-inference evidence
+- Expandable observed-fact and geordi-inference evidence
 - Six deterministic versioned fixtures, including the familiar fictional Mac and
   honest ambiguity
 - Visible `FICTIONAL MAC` environment label
@@ -177,7 +177,7 @@ remain unimplemented. Their sequencing is conditional on product validation.
 make run
 ```
 
-Or open `Package.swift` in Xcode and run the `HALApp` scheme.
+Or open `Package.swift` in Xcode and run the `GeordiApp` scheme.
 
 ## How to test
 
@@ -211,7 +211,7 @@ privileged collection yet.
 5. Trace Cutline to its process, render worker, files, and update helper.
 6. Select a relationship and expand the supporting evidence.
 7. Open **Performance** and explain what happened during the memory incident.
-8. Confirm HAL describes event correlation without overstating causation.
+8. Confirm geordi describes event correlation without overstating causation.
 9. Search for `render cache` and confirm the result retains whole-machine
    context.
 10. Decide whether the map adds understanding beyond the summary and inspector.
@@ -244,7 +244,7 @@ evaluation.
   the fictional profile.
 - [ ] Inspect several application details and confirm paths, signing facts,
   App Store receipt presence, and redacted download origins are understandable.
-- [ ] Relaunch HAL and confirm the cached linked snapshot appears before the
+- [ ] Relaunch geordi and confirm the cached linked snapshot appears before the
   background refresh completes.
 - [ ] Disconnect the network and confirm collection remains local and usable.
 - [ ] Exercise refresh failure and confirm the last successful snapshot remains
@@ -264,7 +264,7 @@ evaluation.
 - The UI automation foundation currently verifies native app packaging; product
   interactions are covered at the model layer and by the manual evaluation
   checklist rather than a full XCUITest runner.
-- HAL currently persists and exports only its compiled live snapshot; it has no
+- geordi currently persists and exports only its compiled live snapshot; it has no
   historical database, notification layer, or machine cleanup actions.
 - Associated application support, cache, preference, log, saved-state, sandbox,
   process, and persistence relationships are collected conservatively and
@@ -278,7 +278,7 @@ evaluation.
 - Native collection permissions may reduce evidence quality.
 - Ownership inference must expose uncertainty.
 - Background telemetry may impose unacceptable overhead.
-- HAL could become another information dump unless explanation remains central.
+- geordi could become another information dump unless explanation remains central.
 - Apple entitlements may constrain advanced V2 monitoring.
 
 ## Product-owner involvement needed next

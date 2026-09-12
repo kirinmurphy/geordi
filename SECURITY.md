@@ -1,8 +1,8 @@
-# HAL Security and Safety Requirements
+# geordi Security and Safety Requirements
 
 ## Threat model
 
-HAL observes sensitive system structure and may eventually offer remediation.
+geordi observes sensitive system structure and may eventually offer remediation.
 Its principal risks include:
 
 - Incorrectly deleting user or shared data
@@ -44,7 +44,7 @@ Cleanup implementation must:
 
 ## Code identity
 
-HAL should record signing evidence but avoid treating signatures as a complete
+geordi should record signing evidence but avoid treating signatures as a complete
 security verdict. Apple signatures, third-party Team IDs, notarization,
 receipts, and hashes are evidence with different meanings.
 

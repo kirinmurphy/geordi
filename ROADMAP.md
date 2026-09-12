@@ -1,4 +1,4 @@
-# HAL Incremental Roadmap
+# geordi Incremental Roadmap
 
 Every milestone must produce a useful, runnable artifact. Work should be safe to
 pause after any milestone.
@@ -26,7 +26,7 @@ still needs evaluation with representative users.
 
 ## Immediate phase — Application Story and Guided Proof
 
-Use existing observations to prove that HAL can explain one application more
+Use existing observations to prove that geordi can explain one application more
 clearly than existing tools. Build task-oriented entry points, a narrative
 Application Story, and a guided fictional walkthrough. Do not add history,
 measurement, telemetry, cleanup, or privileged collection in this phase.
@@ -39,7 +39,7 @@ Detailed plan: `NEXT_PRODUCT_VALIDATION_PLAN.md`
 
 A purpose-built explanation of which background services are configured on
 this Mac, which are currently observed acting, what software owns them, why
-macOS may start them, and where HAL lacks enough evidence to decide.
+macOS may start them, and where geordi lacks enough evidence to decide.
 
 This extends Milestone 3 without waiting for full historical persistence
 tracking. The first useful slice is point-in-time and read-only.
@@ -73,15 +73,15 @@ authorization, recovery, and system-integrity plan.
 
 ## Future roadmap initiative — Portable Mac profiles
 
-HAL may eventually pair its evidence-backed understanding of a Mac with a
+geordi may eventually pair its evidence-backed understanding of a Mac with a
 separate, user-authored desired-machine profile that can be reviewed and
 deployed to another Mac.
 
-Companion prototype: sibling repository `../hal-bootstrap`
+Companion prototype: sibling repository `../geordi-bootstrap`
 
 Prioritization and safety plan: `FUTURE_PHASE_PLANS.md`
 
-This is not ordinary HAL collection. Import and comparison can remain
+This is not ordinary geordi collection. Import and comparison can remain
 read-only, while installation, shell configuration, and migration require a
 separate explicit authorization boundary. The desired profile must use typed,
 schema-validated installation and environment actions rather than arbitrary
@@ -91,7 +91,7 @@ uploaded shell commands.
 
 ### Outcome
 
-A native macOS application using synthetic data to validate HAL's visual
+A native macOS application using synthetic data to validate geordi's visual
 language.
 
 ### Scope
@@ -137,7 +137,7 @@ A read-only explorer of real installed applications and running processes.
 
 ### Exit test
 
-HAL can explain several representative applications, including one with helper
+geordi can explain several representative applications, including one with helper
 processes, more clearly than a raw Activity Monitor listing.
 
 ### Useful if paused
@@ -164,7 +164,7 @@ reclaimable data.
 
 ### Exit test
 
-For every candidate, HAL can explain ownership, evidence, risk, expected
+For every candidate, geordi can explain ownership, evidence, risk, expected
 consequence, and recovery before any action is offered.
 
 ### Useful if paused
@@ -218,7 +218,7 @@ An Activity Monitor companion that preserves and explains resource incidents.
 
 ### Exit test
 
-HAL captures a controlled resource spike, identifies its leading contributors,
+geordi captures a controlled resource spike, identifies its leading contributors,
 shows nearby events, and does not overstate causality.
 
 ### Useful if paused
@@ -244,7 +244,7 @@ Evidence-based application footprints and complete-removal plans.
 
 ### Exit test
 
-HAL observes a test application installation, explains the resulting footprint,
+geordi observes a test application installation, explains the resulting footprint,
 and creates a safe removal plan that distinguishes owned, shared, and uncertain
 files.
 

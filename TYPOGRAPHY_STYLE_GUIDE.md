@@ -3,7 +3,7 @@
 Status: active application style contract  
 Updated: July 29, 2026
 
-HAL uses semantic font roles from `Sources/HALApp/Typography.swift`. Views must
+geordi uses semantic font roles from `Sources/GeordiApp/Typography.swift`. Views must
 not introduce raw point sizes or use SwiftUI's `caption` and `caption2` styles.
 
 - `halDisplay`: primary screen or entity title

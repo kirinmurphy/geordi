@@ -1,4 +1,4 @@
-# HAL Development Environment
+# geordi Development Environment
 
 ## Verified machine
 
@@ -24,15 +24,15 @@ Swift 6.3.3
 ```
 
 The project is a Swift package that opens directly in Xcode. Select the
-`HALApp` scheme. This avoids generated project metadata while retaining Xcode
+`GeordiApp` scheme. This avoids generated project metadata while retaining Xcode
 build, debug, and Apple-platform integration.
 
-The stable Debug installation is `~/Applications/HAL.app`. `make run` refreshes
+The stable Debug installation is `~/Applications/geordi.app`. `make run` refreshes
 that bundle on every invocation, so Spotlight and a Desktop shortcut remain
-valid across development updates. It also stops any running HAL development
+valid across development updates. It also stops any running geordi development
 copy before replacing the bundle, launches exactly one installed copy, and
-records that process in `.build/hal-dev.pids`. You do not need to quit or reopen
-HAL separately after source changes; use `make run` once. HAL also enforces
+records that process in `.build/geordi-dev.pids`. You do not need to quit or reopen
+geordi separately after source changes; use `make run` once. geordi also enforces
 single-instance behavior inside the application: launching another development
 bundle activates the existing process and immediately terminates the duplicate.
 
@@ -41,23 +41,23 @@ bundle activates the existing process and immediately terminates the duplicate.
 Permanent project:
 
 ```text
-~/projects/hal
+~/projects/geordi
 ```
 
 Debug build data:
 
 ```text
-~/Library/Application Support/HAL-Dev
-~/Library/Caches/HAL-Dev
-~/Library/Logs/HAL-Dev
+~/Library/Application Support/geordi-Dev
+~/Library/Caches/geordi-Dev
+~/Library/Logs/geordi-Dev
 ```
 
 Future Release data:
 
 ```text
-~/Library/Application Support/HAL
-~/Library/Caches/HAL
-~/Library/Logs/HAL
+~/Library/Application Support/geordi
+~/Library/Caches/geordi
+~/Library/Logs/geordi
 ```
 
 Debug and Release must use distinct bundle identifiers and never share mutable
@@ -125,7 +125,7 @@ require users to remember lengthy implementation-specific commands.
 `make test-ui` is currently a native launch smoke test. Accessibility
 identifiers establish the boundary for richer XCUITest journeys when a
 conventional app test runner is warranted. `make build` also packages the Swift
-executable as `.build/debug/HALApp.app`; `make run` opens that bundle through
+executable as `.build/debug/GeordiApp.app`; `make run` opens that bundle through
 LaunchServices rather than running the executable directly.
 
 ## Optional development tools

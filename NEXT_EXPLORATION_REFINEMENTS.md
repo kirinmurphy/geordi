@@ -1,4 +1,4 @@
-# HAL Next Exploration Refinements
+# geordi Next Exploration Refinements
 
 Status: recommended next product sequence  
 Updated: July 29, 2026

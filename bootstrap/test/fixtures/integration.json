@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 2,
+  "inventoryConfig": {
+    "appRoots": [
+      "/Applications",
+      "$HOME/Applications"
+    ],
+    "excludedBundlePrefixes": [
+      "com.apple."
+    ],
+    "brewPaths": []
+  },
+  "items": [
+    {
+      "id": "present",
+      "label": "Present Tool",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "path",
+          "value": "/present"
+        }
+      ],
+      "install": {
+        "type": "npmGlobal",
+        "package": "present"
+      }
+    },
+    {
+      "id": "missing",
+      "label": "Missing Tool",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "path",
+          "value": "/missing"
+        }
+      ],
+      "install": {
+        "type": "npmGlobal",
+        "package": "missing"
+      }
+    }
+  ],
+  "inventory": {
+    "brew": {
+      "formulae": [],
+      "casks": [],
+      "taps": []
+    },
+    "apps": [],
+    "warnings": []
+  }
+}

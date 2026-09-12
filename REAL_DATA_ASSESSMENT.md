@@ -7,7 +7,7 @@ recommendations have been implemented. Current priority is defined in
 
 ## Decision
 
-HAL should take a hybrid approach:
+geordi should take a hybrid approach:
 
 1. Complete a focused domain and collection-boundary preparation.
 2. Immediately follow it with a narrow, manually refreshed, read-only application
@@ -15,7 +15,7 @@ HAL should take a hybrid approach:
 3. Preserve synthetic fixtures as a first-class mode for tests, demonstrations,
    product evaluation, and failure simulation.
 
-HAL is ready to begin real observation, but the current Phase 0 Swift model is
+geordi is ready to begin real observation, but the current Phase 0 Swift model is
 not yet able to represent real data honestly. `Entity.details` is an untyped
 array of display strings, evidence has no collection time or stable observation
 reference, and the graph has no scan, capability, freshness, or lifecycle model.
@@ -46,19 +46,19 @@ documentation, not only the README:
   trust, provenance, persistence, history, reclaimability, and user decisions.
 - `TESTING.md` calls for deterministic clocks, capability simulation, recorded
   collector responses, partial-data tests, and opt-in read-only live tests.
-- `Sources/HALDomain/Entity.swift` currently stores all domain-specific
+- `Sources/GeordiDomain/Entity.swift` currently stores all domain-specific
   properties as `Detail(label, value)` strings.
-- `Sources/HALDomain/Relationship.swift` preserves direction, confidence, and
+- `Sources/GeordiDomain/Relationship.swift` preserves direction, confidence, and
   observed-versus-inferred evidence, but not observation timestamps, source
   identity, raw references, or resolver versions.
-- `Sources/HALDomain/SystemGraph.swift` is a fixture-shaped current graph without
+- `Sources/GeordiDomain/SystemGraph.swift` is a fixture-shaped current graph without
   scan or freshness context.
-- `Sources/HALFixtures/FamiliarMac.swift` and
-  `Sources/HALFixtures/FixtureCatalog.swift` contain all current values,
+- `Sources/GeordiFixtures/FamiliarMac.swift` and
+  `Sources/GeordiFixtures/FixtureCatalog.swift` contain all current values,
   explanations, incidents, and relationships as authored fixture data.
-- `Sources/HALApp/HALApp.swift` initializes the app directly from
+- `Sources/GeordiApp/GeordiApp.swift` initializes the app directly from
   `FixtureCatalog`.
-- `Tests/HALFixturesTests/FixtureTests.swift` verifies fictional labeling,
+- `Tests/GeordiFixturesTests/FixtureTests.swift` verifies fictional labeling,
   ambiguity, protected data, and noncausal incident wording.
 - `STATUS.md` confirms there is no SQLite schema, real collector, persistence,
   export, notification, or action layer.
@@ -224,7 +224,7 @@ On explicit manual refresh, collect:
 8. Scan duration, scope, errors, capabilities, and timestamp.
 9. An explicit, redacted diagnostic export.
 
-Exit criterion: HAL explains representative real applications, including one
+Exit criterion: geordi explains representative real applications, including one
 with helpers, more clearly than a raw process list while clearly marking
 unresolved and stale information.
 
@@ -270,7 +270,7 @@ Do not add cleanup.
 - Per-process contribution.
 - Versioned incident state machines.
 - Nearby events expressed only as temporal correlation.
-- Adaptive sampling only after HAL's own overhead is measured.
+- Adaptive sampling only after geordi's own overhead is measured.
 
 ## Test and fixture strategy
 

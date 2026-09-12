@@ -1,0 +1,851 @@
+{
+  "schemaVersion": 2,
+  "items": [
+    {
+      "id": "git",
+      "label": "Git",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "command",
+          "value": "git"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Install Apple Command Line Tools with xcode-select --install, complete the dialog, then rerun."
+      }
+    },
+    {
+      "id": "brew",
+      "label": "Homebrew",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "command",
+          "value": "brew"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Install Homebrew following https://brew.sh, add its bin directory to PATH, then rerun. Homebrew installation is not automated."
+      }
+    },
+    {
+      "id": "cmux",
+      "label": "cmux",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/cmux.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "cmux"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "vscode",
+      "label": "Visual Studio Code",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Visual Studio Code.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "visual-studio-code"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "dropbox",
+      "label": "Dropbox",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Dropbox.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "dropbox"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "native-access",
+      "label": "Native Access",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Native Access.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "native-access"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "chatgpt",
+      "label": "ChatGPT",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/ChatGPT.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "chatgpt"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "docker",
+      "label": "Docker Desktop",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Docker.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "docker-desktop"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "hermes",
+      "label": "Hermes",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "command",
+          "value": "hermes"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Install Hermes using the official instructions at https://hermes-agent.nousresearch.com/docs ; command detection records its resolved path, not a guessed Homebrew package."
+      }
+    },
+    {
+      "id": "brave",
+      "label": "Brave Browser",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Brave Browser.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "brave-browser"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "codex",
+      "label": "Codex",
+      "group": "agents",
+      "detect": [
+        {
+          "type": "command",
+          "value": "codex"
+        }
+      ],
+      "install": {
+        "type": "npmGlobal",
+        "package": "@openai/codex"
+      }
+    },
+    {
+      "id": "claude",
+      "label": "Claude Code",
+      "group": "agents",
+      "detect": [
+        {
+          "type": "command",
+          "value": "claude"
+        }
+      ],
+      "install": {
+        "type": "npmGlobal",
+        "package": "@anthropic-ai/claude-code"
+      }
+    },
+    {
+      "id": "oh-my-zsh",
+      "label": "Oh My Zsh",
+      "group": "shell",
+      "enabled": false,
+      "detect": [
+        {
+          "type": "path",
+          "value": "$HOME/.oh-my-zsh"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Review and follow https://ohmyz.sh ; shell configuration is not changed by bootstrap."
+      }
+    }
+  ],
+  "inventoryConfig": {
+    "appRoots": [
+      "/Applications",
+      "$HOME/Applications"
+    ],
+    "excludedBundlePrefixes": [
+      "com.apple."
+    ],
+    "brewPaths": [
+      "/opt/homebrew/bin/brew",
+      "/usr/local/bin/brew"
+    ]
+  },
+  "inventory": {
+    "brew": {
+      "formulae": [
+        {
+          "name": "ca-certificates",
+          "versions": [
+            "2026-07-16"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "certifi",
+          "versions": [
+            "2026.7.22"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "ca-certificates"
+          ]
+        },
+        {
+          "name": "dav1d",
+          "versions": [
+            "1.5.4"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "deno",
+          "versions": [
+            "2.9.4"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "giflib",
+            "jpeg-turbo",
+            "libpng",
+            "libtiff",
+            "little-cms2",
+            "lz4",
+            "readline",
+            "sqlite",
+            "webp",
+            "xz",
+            "zstd"
+          ]
+        },
+        {
+          "name": "ffmpeg",
+          "versions": [
+            "8.1.2_1"
+          ],
+          "installedOnRequest": true,
+          "dependencies": [
+            "ca-certificates",
+            "dav1d",
+            "lame",
+            "libvmaf",
+            "libvpx",
+            "mpg123",
+            "openssl@3",
+            "opus",
+            "sdl2-compat",
+            "sdl3",
+            "svt-av1",
+            "x264",
+            "x265"
+          ]
+        },
+        {
+          "name": "gh",
+          "versions": [
+            "2.98.0"
+          ],
+          "installedOnRequest": true,
+          "dependencies": []
+        },
+        {
+          "name": "giflib",
+          "versions": [
+            "6.1.3"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "go",
+          "versions": [
+            "1.26.5"
+          ],
+          "installedOnRequest": true,
+          "dependencies": []
+        },
+        {
+          "name": "jpeg-turbo",
+          "versions": [
+            "3.2.0"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "lame",
+          "versions": [
+            "4.0"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "mpg123"
+          ]
+        },
+        {
+          "name": "libevent",
+          "versions": [
+            "2.1.13"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "ca-certificates",
+            "openssl@3"
+          ]
+        },
+        {
+          "name": "libpng",
+          "versions": [
+            "1.6.58"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "libtiff",
+          "versions": [
+            "4.7.2"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "giflib",
+            "jpeg-turbo",
+            "libpng",
+            "lz4",
+            "webp",
+            "xz",
+            "zstd"
+          ]
+        },
+        {
+          "name": "libvmaf",
+          "versions": [
+            "3.2.0"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "libvpx",
+          "versions": [
+            "1.16.0"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "little-cms2",
+          "versions": [
+            "2.19"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "giflib",
+            "jpeg-turbo",
+            "libpng",
+            "libtiff",
+            "lz4",
+            "webp",
+            "xz",
+            "zstd"
+          ]
+        },
+        {
+          "name": "lz4",
+          "versions": [
+            "1.10.0"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "mpdecimal",
+          "versions": [
+            "4.0.1"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "mpg123",
+          "versions": [
+            "1.33.6"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "ncurses",
+          "versions": [
+            "6.6"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "openssl@3",
+          "versions": [
+            "3.6.3"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "ca-certificates"
+          ]
+        },
+        {
+          "name": "opus",
+          "versions": [
+            "1.6.1"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "pcre2",
+          "versions": [
+            "10.47_1"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "python@3.14",
+          "versions": [
+            "3.14.6"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "ca-certificates",
+            "lz4",
+            "mpdecimal",
+            "openssl@3",
+            "readline",
+            "sqlite",
+            "xz",
+            "zstd"
+          ]
+        },
+        {
+          "name": "readline",
+          "versions": [
+            "8.3.3"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "ripgrep",
+          "versions": [
+            "15.2.0"
+          ],
+          "installedOnRequest": true,
+          "dependencies": [
+            "pcre2"
+          ]
+        },
+        {
+          "name": "sdl2-compat",
+          "versions": [
+            "2.32.70"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "sdl3"
+          ]
+        },
+        {
+          "name": "sdl3",
+          "versions": [
+            "3.4.12"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "sqlite",
+          "versions": [
+            "3.53.4"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "readline"
+          ]
+        },
+        {
+          "name": "svt-av1",
+          "versions": [
+            "4.2.0"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "tailscale",
+          "versions": [
+            "1.102.3"
+          ],
+          "installedOnRequest": true,
+          "dependencies": []
+        },
+        {
+          "name": "tmux",
+          "versions": [
+            "3.7b"
+          ],
+          "installedOnRequest": true,
+          "dependencies": [
+            "ca-certificates",
+            "libevent",
+            "ncurses",
+            "openssl@3",
+            "utf8proc"
+          ]
+        },
+        {
+          "name": "utf8proc",
+          "versions": [
+            "2.11.3"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "webp",
+          "versions": [
+            "1.6.0"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "giflib",
+            "jpeg-turbo",
+            "libpng"
+          ]
+        },
+        {
+          "name": "x264",
+          "versions": [
+            "r3222"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "x265",
+          "versions": [
+            "4.2"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "xz",
+          "versions": [
+            "5.8.3"
+          ],
+          "installedOnRequest": false,
+          "dependencies": []
+        },
+        {
+          "name": "yt-dlp",
+          "versions": [
+            "2026.7.4"
+          ],
+          "installedOnRequest": true,
+          "dependencies": [
+            "ca-certificates",
+            "certifi",
+            "deno",
+            "giflib",
+            "jpeg-turbo",
+            "libpng",
+            "libtiff",
+            "little-cms2",
+            "lz4",
+            "mpdecimal",
+            "openssl@3",
+            "python@3.14",
+            "readline",
+            "sqlite",
+            "webp",
+            "xz",
+            "zstd"
+          ]
+        },
+        {
+          "name": "zstd",
+          "versions": [
+            "1.5.7_1"
+          ],
+          "installedOnRequest": false,
+          "dependencies": [
+            "lz4",
+            "xz"
+          ]
+        }
+      ],
+      "casks": [
+        {
+          "name": "t3-code",
+          "versions": [
+            "0.0.35"
+          ],
+          "appPaths": [
+            "/Applications/T3 Code (Alpha).app"
+          ]
+        },
+        {
+          "name": "warp",
+          "versions": [
+            "0.2026.07.22.09.01.stable_01"
+          ],
+          "appPaths": [
+            "/Applications/Warp.app"
+          ]
+        }
+      ],
+      "taps": []
+    },
+    "apps": [
+      {
+        "path": "$HOME/Applications/HAL.app",
+        "name": "HAL",
+        "bundleId": "com.hal.dev",
+        "version": "0.0.1",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "$HOME/Applications/geordi.app",
+        "name": "geordi",
+        "bundleId": "com.hal.dev",
+        "version": "0.0.1",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Brave Browser.app",
+        "name": "Brave Browser",
+        "bundleId": "com.brave.Browser",
+        "version": "150.1.92.144",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Docker.app",
+        "name": "Docker",
+        "bundleId": "com.docker.docker",
+        "version": "4.83.0",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Dropbox.app",
+        "name": "Dropbox",
+        "bundleId": "com.getdropbox.dropbox",
+        "version": "271.3.4240",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Hermes.app",
+        "name": "Hermes",
+        "bundleId": "com.nousresearch.hermes.setup",
+        "version": "0.0.1",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Native Access.app",
+        "name": "Native Access",
+        "bundleId": "com.native-instruments.nativeaccess2",
+        "version": "3.25.2",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Native Instruments/Controller Editor/Controller Editor.app",
+        "name": "Controller Editor",
+        "bundleId": "com.native-instruments.ControllerEditor",
+        "version": "2.8.2",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Native Instruments/Traktor Pro 3/Traktor.app",
+        "name": "Traktor",
+        "bundleId": "com.native-instruments.Traktor",
+        "version": "3.11.1 17",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/NordVPN.app",
+        "name": "NordVPN",
+        "bundleId": "com.nordvpn.NordVPN",
+        "version": "10.9.1",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/T3 Code (Alpha).app",
+        "name": "T3 Code (Alpha)",
+        "bundleId": "com.t3tools.t3code",
+        "version": "0.0.35",
+        "source": "homebrew",
+        "casks": [
+          "t3-code"
+        ]
+      },
+      {
+        "path": "/Applications/Tailscale.app",
+        "name": "Tailscale",
+        "bundleId": "io.tailscale.ipn.macsys",
+        "version": "1.102.3",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Visual Studio Code.app",
+        "name": "Code",
+        "bundleId": "com.microsoft.VSCode",
+        "version": "1.136.1",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      },
+      {
+        "path": "/Applications/Warp.app",
+        "name": "Warp",
+        "bundleId": "dev.warp.Warp-Stable",
+        "version": "0.2026.08.26.17.59.01",
+        "source": "homebrew",
+        "casks": [
+          "warp"
+        ]
+      },
+      {
+        "path": "/Applications/cmux.app",
+        "name": "cmux",
+        "bundleId": "com.cmuxterm.app",
+        "version": "0.64.22",
+        "source": "unverified",
+        "casks": [],
+        "install": {
+          "type": "manual",
+          "instructions": "Install from a verified vendor or original source; no package identifier has been inferred."
+        }
+      }
+    ],
+    "warnings": []
+  }
+}

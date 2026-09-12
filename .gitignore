@@ -13,8 +13,8 @@ xcuserdata/
 # macOS
 .DS_Store
 
-# Local HAL state
-.hal/
+# Local geordi state
+.geordi/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal

@@ -6,14 +6,14 @@ Constraint: use current observations and fixtures; do not start Future Phase 6
 
 ## Product question
 
-Can HAL help a person answer, in under two minutes:
+Can geordi help a person answer, in under two minutes:
 
 > What is this application, why is it active, where did it come from, what does
 > it place on my Mac, and what should I investigate next?
 
 The relationship and filesystem maps are ingredients. The next phase must prove
-that HAL can turn them into a coherent explanation without requiring users to
-learn HAL's data model first.
+that geordi can turn them into a coherent explanation without requiring users to
+learn geordi's data model first.
 
 ## Recommended experience
 
@@ -39,9 +39,9 @@ relationship map:
 1. **At a glance** — identity, current state, source, and confidence
 2. **Why it may be active** — observed processes and startup declarations
 3. **Where it came from** — signing, receipt, download, or package evidence
-4. **What HAL associates with it** — meaningful support locations, caches,
+4. **What geordi associates with it** — meaningful support locations, caches,
    helpers, and command-line tools
-5. **What HAL does not know** — unavailable or ambiguous evidence
+5. **What geordi does not know** — unavailable or ambiguous evidence
 6. **Explore** — Relationship Map, Filesystem Map, paths, and raw evidence
 
 Unknown and unavailable states should read as intentional product explanations,

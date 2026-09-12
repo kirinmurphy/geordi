@@ -16,7 +16,7 @@ point.
 - Remove Reference from the destination and breadcrumb models.
 - Remove the Reference sidebar section.
 - Place **How this map works** directly beside each map summary.
-- Present the generic model in a closable sheet attached to the current HAL
+- Present the generic model in a closable sheet attached to the current geordi
   window.
 - Preserve destination, selection, map position, and zoom beneath the sheet.
 - Support explicit Close and the Escape key.

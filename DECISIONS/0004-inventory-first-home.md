@@ -23,6 +23,6 @@ recognizable inventory and a reason to inspect an item.
 
 ## Consequences
 
-The map becomes supporting context instead of the product's front door. HAL can
+The map becomes supporting context instead of the product's front door. geordi can
 later add sorting, grouping, history, and real observations without changing
 the basic information architecture.

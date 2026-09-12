@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geordi.local/schemas/product-brand/v2",
+  "title": "Product brand",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "displayName",
+    "dataDirectoryName",
+    "executable",
+    "bundleIdentifier",
+    "cliCommand"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "dataDirectoryName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[^/:]+$"
+    },
+    "executable": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z][A-Za-z0-9-]*$"
+    },
+    "bundleIdentifier": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9.-]+$"
+    },
+    "cliCommand": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[a-z][a-z0-9-]*$"
+    }
+  }
+}

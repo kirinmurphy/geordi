@@ -3,18 +3,18 @@
 import PackageDescription
 
 let package = Package(
-  name: "HAL",
+  name: "geordi",
   platforms: [.macOS(.v15)],
   products: [
-    .library(name: "HALDomain", targets: ["HALDomain"]),
-    .library(name: "HALManifestKit", targets: ["HALManifestKit"]),
-    .library(name: "HALCollectors", targets: ["HALCollectors"]),
-    .library(name: "HALDataSource", targets: ["HALDataSource"]),
-    .library(name: "HALProfileSchema", targets: ["HALProfileSchema"]),
-    .library(name: "HALFixtures", targets: ["HALFixtures"]),
-    .library(name: "HALVisualization", targets: ["HALVisualization"]),
-    .executable(name: "HALApp", targets: ["HALApp"]),
-    .executable(name: "hal-fixture-validator", targets: ["HALFixtureValidator"]),
+    .library(name: "GeordiDomain", targets: ["GeordiDomain"]),
+    .library(name: "GeordiManifestKit", targets: ["GeordiManifestKit"]),
+    .library(name: "GeordiCollectors", targets: ["GeordiCollectors"]),
+    .library(name: "GeordiDataSource", targets: ["GeordiDataSource"]),
+    .library(name: "GeordiProfileSchema", targets: ["GeordiProfileSchema"]),
+    .library(name: "GeordiFixtures", targets: ["GeordiFixtures"]),
+    .library(name: "GeordiVisualization", targets: ["GeordiVisualization"]),
+    .executable(name: "GeordiApp", targets: ["GeordiApp"]),
+    .executable(name: "geordi-fixture-validator", targets: ["GeordiFixtureValidator"]),
   ],
   dependencies: [
     .package(
@@ -24,76 +24,77 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "HALDomain",
-      dependencies: ["HALManifestKit"],
+      name: "GeordiDomain",
+      dependencies: ["GeordiManifestKit"],
       resources: [.process("Resources")]
     ),
     .target(
-      name: "HALManifestKit",
+      name: "GeordiManifestKit",
       dependencies: [
         .product(name: "JSONSchema", package: "swift-json-schema")
       ],
       resources: [.process("Resources")]
     ),
     .target(
-      name: "HALCollectors",
-      dependencies: ["HALDomain", "HALManifestKit"],
+      name: "GeordiCollectors",
+      dependencies: ["GeordiDomain", "GeordiManifestKit"],
       resources: [.process("Resources")]
     ),
-    .target(name: "HALDataSource", dependencies: ["HALDomain"]),
+    .target(name: "GeordiDataSource", dependencies: ["GeordiDomain"]),
     .target(
-      name: "HALProfileSchema",
+      name: "GeordiProfileSchema",
       dependencies: [
-        "HALDomain",
-        "HALManifestKit",
+        "GeordiDomain",
+        "GeordiManifestKit",
       ],
       resources: [.process("Resources")]
     ),
     .target(
-      name: "HALFixtures",
-      dependencies: ["HALDomain", "HALManifestKit", "HALProfileSchema"],
+      name: "GeordiFixtures",
+      dependencies: ["GeordiDomain", "GeordiManifestKit", "GeordiProfileSchema"],
       resources: [.process("Resources")]
     ),
     .target(
-      name: "HALVisualization",
-      dependencies: ["HALDomain", "HALManifestKit"],
+      name: "GeordiVisualization",
+      dependencies: ["GeordiDomain", "GeordiManifestKit"],
       resources: [.process("Resources")]
     ),
     .executableTarget(
-      name: "HALApp",
+      name: "GeordiApp",
       dependencies: [
-        "HALCollectors", "HALDataSource", "HALDomain", "HALFixtures", "HALVisualization",
+        "GeordiCollectors", "GeordiDataSource", "GeordiDomain", "GeordiFixtures",
+        "GeordiVisualization",
       ]
     ),
     .executableTarget(
-      name: "HALFixtureValidator",
-      dependencies: ["HALDomain", "HALFixtures", "HALProfileSchema"]
+      name: "GeordiFixtureValidator",
+      dependencies: ["GeordiDomain", "GeordiFixtures", "GeordiProfileSchema"]
     ),
-    .testTarget(name: "HALDomainTests", dependencies: ["HALDomain"]),
-    .testTarget(name: "HALManifestKitTests", dependencies: ["HALManifestKit"]),
+    .testTarget(name: "GeordiDomainTests", dependencies: ["GeordiDomain"]),
+    .testTarget(name: "GeordiManifestKitTests", dependencies: ["GeordiManifestKit"]),
     .testTarget(
-      name: "HALDataSourceTests",
-      dependencies: ["HALDataSource", "HALDomain"]
-    ),
-    .testTarget(
-      name: "HALProfileSchemaTests",
-      dependencies: ["HALDomain", "HALProfileSchema"]
+      name: "GeordiDataSourceTests",
+      dependencies: ["GeordiDataSource", "GeordiDomain"]
     ),
     .testTarget(
-      name: "HALCollectorsTests",
-      dependencies: ["HALCollectors", "HALDomain", "HALManifestKit"]
+      name: "GeordiProfileSchemaTests",
+      dependencies: ["GeordiDomain", "GeordiProfileSchema"]
     ),
     .testTarget(
-      name: "HALFixturesTests",
-      dependencies: ["HALDomain", "HALFixtures"]
+      name: "GeordiCollectorsTests",
+      dependencies: ["GeordiCollectors", "GeordiDomain", "GeordiManifestKit"]
     ),
     .testTarget(
-      name: "HALVisualizationTests",
-      dependencies: ["HALDomain", "HALFixtures", "HALVisualization"]
+      name: "GeordiFixturesTests",
+      dependencies: ["GeordiDomain", "GeordiFixtures"]
     ),
     .testTarget(
-      name: "HALAppTests",
-      dependencies: ["HALApp", "HALCollectors", "HALDataSource", "HALDomain"]
+      name: "GeordiVisualizationTests",
+      dependencies: ["GeordiDomain", "GeordiFixtures", "GeordiVisualization"]
+    ),
+    .testTarget(
+      name: "GeordiAppTests",
+      dependencies: ["GeordiApp", "GeordiCollectors", "GeordiDataSource", "GeordiDomain"]
     ),
   ],
   swiftLanguageModes: [.v6]

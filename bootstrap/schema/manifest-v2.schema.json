@@ -1,0 +1,361 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geordi.local/schemas/bootstrap-v2.json",
+  "title": "Geordi bootstrap manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "inventoryConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "appRoots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "excludedBundlePrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "brewPaths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "appRoots",
+        "excludedBundlePrefixes",
+        "brewPaths"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "inventory": {
+      "$ref": "#/$defs/inventory"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "inventoryConfig",
+    "items",
+    "inventory"
+  ],
+  "$defs": {
+    "brewPackage": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9+_.@-]*(/[A-Za-z0-9][A-Za-z0-9+_.@-]*){0,2}$"
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group": {
+          "enum": [
+            "cli",
+            "apps",
+            "agents",
+            "shell"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "detect": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "enum": [
+                  "command",
+                  "app",
+                  "path"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ]
+          },
+          "minItems": 1
+        },
+        "install": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "enum": [
+                    "brewFormula",
+                    "brewCask"
+                  ]
+                },
+                "package": {
+                  "$ref": "#/$defs/brewPackage"
+                }
+              },
+              "required": [
+                "type",
+                "package"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "npmGlobal"
+                },
+                "package": {
+                  "type": "string",
+                  "pattern": "^(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]*$"
+                }
+              },
+              "required": [
+                "type",
+                "package"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "manual"
+                },
+                "instructions": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "type",
+                "instructions"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "group",
+        "detect",
+        "install"
+      ]
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brew": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "formulae": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "$ref": "#/$defs/brewPackage"
+                  },
+                  "versions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "installedOnRequest": {
+                    "type": "boolean"
+                  },
+                  "dependencies": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/brewPackage"
+                    },
+                    "uniqueItems": true
+                  }
+                },
+                "required": [
+                  "name",
+                  "versions",
+                  "installedOnRequest",
+                  "dependencies"
+                ]
+              }
+            },
+            "casks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "$ref": "#/$defs/brewPackage"
+                  },
+                  "versions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1,
+                    "uniqueItems": true
+                  },
+                  "appPaths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "uniqueItems": true
+                  }
+                },
+                "required": [
+                  "name",
+                  "versions",
+                  "appPaths"
+                ]
+              }
+            },
+            "taps": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "formulae",
+            "casks",
+            "taps"
+          ]
+        },
+        "apps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bundleId": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "source": {
+                "enum": [
+                  "homebrew",
+                  "unverified"
+                ]
+              },
+              "casks": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/brewPackage"
+                },
+                "uniqueItems": true
+              },
+              "install": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "manual"
+                  },
+                  "instructions": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "type",
+                  "instructions"
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "name",
+              "bundleId",
+              "version",
+              "source",
+              "casks"
+            ]
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "brew",
+        "apps",
+        "warnings"
+      ]
+    }
+  }
+}

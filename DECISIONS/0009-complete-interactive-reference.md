@@ -6,7 +6,7 @@ Accepted for Phase 0.
 
 ## Context
 
-The first reference diagram explained only the middle of HAL's model: software,
+The first reference diagram explained only the middle of geordi's model: software,
 runtime, data, resources, and events. It omitted where those things live, their
 identity and provenance, how observations become findings, and the user's role
 in deciding what happens next. Static cards also provided too little context
@@ -31,7 +31,7 @@ model:
 
 Runtime and persistence remain separate because “running now” and “able to
 start or return automatically” answer materially different user questions.
-Relationships and evidence are explicit because HAL must distinguish observed
+Relationships and evidence are explicit because geordi must distinguish observed
 facts from confidence-bearing inference.
 
 Each concept is selectable. The diagram dims in place while the concept expands
@@ -50,7 +50,7 @@ rather than scrolling behind it.
 
 ## Consequences
 
-- The diagram can honestly serve as HAL's complete high-level user model.
+- The diagram can honestly serve as geordi's complete high-level user model.
 - Users can learn concepts in place without navigating away from their work.
 - Implementation architecture remains documented separately and cannot be
   mistaken for a user-facing system concept.

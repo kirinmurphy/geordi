@@ -1,8 +1,8 @@
-# HAL Privacy Requirements
+# geordi Privacy Requirements
 
 ## Default posture
 
-HAL is local-first. Collection, analysis, storage, and visualization remain on
+geordi is local-first. Collection, analysis, storage, and visualization remain on
 the Mac by default.
 
 No account, cloud service, advertising identifier, or remote telemetry is
@@ -10,7 +10,7 @@ required for core operation.
 
 ## Potentially sensitive information
 
-HAL may encounter:
+geordi may encounter:
 
 - Application names
 - File and folder names
@@ -38,7 +38,7 @@ Collection does not imply permission to retain or display all available data.
 
 ## Permission design
 
-For every requested macOS permission, HAL must explain:
+For every requested macOS permission, geordi must explain:
 
 - What capability needs it
 - What additional data becomes visible

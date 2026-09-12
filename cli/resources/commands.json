@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "commands": [
+    {
+      "command": [
+        "find-dupe-files"
+      ],
+      "description": "Review duplicate files (current directory by default)",
+      "runtime": "python",
+      "path": "cli/bin/sidekicks/find-dupe-files",
+      "args": []
+    },
+    {
+      "command": [
+        "setup",
+        "mac"
+      ],
+      "description": "Preview missing Mac setup packages; use --apply to install",
+      "runtime": "node",
+      "path": "bootstrap/bin/geordi-bootstrap.js",
+      "args": [
+        "mac"
+      ]
+    }
+  ],
+  "links": [
+    {
+      "name": "@cliCommand",
+      "path": "bin/geordi",
+      "legacySources": []
+    },
+    {
+      "name": "find-dupe-files",
+      "path": "cli/bin/sidekicks/find-dupe-files",
+      "legacySources": [
+        "bin/sidekicks/find-dupe-files"
+      ]
+    }
+  ]
+}

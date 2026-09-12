@@ -37,7 +37,7 @@ classification policy recognizes the generic **Installed with: Homebrew cask
 
 An active `.zshrc` reference plus a current process whose executable exactly
 matches the manifest-declared shell supports a useful but limited association.
-HAL now presents this as a possible relationship and explicitly says it did
+geordi now presents this as a possible relationship and explicitly says it did
 not inspect the process environment or prove that the process sourced the
 configuration. The number of projected shell processes is manifest-bounded.
 

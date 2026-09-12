@@ -1,4 +1,4 @@
-# HAL Application Story Evaluation Guide
+# geordi Application Story Evaluation Guide
 
 Status: ready for moderated product evaluation  
 Duration: approximately 15 minutes  
@@ -6,10 +6,10 @@ Build: record the tested commit in each session log
 
 ## Purpose
 
-Test whether HAL explains one application more clearly than a raw inventory,
+Test whether geordi explains one application more clearly than a raw inventory,
 Activity Monitor, Finder, or several disconnected system panels.
 
-This is a product evaluation, not a feature demonstration. Avoid teaching HAL's
+This is a product evaluation, not a feature demonstration. Avoid teaching geordi's
 terminology before the participant encounters it.
 
 ## Participant setup
@@ -37,12 +37,12 @@ Record whether the participant chooses a task-oriented entry without coaching.
 Ask the participant to open Visual Studio Code and answer:
 
 - What is it?
-- Does HAL show it as active?
+- Does geordi show it as active?
 - What evidence explains that activity?
-- Where does HAL think it came from?
+- Where does geordi think it came from?
 - Does anything start it automatically?
-- What files, packages, or tools does HAL associate with it?
-- What does HAL explicitly not know?
+- What files, packages, or tools does geordi associate with it?
+- What does geordi explicitly not know?
 
 Do not prompt them to open a map.
 
@@ -60,14 +60,14 @@ like supporting context.
 Ask the participant to use the Filesystem Map and explain:
 
 - where the selected software or associated data lives;
-- whether HAL enumerated the location; and
+- whether geordi enumerated the location; and
 - the difference between “not enumerated” and “empty.”
 
 ### 5. Distinguish data safety
 
 Ask:
 
-> Which observed data appears rebuildable, and does HAL say it is safe to
+> Which observed data appears rebuildable, and does geordi say it is safe to
 > delete now?
 
 The expected answer is that rebuildability is explained separately and no
@@ -91,7 +91,7 @@ Record:
 - whether maps added clarity;
 - every place the participant became lost;
 - every term that required explanation; and
-- the participant's one-sentence description of HAL.
+- the participant's one-sentence description of geordi.
 
 ## Decision rubric
 

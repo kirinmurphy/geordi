@@ -1,18 +1,18 @@
-# HAL Phase 0 app icon
+# geordi Phase 0 app icon
 
 The Phase 0 icon is original generated artwork, not a copied film still or
-reproduction of the HAL 9000 prop.
+reproduction of the geordi 9000 prop.
 
 ## Generation
 
 - Tool: built-in OpenAI image generation
 - Date: July 26, 2026
-- Master: `HALApp-1024.png`
-- Packaged asset: `HALApp.icns`
+- Master: `GeordiApp-1024.png`
+- Packaged asset: `GeordiApp.icns`
 
 ## Prompt
 
-> Create an original, premium macOS application icon for HAL, a relational
+> Create an original, premium macOS application icon for geordi, a relational
 > system visualizer, centered on an ominous glowing red camera-eye concept
 > evocative of classic cerebral science-fiction cinema without copying any
 > film still, prop, logo, or copyrighted frame. Use one centered circular red

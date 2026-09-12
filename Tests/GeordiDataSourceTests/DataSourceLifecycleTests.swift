@@ -1,0 +1,212 @@
+import Foundation
+import GeordiDataSource
+import GeordiDomain
+import Testing
+
+@Suite("Data source lifecycle")
+struct DataSourceLifecycleTests {
+  @Test("Stored snapshots are validated before use")
+  func invalidStoredSnapshotIsRejected() throws {
+    let temporary = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let store = UserDataStore(root: temporary.appending(path: "UserData"))
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    try FileManager.default.createDirectory(at: store.root, withIntermediateDirectories: true)
+    let invalid = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "invalid", name: "Invalid", summary: "Invalid"),
+        entities: [],
+        relationships: [
+          Relationship(
+            id: "missing",
+            source: "missing-a",
+            target: "missing-b",
+            type: .owns,
+            confidence: .confirmed,
+            explanation: "Invalid endpoints",
+            evidence: [
+              Evidence(
+                id: "evidence",
+                kind: .observed,
+                summary: "Observed",
+                source: "Test",
+                observedAt: Date(timeIntervalSince1970: 1)
+              )
+            ]
+          )
+        ]
+      ),
+      scan: ScanContext(
+        id: "invalid",
+        environment: .liveReadOnly,
+        startedAt: Date(timeIntervalSince1970: 1)
+      )
+    )
+    let data = try JSONEncoder().encode(invalid)
+    try data.write(to: store.root.appending(path: "latest-live-snapshot.json"))
+
+    #expect(throws: UserDataStoreError.self) {
+      try store.loadSnapshot()
+    }
+  }
+
+  @Test("Mode defaults to synthetic and persists explicitly")
+  func preferenceLifecycle() throws {
+    let suite = "GeordiDataSourceTests.\(UUID().uuidString)"
+    let defaults = try #require(UserDefaults(suiteName: suite))
+    defer { defaults.removePersistentDomain(forName: suite) }
+    let store = UserDefaultsDataSourcePreferenceStore(defaults: defaults)
+
+    #expect(store.mode() == .synthetic)
+    store.setMode(.linkedMac)
+    #expect(store.mode() == .linkedMac)
+    store.setMode(.synthetic)
+    #expect(store.mode() == .synthetic)
+  }
+
+  @Test("Snapshot backup and reset stay inside an exact temporary root")
+  func backupAndReset() throws {
+    let temporary = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let root = temporary.appending(path: "UserData", directoryHint: .isDirectory)
+    let backup = temporary.appending(path: "backup.json")
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    let store = UserDataStore(root: root)
+    let snapshot = sampleSnapshot()
+
+    try store.saveSnapshot(snapshot)
+    #expect(try store.loadSnapshot() == snapshot)
+    try store.exportBackup(to: backup)
+    #expect(FileManager.default.fileExists(atPath: backup.path))
+    try store.reset()
+    #expect(!FileManager.default.fileExists(atPath: root.path))
+    #expect(FileManager.default.fileExists(atPath: backup.path))
+  }
+
+  @Test("One-to-many relationship identities survive persistence and reload")
+  func denseRelationshipSnapshotRoundTrips() throws {
+    let temporary = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let store = UserDataStore(root: temporary.appending(path: "UserData"))
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    let application = Entity(
+      id: "application",
+      type: .application,
+      name: "Application",
+      summary: "Application"
+    )
+    let locations = ["first-location", "second-location"].map {
+      Entity(id: EntityID($0), type: .file, name: $0, summary: $0)
+    }
+    let relationships = locations.map { location in
+      Relationship(
+        id: .edge(
+          namespace: "associated-location",
+          source: application.id,
+          target: location.id,
+          discriminator: "group-container-children"
+        ),
+        source: application.id,
+        target: location.id,
+        type: .shares,
+        confidence: .high,
+        explanation: "The application can access this shared container.",
+        evidence: [
+          Evidence(
+            id: "evidence:\(location.id.rawValue)",
+            kind: .observed,
+            summary: "Observed",
+            source: "Test"
+          )
+        ]
+      )
+    }
+    let date = Date(timeIntervalSince1970: 1)
+    let snapshot = GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(id: "dense", name: "Dense", summary: "Dense"),
+        entities: [application] + locations,
+        relationships: relationships
+      ),
+      scan: ScanContext(
+        id: "dense",
+        environment: .liveReadOnly,
+        startedAt: date,
+        completedAt: date
+      )
+    )
+
+    try store.saveSnapshot(snapshot)
+    let loaded = try store.loadSnapshot()
+    let reloaded = try #require(loaded)
+
+    #expect(reloaded == snapshot)
+    #expect(Set(reloaded.graph.relationships.map(\.id)).count == 2)
+    try reloaded.graph.validate()
+  }
+
+  @Test("Reset refuses a symbolic-link root")
+  func resetRejectsSymlink() throws {
+    let temporary = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let target = temporary.appending(path: "target", directoryHint: .isDirectory)
+    let link = temporary.appending(path: "link", directoryHint: .isDirectory)
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+    try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+
+    #expect(throws: UserDataStoreError.unsafeRoot) {
+      try UserDataStore(root: link).reset()
+    }
+  }
+
+  @Test("Reset refuses broad roots")
+  func resetRejectsBroadRoots() {
+    #expect(throws: UserDataStoreError.unsafeRoot) {
+      try UserDataStore(root: URL(filePath: "/")).reset()
+    }
+    #expect(throws: UserDataStoreError.unsafeRoot) {
+      try UserDataStore(root: FileManager.default.homeDirectoryForCurrentUser).reset()
+    }
+  }
+
+  @Test("A replacement backup is complete JSON")
+  func backupReplacementIsAtomic() throws {
+    let temporary = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let root = temporary.appending(path: "UserData", directoryHint: .isDirectory)
+    let backup = temporary.appending(path: "backup.json")
+    defer { try? FileManager.default.removeItem(at: temporary) }
+    let store = UserDataStore(root: root)
+    let snapshot = sampleSnapshot()
+    try FileManager.default.createDirectory(at: temporary, withIntermediateDirectories: true)
+    try Data("old".utf8).write(to: backup)
+
+    try store.saveSnapshot(snapshot)
+    try store.exportBackup(to: backup)
+
+    let exported = try JSONDecoder().decode(GraphSnapshot.self, from: Data(contentsOf: backup))
+    #expect(exported == snapshot)
+  }
+
+  private func sampleSnapshot() -> GraphSnapshot {
+    let date = Date(timeIntervalSince1970: 1_700_000_000)
+    return GraphSnapshot(
+      graph: SystemGraph(
+        metadata: FixtureMetadata(
+          id: "live-applications",
+          name: "This Mac",
+          summary: "Read-only application inventory."
+        ),
+        entities: [],
+        relationships: []
+      ),
+      scan: ScanContext(
+        id: "scan-1",
+        environment: .liveReadOnly,
+        startedAt: date,
+        completedAt: date
+      )
+    )
+  }
+}

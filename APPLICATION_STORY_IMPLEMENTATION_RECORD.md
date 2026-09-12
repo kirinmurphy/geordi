@@ -24,7 +24,7 @@ Specification: `NEXT_PRODUCT_VALIDATION_PLAN.md`
 
 ### Homebrew cask ownership is independent provenance
 
-HAL now inventories configured Homebrew Caskroom roots without running
+geordi now inventories configured Homebrew Caskroom roots without running
 Homebrew, reads only bounded local install receipts, and projects formulae and
 casks as separate package concepts. A declared `.app` artifact is correlated
 to the bounded application inventory by its artifact name or bundle identifier;
@@ -63,7 +63,7 @@ is limited by a fixed byte budget and records only active, inactive, absent, or
 unreadable state; contents and credentials are never normalized.
 
 The Application Story describes the result as consistent with a Git/bootstrap
-installation and explicitly says HAL did not witness the original install
+installation and explicitly says geordi did not witness the original install
 command. General shell history was rejected because it would add sensitive,
 unbounded evidence without improving the truth of this current-state claim.
 
@@ -74,7 +74,7 @@ now supports a generic `startsWith` detail rule and selects Homebrew Casks from
 the receipt-backed **Installed with** value.
 
 When an active declared shell configuration and an exact manifest-declared
-shell executable are both observed, HAL projects a bounded, possible
+shell executable are both observed, geordi projects a bounded, possible
 framework/process relationship. The explanation explicitly preserves the gap
 between “may load this active configuration” and “proved loaded.”
 
@@ -82,7 +82,7 @@ between “may load this active configuration” and “proved loaded.”
 
 Options considered were keeping the map as the application landing page,
 placing a summary above the same map, and creating a dedicated story surface.
-The dedicated story was selected because it directly tests whether HAL can
+The dedicated story was selected because it directly tests whether geordi can
 explain an application without requiring users to decode the graph.
 
 ### Homepage rows prioritize differences
@@ -120,7 +120,7 @@ validated manifest. Swift implements generic presentation and navigation.
 - `make verify` passed with strict formatting, 120 tests across 25 suites,
   validation of all seven synthetic profiles, Debug build, native application
   packaging, and bundle smoke validation.
-- The verified development build was installed at `~/Applications/HAL.app` and
+- The verified development build was installed at `~/Applications/geordi.app` and
   launched for manual evaluation.
 - Homebrew-focused tests cover schema versioning, unknown keys, unsafe paths,
   formula inventory, Caskroom artifacts, bundle identity, and the independent
@@ -193,16 +193,16 @@ current Mac setup marker.
 
 ## July 30 software-architecture refinement
 
-HAL's projected live graph is canonically ordered by stable entity and
+geordi's projected live graph is canonically ordered by stable entity and
 relationship IDs before it reaches any view. Dictionary and filesystem
 enumeration order therefore cannot change the displayed ordering. Labels,
 classifications, grouping, stages, and thresholds come from validated versioned
 manifests or directly observed system metadata; presentation code does not
 LLM-generate system facts. Time-sensitive values such as processes and
 freshness remain explicitly observed facts. Given the same captured
-observations and manifests, HAL produces the same graph and presentation.
+observations and manifests, geordi produces the same graph and presentation.
 
-HAL now requires a successful, timeout-bounded version response before
+geordi now requires a successful, timeout-bounded version response before
 presenting an executable as an installed runtime. This prevents Apple's
 `/usr/bin/java` and `/usr/bin/javac` launcher stubs from appearing as available
 Java installations when they report that no Java runtime exists.
@@ -228,7 +228,7 @@ The application Origin Story presents its ordinary application path as a
 compact path-action row. Separate provenance artifacts, such as Homebrew
 Caskroom nodes, retain the filesystem tree treatment.
 
-HAL's shared visual scale now defines `sm`, `base`, `large`, `xl`, and `2xl`
+geordi's shared visual scale now defines `sm`, `base`, `large`, `xl`, and `2xl`
 text sizes plus small, base, large, and extra-large icon sizes. The minimum text
 role increased to 14 points, homepage list icons use the larger shared base
 scale, and generic application nodes use the idiomatic multiple-window symbol.
@@ -236,7 +236,7 @@ scale, and generic application nodes use the idiomatic multiple-window symbol.
 The completed refinement boundary passed strict formatting, 149 tests across
 27 suites, all seven synthetic-profile validations, Debug build, native bundle
 packaging, and UI bundle smoke validation. The verified build was installed at
-`~/Applications/HAL.app` and launched; automated window inspection remained
+`~/Applications/geordi.app` and launched; automated window inspection remained
 unavailable because System Events does not have Accessibility access.
 
 ## Commits

@@ -8,7 +8,7 @@ Accepted on July 26, 2026.
 
 The contextual-atlas revision improved orientation, but fictional application
 names still required the product owner to learn invented products before
-learning HAL. Familiar software offers an existing mental model for processes,
+learning geordi. Familiar software offers an existing mental model for processes,
 files, package management, startup behavior, and performance.
 
 ## Decision
@@ -26,6 +26,6 @@ files, package management, startup behavior, and performance.
 
 ## Consequences
 
-Users can apply knowledge they already have while evaluating HAL's navigation
+Users can apply knowledge they already have while evaluating geordi's navigation
 and explanations. The fixture is illustrative, not an inventory or diagnostic
 report of the development machine.

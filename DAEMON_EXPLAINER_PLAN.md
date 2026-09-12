@@ -1,11 +1,11 @@
-# HAL Background Services and Daemon Explainer
+# geordi Background Services and Daemon Explainer
 
 Status: Slice 2 process correlation complete; loaded-state collection deferred
 Updated: July 30, 2026
 
 ## Product promise
 
-HAL should explain background software in plain language without treating every
+geordi should explain background software in plain language without treating every
 startup declaration as suspicious or every configured service as currently
 running.
 
@@ -24,7 +24,7 @@ It must separate four kinds of fact:
 4. **Owned** — evidence connects the declaration or executable to an
    application, package, or other software entity.
 
-None of these states implies the others unless HAL retains evidence for the
+None of these states implies the others unless geordi retains evidence for the
 relationship.
 
 ## First-screen design
@@ -91,7 +91,7 @@ Required distinctions:
 - absence from one process snapshot is not proof that a service is disabled,
   unloaded, or never runs;
 - a restart policy is configuration, not proof that restarts occurred; and
-- HAL never infers purpose or safety from a label, executable name, or path
+- geordi never infers purpose or safety from a label, executable name, or path
   alone.
 
 ## Delivery slices
@@ -131,12 +131,12 @@ The reviewed built-in candidate was `launchctl print` for a specific launchd
 domain or service target. It is read-only and can be timeout-limited, but its
 human-oriented output is not a stable, documented machine schema; a domain
 print can be broad; and output may expose arguments, environment values, and
-other payload HAL is prohibited from retaining. Enumerating targets would also
+other payload geordi is prohibited from retaining. Enumerating targets would also
 require a separately bounded and manifest-defined source of loaded identifiers.
 `launchctl print-disabled` reports disabled overrides, not loaded state, and
 process presence cannot substitute for either source.
 
-No loaded-state collector is added. Before reconsideration, HAL needs a reviewed
+No loaded-state collector is added. Before reconsideration, geordi needs a reviewed
 field allowlist and parser, manifest-defined domains and record budgets,
 fixtures for OS output variants, deterministic normalization, explicit timeout
 and permission outcomes, and proof that prohibited payloads are discarded
@@ -160,7 +160,7 @@ specific unresolved explanation.
   identity changes.
 - Distinguish a changed declaration from a newly observed process.
 
-Exit: HAL can explain what changed without retaining arbitrary property-list
+Exit: geordi can explain what changed without retaining arbitrary property-list
 contents or process arguments.
 
 ## Privacy and safety
@@ -207,7 +207,7 @@ Add tests for:
   explicit unavailable/partial state.
 - The first screen separates agents, daemons, scope, ownership, and observed
   activity.
-- HAL never equates configuration with a running process.
+- geordi never equates configuration with a running process.
 - Every “running” claim has a point-in-time process observation.
 - Every “loaded” claim has a dedicated loaded-state observation.
 - Users can reach the evidence and bounded relationships for every item.

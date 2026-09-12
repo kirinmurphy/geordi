@@ -1,0 +1,794 @@
+#!/usr/bin/env python3
+"""find-dupe-files — find duplicate files in any folder tree.
+
+Default mode is a guided 4-stage cleanup:
+
+  Stage 1  byte-identical copies split across temp / permanent folders
+           -> shown together, one prompt, batch-delete the temp copies
+  Stage 2  byte-identical copies whose names are OS copy artifacts
+           ('name 2.wav', 'name copy.wav') -> batch delete the copies,
+           the bare-named original always survives
+  Stage 3  same filename in lossless + compressed formats -> reviewed
+           ONE BY ONE: no universal keep-rule (tunes keeps lossless,
+           mixes may want compressed), you pick per group
+  Stage 4  byte-identical or compatible-format groups -> one-by-one
+           multi-select review
+
+Cross-format matching is whitelist-based (COMPAT_PAIRS below): wav/mp3,
+aif/mp3, doc/docx etc. are flagged; mp3/mp4 or doc/xls never are.
+
+Other modes:
+  find-dupe-files --report        read-only report, no prompts
+  find-dupe-files --temp-folders  temp-folder-only duplicates + prompt
+
+Without a path argument, scans the CURRENT DIRECTORY.
+
+Safety: nothing is deleted without an explicit prompt (or --yes for
+scripts); non-tty stdin refuses destructive action; the interactive
+review needs a real terminal.
+
+Options:
+  --report         read-only report (default is the guided review)
+  --dur            read media durations (afinfo/ffprobe) for --report
+  --temp-folders   only temp-folder duplicates; plan + prompt
+  --yes (-y)       skip prompts (scripts); stages 3+4 still skipped
+  --temp-pattern   regex for temp dirs (default "^_{5,}")
+  --min-size-mb N  ignore files smaller than N MB
+
+Exit codes: 0 ok, 1 deletion failures, 2 aborted at a prompt.
+"""
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from collections import defaultdict
+
+AUDIO_EXTS = {".wav", ".mp3", ".aif", ".aiff", ".m4a", ".flac", ".mp4",
+              ".m4p", ".mpeg"}
+
+# Unordered extension pairs considered "same content, different format".
+# Cross-format name matches are ONLY flagged when the pair is listed here.
+# Anything else (e.g. .mp3 vs .mp4, .doc vs .xls) is never proposed.
+COMPAT_PAIRS = {
+    frozenset(p) for p in [
+        (".wav", ".mp3"), (".aif", ".mp3"), (".aiff", ".mp3"),
+        (".flac", ".mp3"),
+        (".wav", ".m4a"), (".aif", ".m4a"), (".aiff", ".m4a"),
+        (".flac", ".m4a"),
+        (".wav", ".flac"), (".wav", ".aif"), (".wav", ".aiff"),
+        (".aif", ".aiff"),
+        (".doc", ".docx"), (".xls", ".xlsx"), (".ppt", ".pptx"),
+    ]
+}
+# Compressed audio: auto-proposed for deletion in stage 2 when a
+# same-named lossless copy exists.
+LOSSY_EXTS = {".mp3", ".m4a", ".m4p", ".aac", ".ogg", ".oga", ".opus", ".wma"}
+LOSSLESS_EXTS = {".wav", ".aif", ".aiff", ".flac"}
+
+# Words stripped before name comparison — format/edition noise, not song
+# identity. Tune if matching is too loose or too strict.
+STRIP_WORDS = r"""\b(official|original|extended|remix|edit|mix|version|ver|
+remaster(ed)?|audio|video|hq|lyrics?|instrumental|rip|slowed|down|radio)\b"""
+
+
+def norm(stem):
+    s = re.sub(STRIP_WORDS, " ", stem.lower(), flags=re.VERBOSE)
+    return re.sub(r"[^a-z0-9]+", "", s)
+
+
+def collect_files(base):
+    """Every regular file under base, skipping dotfiles and macOS cruft."""
+    out = []
+    for root, dirs, files in os.walk(base):
+        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        for fn in files:
+            if fn.startswith(".") or fn in ("Icon\r", "Icon?"):
+                continue
+            fp = os.path.join(root, fn)
+            if os.path.isfile(fp):
+                out.append(fp)
+    return out
+
+
+def md5_file(path):
+    h = hashlib.md5()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def is_offline(path):
+    """True if the file has a logical size but no data blocks on disk —
+    a dataless placeholder (e.g. Dropbox online-only). Reading it would
+    trigger a download, so byte-matching must skip it."""
+    try:
+        st = os.stat(path)
+        return st.st_blocks == 0 and st.st_size > 0
+    except OSError:
+        return False
+
+
+def size_str(p):
+    """Human-readable size: bytes under 10 KB, KB below 1 MB, MB above."""
+    s = os.path.getsize(p)
+    if s < 10_000:
+        return f"{s} B"
+    return f"{s / 1e6:.1f} MB" if s >= 1e6 else f"{s / 1e3:.1f} KB"
+
+
+def is_temp(fp, temp_re):
+    """True if any path component matches the temp-dir pattern."""
+    return any(temp_re.match(part) for part in fp.split(os.sep))
+
+
+def ext_of(p):
+    return os.path.splitext(p)[1].lower()
+
+
+def stem_of(p):
+    """Filename minus extension, case-insensitive."""
+    return os.path.splitext(os.path.basename(p))[0].lower()
+
+
+def _duration(fp):
+    """Seconds via afinfo (macOS) or ffprobe; None if unreadable."""
+    try:
+        r = subprocess.run(["afinfo", fp], capture_output=True, text=True, timeout=30)
+        for line in r.stdout.splitlines():
+            if "estimated duration" in line.lower():
+                return float(line.split(":")[1].strip().split()[0])
+    except (OSError, ValueError, subprocess.SubprocessError):
+        pass
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
+             "-of", "json", fp], capture_output=True, text=True, timeout=30)
+        return float(json.loads(r.stdout)["format"]["duration"])
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError):
+        return None
+
+
+def byte_clusters(all_files):
+    """Exact duplicates: size prefilter -> md5 -> clusters.
+    Skips empty files (everything empty 'matches' everything else) and
+    offline/dataless placeholders (reading them would trigger downloads)."""
+    candidates = []
+    for fp in all_files:
+        try:
+            st = os.stat(fp)
+        except OSError:
+            continue
+        if st.st_size == 0:
+            continue
+        if st.st_blocks == 0:
+            continue  # online-only placeholder — not locally comparable
+        candidates.append(fp)
+
+    size_map = defaultdict(list)
+    for fp in candidates:
+        size_map[os.path.getsize(fp)].append(fp)
+    groups = [fps for fps in size_map.values() if len(fps) > 1]
+
+    hash_map = defaultdict(list)
+    for fps in groups:
+        for fp in fps:
+            try:
+                hash_map[md5_file(fp)].append(fp)
+            except OSError:
+                pass
+    clusters = [sorted(paths) for paths in hash_map.values() if len(paths) > 1]
+    clusters.sort(key=lambda c: c[0])
+    return clusters
+
+
+def name_groups(all_files):
+    """Same normalized name, different bytes (any extension)."""
+    groups = defaultdict(list)
+    for fp in all_files:
+        groups[norm(os.path.splitext(os.path.basename(fp))[0])].append(fp)
+    out = []
+    for k, paths in groups.items():
+        if len(paths) > 1 and len({os.path.getsize(p) for p in paths}) > 1:
+            out.append((os.path.basename(paths[0]), sorted(paths)))
+    out.sort(key=lambda g: -os.path.getsize(g[1][0]))
+    return out
+
+
+def delete_files(paths, base):
+    """Delete paths; print one row per file with its size.
+    Idempotent: a path that no longer exists (already deleted by an
+    earlier pass in this run) is skipped without error."""
+    ok = failed = 0
+    for p in paths:
+        try:
+            if not os.path.exists(p):
+                continue
+            size = os.path.getsize(p)
+            os.remove(p)
+            print(f"deleted: {os.path.relpath(p, base)} ({size_str(p)})")
+            ok += 1
+        except FileNotFoundError:
+            # already deleted by an earlier stage in this run — fine
+            print(f"already gone: {os.path.relpath(p, base)}")
+            ok += 1
+        except OSError as e:
+            print(f"FAILED: {p}: {e}", file=sys.stderr)
+            failed += 1
+    return ok, failed
+
+
+def mb(p):
+    return os.path.getsize(p) / 1e6
+
+
+def _rel_dir(p, base):
+    """Relative dir of p vs base as './dir/' (or './' at the root)."""
+    d = os.path.dirname(os.path.relpath(p, base))
+    return f"./{d}/" if d else "./"
+
+
+# Filename suffixes that mark a copy: "name 2.wav", "name 3.wav", ...
+# "name copy.wav", "name copy 2.wav", and (case-insensitive) " copy Copy".
+COPY_SUFFIX_RE = re.compile(
+    r"^(?P<stem>.+?)(?:\s+copy(?:\s+\d+)?)?\s+(\d{1,3})$|"
+    r"^(?P<stem2>.+?)\s+copy(?:\s+(\d{1,3}))?$",
+    re.IGNORECASE)
+
+
+def split_copy_suffix(filename):
+    """If filename is 'X 2.ext' / 'X copy.ext' / 'X copy 2.ext', return
+    (stem X, suffix description) — else None."""
+    stem, ext = os.path.splitext(filename)
+    m = COPY_SUFFIX_RE.match(stem)
+    if not m:
+        return None
+    base = (m.group("stem") or m.group("stem2")).rstrip()
+    if not base:
+        return None
+    return base, ext.lower()
+
+
+# ---------------------------------------------------------------- output
+
+def print_loc(p, base, temp_re=None, prefix="  ", dur=None, label=None):
+    """One location row: 'LABEL:  ./dir/ [TEMP] [OFFLINE] (size) [dur]'"""
+    d = os.path.dirname(os.path.relpath(p, base))
+    d = f"./{d}/" if d else "./"
+    tags = ""
+    if temp_re and is_temp(p, temp_re):
+        tags += " [TEMP]"
+    if is_offline(p):
+        tags += " [OFFLINE]"
+    dur_s = f" {dur:.1f}s" if dur is not None else ""
+    lab = f"{label:<7}" if label else ""
+    print(f"{prefix}{lab}{d}{tags} ({size_str(p)}){dur_s}")
+
+
+def print_anchor(name, size=None, note=None):
+    """Section anchor: the filename. size: float MB or preformatted str."""
+    extra = []
+    if size is not None:
+        extra.append(size if isinstance(size, str) else f"{size:.1f} MB")
+    if note:
+        extra.append(note)
+    suffix = f" — {', '.join(extra)}" if extra else ""
+    print(f"{name}{suffix}")
+
+
+def confirm(msg, assume_yes):
+    """Prompt-gated confirmation. Non-tty stdin without --yes refuses."""
+    if assume_yes:
+        return True
+    if not sys.stdin.isatty():
+        return False
+    try:
+        answer = input(msg)
+    except (EOFError, KeyboardInterrupt):
+        return False
+    return answer.strip().lower() in ("y", "yes")
+
+
+def batch_stage(title, groups, assume_yes, base):
+    """Print DEL/KEEP sections anchored on filename, then one batch prompt.
+    groups: list of (anchor, dels, keeps, note) tuples. Returns exit code.
+    Paths deleted by an earlier stage in this run are pruned from the plan
+    (clusters are computed once up front, so they can go stale)."""
+    pruned = []
+    for anchor, dels, keeps, note in groups:
+        dels = [p for p in dels if os.path.exists(p)]
+        keeps = [p for p in keeps if os.path.exists(p)]
+        if dels and not keeps:
+            # nothing left to keep — the largest remaining file survives
+            keep_one = max(dels, key=os.path.getsize)
+            keeps = [keep_one]
+            dels = [p for p in dels if p != keep_one]
+        if dels:
+            pruned.append((anchor, dels, keeps, note))
+    groups[:] = pruned
+    n_del = sum(len(d) for _, d, _, _ in groups)
+    total = sum(mb(p) for _, d, _, _ in groups for p in d)
+    print(f"=== {title}: {n_del} files, {total:.1f} MB ===\n")
+    if not groups:
+        print("  none found\n")
+        return 0
+    for anchor, dels, keeps, note in groups:
+        print_anchor(anchor, note=note)
+        for p in dels:
+            print_loc(p, base, prefix="  ", label="DELETE")
+        for p in keeps:
+            print_loc(p, base, prefix="  ", label="KEEP")
+        print()
+    if confirm(f"Delete {n_del} files ({total:.1f} MB)? [y/N] ", assume_yes):
+        ok, failed = delete_files(
+            [p for _, d, _, _ in groups for p in d if os.path.exists(p)],
+            base)
+        print(f"  {ok} deleted, {failed} failed\n")
+        return 0 if failed == 0 else 1
+    if not assume_yes and not sys.stdin.isatty():
+        print("  skipped — stdin is not a terminal (use --yes for scripts)\n")
+    else:
+        print("  skipped — nothing deleted\n")
+    return 2
+
+
+# ------------------------------------------------ interactive selector
+
+def curses_select(rows, counter, total, group_title, sub_header, scan_root):
+    """Multi-select picker. rows: [{'folder': str, 'name': str}] where name
+    may be empty (same-filename groups render folders only). sub_header is
+    drawn above the list (the 'Found: ...' line). scan_root names the
+    directory being scanned (shown in the title line).
+    Returns (action, selected): action in {'continue','back','quit'}.
+    Keys: UP/DOWN or j/k move · SPACE toggle · ENTER or RIGHT = continue
+    · LEFT = back to previous group · Q = quit the whole workflow.
+    All text renders bold white; the cursor row is reverse-video.
+    """
+    import curses
+
+    selected = set()
+    result = {"action": "quit", "selected": []}
+
+    def run(stdscr):
+        idx = 0
+        curses.curs_set(0)
+        stdscr.keypad(True)
+        # force actual WHITE text: A_BOLD alone only emboldens the default
+        # foreground (which can render dark gray); a white color pair
+        # guarantees it on any terminal profile
+        if curses.has_colors():
+            curses.start_color()
+            curses.use_default_colors()
+            curses.init_pair(1, curses.COLOR_WHITE, -1)
+            BASE = curses.A_BOLD | curses.color_pair(1)
+        else:
+            BASE = curses.A_BOLD
+        folder_w = max(len(r["folder"]) for r in rows) + 2
+        while True:
+            stdscr.erase()
+            maxy, maxx = stdscr.getmaxyx()
+            stdscr.addnstr(0, 0, f"{total} {group_title} in {scan_root}",
+                           maxx - 1, BASE)
+            stdscr.addnstr(2, 0,
+                           "UP/DOWN: move · SPACE: select/deselect · "
+                           "LEFT: back · V: view file location",
+                           maxx - 1, BASE)
+            sel_note = f" ({len(selected)} selected)" if selected else ""
+            stdscr.addnstr(4, 0,
+                           f"{counter} - Select What File(s) to DELETE"
+                           f"{sel_note}", maxx - 1, BASE)
+            stdscr.addnstr(6, 0, sub_header, maxx - 1, BASE)
+            # blank row 7, list from row 8, blank row after list, footer
+            list_top = 8
+            list_h = max(1, maxy - list_top - 3)
+            top = max(0, min(idx - (list_h - 1), len(rows) - list_h))
+            draw_end = list_top  # row after the last actually-drawn item
+            for vis, i in enumerate(range(top, min(len(rows), top + list_h))):
+                r = rows[i]
+                cursor = ">" if i == idx else " "
+                mark = "x" if i in selected else " "
+                name = r["name"]
+                line = f"{cursor} [{mark}] {r['folder']:<{folder_w}}{name}"
+                stdscr.addnstr(list_top + vis, 0, line, maxx - 1,
+                               curses.A_REVERSE | BASE if i == idx else BASE)
+                draw_end = list_top + vis + 1
+            # footer one blank row below the last drawn item — NOT pinned
+            # to the screen bottom
+            footer_y = min(maxy - 1, draw_end + 1)
+            stdscr.addnstr(
+                footer_y, 0,
+                "Hit Enter or Right Arrow Key to Continue, Q to Quit",
+                maxx - 1, BASE)
+            stdscr.refresh()
+
+            key = stdscr.getch()
+            if key in (curses.KEY_UP, ord("k")):
+                idx = max(0, idx - 1)
+            elif key in (curses.KEY_DOWN, ord("j")):
+                idx = min(len(rows) - 1, idx + 1)
+            elif key == ord(" "):
+                if idx in selected:
+                    selected.discard(idx)
+                else:
+                    selected.add(idx)
+            elif key in (curses.KEY_ENTER, 10, 13, curses.KEY_RIGHT):
+                result.update(action="continue",
+                              selected=[rows[i]["path"] for i in selected])
+                return
+            elif key in (ord("v"), ord("V")):
+                # reveal the cursor file in Finder (macOS); on failure
+                # (non-macOS / missing file) just ignore and keep going
+                try:
+                    subprocess.Popen(["open", "-R", rows[idx]["path"]],
+                                     stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
+                except OSError:
+                    pass
+            elif key == curses.KEY_LEFT:
+                result.update(action="back", selected=[])
+                return
+            elif key in (ord("q"), ord("Q")):
+                result.update(action="quit", selected=[])
+                return
+
+    curses.wrapper(run)
+    return result["action"], result["selected"]
+
+
+# ---------------------------------------------------------------- modes
+
+def review_mode(all_files, base, temp_re, assume_yes):
+    """Four sequential stages (the default mode):
+      1. byte dupes, temp vs permanent  -> batch delete temp copies
+      2. byte dupes that are copy-suffixed (' 2', ' copy') -> batch delete
+      3. same filename, lossless + compressed -> one-by-one review
+      4. everything else -> one-by-one review
+    """
+    clusters = byte_clusters(all_files)
+
+    # --- stage 1: byte dupes split across temp / permanent -------------
+    stage1, handled = [], set()
+    for c in clusters:
+        inside = [p for p in c if is_temp(p, temp_re)]
+        outside = [p for p in c if not is_temp(p, temp_re)]
+        if inside and outside:
+            anchor = os.path.basename(c[0])
+            stage1.append((anchor, inside, outside, ""))
+            handled.add(tuple(c))
+    rc = batch_stage("STAGE 1 — TEMP vs PERMANENT DUPLICATES",
+                     stage1, assume_yes, base)
+    if rc == 1:
+        return 1
+
+    # --- stage 2: byte dupes that are OS copy-suffixed ------------------
+    # A cluster member is a "copy" if its name ends in ' 2', ' copy', etc.
+    # AND a byte-identical sibling carries the bare stem name. The bare
+    # original always survives; only suffixed copies are proposed.
+    stage2, handled2 = [], set()
+    for c in clusters:
+        if tuple(c) in handled:
+            continue
+        by_stem = {}
+        for p in c:
+            s = split_copy_suffix(os.path.basename(p))
+            if s:
+                by_stem.setdefault((s[0], s[1]), []).append(p)
+        bare = {p for p in c
+                if not split_copy_suffix(os.path.basename(p))}
+        dels = []
+        for (stem, _ext), ps in by_stem.items():
+            original = [p for p in bare
+                        if os.path.splitext(os.path.basename(p))[0] == stem
+                        and ext_of(p) == _ext]
+            if original:
+                dels.extend(ps)
+        if dels:
+            keeps = [p for p in c if p not in dels]
+            anchor = os.path.basename(next(iter(keeps))) if keeps \
+                else os.path.basename(c[0])
+            stage2.append((anchor, dels, keeps, "copy of an original above"))
+            handled2.add(tuple(c))
+    rc = batch_stage("STAGE 2 — COPY-SUFFIXED DUPLICATES (' 2', ' copy')",
+                     stage2, assume_yes, base)
+    if rc == 1:
+        return 1
+
+    # --- stage 3: same filename, lossless + compressed ------------------
+    stem_map = defaultdict(list)
+    for fp in all_files:
+        stem_map[stem_of(fp)].append(fp)
+    stage3_lossy, stage4_name = [], []
+    for stem, paths in stem_map.items():
+        if len(paths) < 2:
+            continue
+        exts = {ext_of(p) for p in paths}
+        if len(exts) < 2:
+            continue  # same extension = different masters, never auto-delete
+        lossless = [p for p in paths if ext_of(p) in LOSSLESS_EXTS]
+        lossy = [p for p in paths if ext_of(p) in LOSSY_EXTS]
+        if lossless and lossy:
+            stage3_lossy.append((lossy, lossless))
+            continue
+        if all(frozenset((a, b)) in COMPAT_PAIRS
+               for a in exts for b in exts if a != b):
+            stage4_name.append(paths)
+    # demoted from bulk delete: policy (keep lossless vs lossy) is
+    # folder-dependent, so these are decided per group in stage 3 review
+    stage3_byte = [c for c in clusters
+                   if tuple(c) not in handled
+                   and tuple(c) not in handled2
+                   and not all(is_temp(p, temp_re) for p in c)]
+    stage4_name = [paths for paths in stage4_name
+                   if not all(is_temp(p, temp_re) for p in paths)]
+    stage3_lossy = [pair for pair in stage3_lossy
+                    if not all(is_temp(p, temp_re)
+                               for pair in pair[0] + pair[1])]
+
+    # --- stages 3+4: one-by-one review, permanent locations only --------
+    groups = [("lossy", pair) for pair in stage3_lossy] + \
+             [("byte", c) for c in stage3_byte] + \
+             [("compat", p) for p in stage4_name]
+    n_groups = len(groups)
+    print(f"=== STAGE 3 — MANUAL REVIEW: {n_groups} groups ===\n")
+    if n_groups == 0:
+        print("  nothing to review\n")
+        return 0
+    if assume_yes or not (sys.stdin.isatty() and sys.stdout.isatty()):
+        print("  skipped — needs an interactive terminal "
+              "(run without --yes in a real terminal)\n")
+        return 0
+
+    deleted = failed = 0
+    freed = 0  # bytes
+
+    def group_rows(paths, kind):
+        """Two-column rows + sub-header for a group.
+        Same filenames -> 'Found: name (size) in'; otherwise per-file names."""
+        names = {os.path.basename(p) for p in paths}
+        if len(names) == 1:
+            name = next(iter(names))
+            header = f"Found: {name} ({size_str(paths[0])}) in"
+            rows = [{"folder": _rel_dir(p, base),
+                     "name": "", "path": p} for p in paths]
+        else:
+            header = (f"Found duplicate with different file names "
+                      f"({size_str(max(paths, key=os.path.getsize))}):")
+            rows = [{"folder": _rel_dir(p, base),
+                     "name": os.path.basename(p), "path": p} for p in paths]
+        return header, rows
+
+    pos = 0
+    seen = set()  # ids of groups rendered at least once
+    try:
+        while 0 <= pos < len(groups):
+            kind, payload = groups[pos]
+            if kind == "lossy":
+                lossy, lossless = payload
+                paths = [p for p in lossy + lossless if os.path.exists(p)]
+                lossy = [p for p in lossy if os.path.exists(p)]
+                lossless = [p for p in lossless if os.path.exists(p)]
+                if not (lossy and lossless):
+                    groups.pop(pos)
+                    if pos >= len(groups):
+                        pos = max(0, pos - 1)
+                    continue
+                # no universal keep-lossless policy: pre-select nothing,
+                # the user decides which format to keep per group
+                header = (f"Same track in two formats — "
+                          f"keep the one you want, delete the other")
+                rows = [{"folder": _rel_dir(p, base),
+                         "name": f"[{ext_of(p)}] "
+                                 f"{os.path.basename(p)}"
+                                 f"{' [OFFLINE]' if is_offline(p) else ''}"
+                                 f" ({size_str(p)})",
+                         "path": p} for p in paths]
+                group_title = "Lossless / Compressed Pairs"
+            else:
+                paths = payload
+                # prune files deleted in earlier passes (e.g. LEFT back
+                # after a deletion); <2 survivors drop the group
+                paths = [p for p in paths if os.path.exists(p)]
+                if len(paths) < 2:
+                    groups.pop(pos)
+                    if pos >= len(groups):
+                        pos = max(0, pos - 1)
+                    continue
+                header, rows = group_rows(paths, kind)
+            seen.add(id(groups[pos]))
+            action, sel = curses_select(
+                rows, counter=f"{pos + 1}/{len(groups)}",
+                total=len(groups),
+                group_title="Matches",
+                sub_header=header,
+                scan_root=base)
+            if action == "quit":
+                break
+            if action == "back":
+                pos = max(0, pos - 1)
+                continue
+            if sel:
+                sel = sorted(set(sel))  # dedupe; tolerate races
+                sizes = {}
+                for p in sel:
+                    try:
+                        sizes[p] = os.path.getsize(p)
+                    except OSError:
+                        sizes[p] = 0
+                ok, fl = delete_files(sel, base)
+                deleted += ok
+                failed += fl
+                freed += sum(sizes.values())
+            # advance or resolve: a group is done when fewer than 2 files
+            # survive (lossy: both sides must survive to stay queued)
+            if kind == "lossy":
+                still_lossy = [p for p in lossy if os.path.exists(p)]
+                still_lossless = [p for p in lossless if os.path.exists(p)]
+                if not (still_lossy and still_lossless):
+                    groups.pop(pos)
+                    if pos >= len(groups):
+                        pos = max(0, pos - 1)
+                else:
+                    pos += 1
+            else:
+                survivors = [p for p in paths if os.path.exists(p)]
+                if len(survivors) < 2:
+                    groups.pop(pos)  # counter shrinks: 3/17 -> 3/16
+                    if pos >= len(groups):
+                        pos = max(0, pos - 1)
+                else:
+                    pos += 1
+    except curses.error:
+        print("(terminal does not support curses — stage 3 skipped)")
+    reviewed = len(seen)
+    noun = "file" if deleted == 1 else "files"
+    lead = "\n" if deleted else ""
+    freed_s = (f"{freed / 1e6:.1f} MB" if freed >= 1e6 else
+               f"{freed / 1e3:.1f} KB" if freed >= 10_000 else
+               f"{freed} B")
+    print(f"{lead}{deleted} {noun} deleted ({freed_s}), {failed} failed")
+    print(f"{reviewed} of {n_groups} duplicates reviewed, "
+          f"{len(groups)} remaining")
+    print(f"\nrerun 'find-dupe-files' to continue anytime")
+    print(f"\n=== REVIEW COMPLETE ===")
+    return 0 if failed == 0 else 1
+
+
+def temp_folders_mode(all_files, base, temp_re, assume_yes):
+    """Temp-folder-only duplicates: plan + prompt."""
+    clusters = byte_clusters(all_files)
+    groups, to_delete = [], []
+    for c in clusters:
+        inside = [p for p in c if is_temp(p, temp_re)]
+        outside = [p for p in c if not is_temp(p, temp_re)]
+        if not inside:
+            continue
+        if outside:
+            groups.append((os.path.basename(c[0]), inside, outside,
+                           "copy survives outside temp"))
+        else:
+            groups.append((os.path.basename(c[0]), c[1:], [c[0]],
+                           "temp-only group"))
+            to_delete.extend(c[1:])
+        to_delete.extend(inside)
+    if not groups:
+        print("No duplicate files inside temp folders. Nothing to do.")
+        return 0
+    anchor_rows = [(a, d, k, n) for a, d, k, n in groups]
+    n_del = sum(len(d) for _, d, _, _ in anchor_rows)
+    total = sum(mb(p) for _, d, _, _ in anchor_rows for p in d)
+    for anchor, dels, keeps, note in anchor_rows:
+        print_anchor(anchor, note=note)
+        for p in dels:
+            print_loc(p, base, prefix="  ", label="DELETE")
+        for p in keeps:
+            print_loc(p, base, prefix="  ", label="KEEP")
+        print()
+    if confirm(f"Delete {n_del} files ({total:.1f} MB)? [y/N] ", assume_yes):
+        ok, failed = delete_files(
+            [p for _, d, _, _ in anchor_rows for p in d], base)
+        print(f"  {ok} deleted, {failed} failed")
+        return 0 if failed == 0 else 1
+    print("\nAborted — nothing deleted.")
+    return 2
+
+
+def view_report(all_files, base, temp_re, want_dur):
+    """Read-only report."""
+    clusters = byte_clusters(all_files)
+    dup_files = sum(len(c) - 1 for c in clusters)
+    wasted = sum(os.path.getsize(c[0]) * (len(c) - 1) for c in clusters)
+    print(f"=== EXACT DUPLICATES: {len(clusters)} groups, {dup_files} redundant "
+          f"copies, {wasted / 1e6:.1f} MB wasted ===\n")
+    for c in clusters:
+        print_anchor(os.path.basename(c[0]), size=size_str(c[0]),
+                     note=f"x{len(c)}")
+        locs = [_rel_dir(p, base) + (" [TEMP]" if is_temp(p, temp_re) else "")
+                for p in c]
+        print(f"  byte-identical in: {', '.join(locs)}\n")
+
+    groups = name_groups(all_files)
+    print(f"=== SAME NAME, DIFFERENT BYTES: {len(groups)} groups ===\n")
+    if not groups:
+        return 0
+
+    same_master, diff_ver, unread = [], [], []
+    if want_dur:
+        for title, paths in groups:
+            durs = [_duration(p) if ext_of(p) in AUDIO_EXTS else None
+                    for p in paths]
+            if any(d is None for d in durs):
+                unread.append((title, paths, durs))
+            elif max(durs) - min(durs) <= 1.0:
+                same_master.append((title, paths, durs))
+            else:
+                diff_ver.append((title, paths, durs))
+        sections = (
+            ("same duration — likely same master, keep one", same_master),
+            ("different duration — different version, keep both", diff_ver),
+            ("not media / unreadable — check manually", unread))
+    else:
+        sections = (("pass --dur to classify these", groups),)
+
+    for label, items in sections:
+        print(f"  --- {label} ({len(items)}) ---\n")
+        for title, paths, *durs in items:
+            print_anchor(title)
+            dl = durs[0] if durs else [None] * len(paths)
+            for p, d in zip(paths, dl):
+                print_loc(p, base, prefix="  ", dur=d)
+            print()
+    return 0
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        prog="find-dupe-files",
+        description="Find duplicate files in a folder tree (defaults to the "
+                    "current directory).",
+        epilog="examples:\n"
+               "  find-dupe-files                  # guided 3-stage cleanup\n"
+               "  find-dupe-files --report         # read-only report\n"
+               "  find-dupe-files ~/Music --report --dur   # + duration info\n"
+               "  find-dupe-files --temp-folders   # temp dupes + prompt\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("path", nargs="?", default=".",
+                    help="folder to scan (default: current directory)")
+    ap.add_argument("--temp-folders", action="store_true",
+                    help="only temp-folder duplicates; plan + prompt")
+    ap.add_argument("-y", "--yes", action="store_true",
+                    help="skip prompts (for scripts); interactive review skipped")
+    ap.add_argument("--report", action="store_true",
+                    help="read-only report (default is the guided 3-stage review)")
+    ap.add_argument("--dur", action="store_true",
+                    help="with --report: classify same-name media groups by duration")
+    ap.add_argument("--temp-pattern", default=r"^_{5,}",
+                    help="regex for temp dir names (default: 5+ underscores)")
+    ap.add_argument("--min-size-mb", type=float, default=0)
+    args = ap.parse_args()
+
+    base = os.path.abspath(os.path.expanduser(args.path))
+    if not os.path.isdir(base):
+        print(f"error: not a directory: {args.path}", file=sys.stderr)
+        return 1
+    temp_re = re.compile(args.temp_pattern)
+
+    all_files = collect_files(base)
+    if args.min_size_mb:
+        floor = args.min_size_mb * 1e6
+        all_files = [f for f in all_files if os.path.getsize(f) >= floor]
+    kind = "files" if not args.min_size_mb else f"files >= {args.min_size_mb} MB"
+    print(f"Scanning {len(all_files)} {kind} under {base}\n")
+
+    if args.temp_folders:
+        return temp_folders_mode(all_files, base, temp_re, args.yes)
+    if args.report:
+        return view_report(all_files, base, temp_re, args.dur)
+    return review_mode(all_files, base, temp_re, args.yes)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

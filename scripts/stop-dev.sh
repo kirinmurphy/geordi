@@ -3,14 +3,14 @@ set -euo pipefail
 
 project_dir="${0:A:h:h}"
 source "$project_dir/scripts/product-brand.sh"
-installed_executable="$HOME/Applications/$product_display_name.app/Contents/MacOS/HALApp"
-pid_file="$project_dir/.build/hal-dev.pids"
+installed_executable="$HOME/Applications/$product_display_name.app/Contents/MacOS/GeordiApp"
+pid_file="$project_dir/.build/dev.pids"
 
-is_hal_development_command() {
+is_development_command() {
   local command="$1"
   [[ "$command" == "$installed_executable" ]] && return 0
-  [[ "$command" == "$project_dir/.build/"*"/HALApp.app/Contents/MacOS/HALApp" ]] && return 0
-  [[ "$command" == "$project_dir/.build/"*"/HALApp" ]] && return 0
+  [[ "$command" == "$project_dir/.build/"*"/GeordiApp.app/Contents/MacOS/GeordiApp" ]] && return 0
+  [[ "$command" == "$project_dir/.build/"*"/GeordiApp" ]] && return 0
   return 1
 }
 
@@ -23,21 +23,21 @@ if [[ -f "$pid_file" ]]; then
 fi
 
 while read -r pid command; do
-  if is_hal_development_command "$command"; then
+  if is_development_command "$command"; then
     candidate_pids+=("$pid")
   fi
 done < <(/bin/ps -axo pid=,command=)
 
-typeset -a hal_pids
+typeset -a app_pids
 for pid in ${(u)candidate_pids}; do
   command="$(/bin/ps -p "$pid" -o command= 2>/dev/null || true)"
   command="${command## }"
-  if [[ -n "$command" ]] && is_hal_development_command "$command"; then
-    hal_pids+=("$pid")
+  if [[ -n "$command" ]] && is_development_command "$command"; then
+    app_pids+=("$pid")
   fi
 done
 
-if (( ${#hal_pids} == 0 )); then
+if (( ${#app_pids} == 0 )); then
   rm -f "$pid_file"
   print "No running $product_display_name development process."
   exit 0
@@ -45,20 +45,20 @@ fi
 
 # SIGTERM gives the app a chance to terminate normally. Every PID is checked
 # against an exact development-bundle path immediately before signaling it.
-for pid in $hal_pids; do
+for pid in $app_pids; do
   command="$(/bin/ps -p "$pid" -o command= 2>/dev/null || true)"
   command="${command## }"
-  if is_hal_development_command "$command"; then
+  if is_development_command "$command"; then
     /bin/kill -TERM "$pid"
   fi
 done
 
 for _ in {1..50}; do
   typeset -a remaining
-  for pid in $hal_pids; do
+  for pid in $app_pids; do
     command="$(/bin/ps -p "$pid" -o command= 2>/dev/null || true)"
     command="${command## }"
-    if [[ -n "$command" ]] && is_hal_development_command "$command"; then
+    if [[ -n "$command" ]] && is_development_command "$command"; then
       remaining+=("$pid")
     fi
   done
@@ -73,4 +73,4 @@ if (( ${#remaining} > 0 )); then
 fi
 
 rm -f "$pid_file"
-print "Stopped $product_display_name development process(es): ${hal_pids[*]}"
+print "Stopped $product_display_name development process(es): ${app_pids[*]}"

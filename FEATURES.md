@@ -1,4 +1,4 @@
-# HAL Feature Catalog
+# geordi Feature Catalog
 
 This catalog records every feature discussed so far. Inclusion here does not
 mean every feature belongs in the first release.
@@ -136,11 +136,11 @@ remain available as context and as a lens.
 Proposed commands:
 
 ```text
-hal reclaim scan
-hal reclaim candidates
-hal reclaim explain <path>
-hal reclaim clean --dry-run
-hal reclaim clean
+geordi reclaim scan
+geordi reclaim candidates
+geordi reclaim explain <path>
+geordi reclaim clean --dry-run
+geordi reclaim clean
 ```
 
 ## Overall storage lens
@@ -180,7 +180,7 @@ This is a V2 feature.
 - Increase resolution around a detected incident.
 - Downsample historical normal periods.
 - Bound database size with retention policies.
-- Measure and report HAL's own overhead.
+- Measure and report geordi's own overhead.
 
 ## Incidents and behavioral correlation
 
@@ -191,7 +191,7 @@ This is a V2 feature.
 - Rank contributing processes and applications.
 - Record nearby launches, exits, wake events, installations, updates, and
   explicitly enabled user-context events.
-- Allow manual markers such as `hal mark "started export"`.
+- Allow manual markers such as `geordi mark "started export"`.
 - Compare incidents for repeated sequences.
 - Report correlations and possible triggers without claiming unsupported
   causation.
@@ -218,20 +218,20 @@ diagnostics, inspection, testing, and export.
 Candidate surface:
 
 ```text
-hal map
-hal status
-hal health
-hal explain <entity>
-hal inspect <entity>
-hal changes
+geordi map
+geordi status
+geordi health
+geordi explain <entity>
+geordi inspect <entity>
+geordi changes
 
-hal apps
-hal processes
-hal persistence
-hal reclaim
-hal incidents
-hal telemetry
-hal doctor
+geordi apps
+geordi processes
+geordi persistence
+geordi reclaim
+geordi incidents
+geordi telemetry
+geordi doctor
 ```
 
 The exact CLI is provisional and should emerge from real workflows rather than
@@ -252,7 +252,7 @@ be treated as a frozen contract.
 - Findings inbox
 - Application footprint
 - Settings, privacy, retention, and permissions
-- HAL health and overhead
+- geordi health and overhead
 
 ## Privacy and safety
 

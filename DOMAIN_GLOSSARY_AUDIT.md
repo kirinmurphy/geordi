@@ -1,8 +1,8 @@
-# HAL domain-language audit
+# geordi domain-language audit
 
 Updated: July 29, 2026
 
-HAL’s manifest-backed glossary now covers the domain terms currently repeated
+geordi’s manifest-backed glossary now covers the domain terms currently repeated
 across the overview, inspector, evidence, application-story, and planned shell
 visualizer copy.
 

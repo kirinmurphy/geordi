@@ -4,8 +4,8 @@ set -euo pipefail
 project_dir="${0:A:h:h}"
 source "$project_dir/scripts/product-brand.sh"
 installed_bundle="$HOME/Applications/$product_display_name.app"
-installed_executable="$installed_bundle/Contents/MacOS/HALApp"
-pid_file="$project_dir/.build/hal-dev.pids"
+installed_executable="$installed_bundle/Contents/MacOS/GeordiApp"
+pid_file="$project_dir/.build/dev.pids"
 
 if [[ ! -x "$installed_executable" ]]; then
   print -u2 "$product_display_name is not installed at $installed_bundle"

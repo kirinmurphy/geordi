@@ -1,4 +1,4 @@
-# HAL Architecture
+# geordi Architecture
 
 ## Architectural goal
 

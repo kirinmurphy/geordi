@@ -4,7 +4,7 @@ Status: completed historical brief. See `COMPLETED_PHASES.md`.
 
 ## Objective
 
-Deliver a runnable native macOS concept that proves HAL's core interaction:
+Deliver a runnable native macOS concept that proves geordi's core interaction:
 
 > A user can select a synthetic application and understand how it relates to
 > processes, files, resource use, and a persistent helper.
@@ -50,7 +50,7 @@ events.
 A folder or helper with two plausible owners and evidence that cannot support a
 confident conclusion.
 
-The ambiguous scenario is essential: HAL must make uncertainty understandable,
+The ambiguous scenario is essential: geordi must make uncertainty understandable,
 not merely draw confident-looking connections.
 
 ## Interaction acceptance criteria
@@ -97,7 +97,7 @@ not merely draw confident-looking connections.
 The product owner should evaluate:
 
 1. Can I tell what the selected application owns and launches?
-2. Can I distinguish observed facts from HAL's inferences?
+2. Can I distinguish observed facts from geordi's inferences?
 3. Does uncertainty feel honest and comprehensible?
 4. Is navigation calmer and clearer than reading several tables?
 5. Does the map add understanding beyond the inspector?

@@ -1,0 +1,22 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://geordi.local/schemas/glossary-v1.json",
+  "type":"object","additionalProperties":false,
+  "required":["schemaVersion","hoverDelayMilliseconds","terms"],
+  "properties":{
+    "schemaVersion":{"const":1},
+    "hoverDelayMilliseconds":{"type":"integer","minimum":0,"maximum":2000},
+    "terms":{"type":"array","minItems":1,"items":{
+      "type":"object","additionalProperties":false,
+      "required":["id","displayTerm","description","aliases","contexts"],
+      "properties":{
+        "id":{"type":"string","minLength":1},
+        "displayTerm":{"type":"string","minLength":1},
+        "description":{"type":"string","minLength":1},
+        "explanation":{"type":"string","minLength":1},
+        "aliases":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},
+        "contexts":{"type":"array","minItems":1,"items":{"type":"string","minLength":1},"uniqueItems":true}
+      }
+    }}
+  }
+}

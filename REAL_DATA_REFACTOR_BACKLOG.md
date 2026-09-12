@@ -70,7 +70,7 @@ These items were recorded from the first linked-Mac product test on
 ### Initial linking flow
 
 - [x] Replace the banner-only `Linking…` state with a focused setup overlay
-  that explains HAL is performing read-only collection.
+  that explains geordi is performing read-only collection.
 - [x] Disable controls whose meaning depends on the selected data source while
   the initial link is unresolved.
 - [x] Keep unlink, destructive reset, and ordinary refresh unavailable during
@@ -93,7 +93,7 @@ These items were recorded from the first linked-Mac product test on
 
 - [x] Replace the green “Read-only application inventory” notification with a
   completion/coverage panel that answers:
-  what finished, what HAL learned, what remains unavailable, and what the user
+  what finished, what geordi learned, what remains unavailable, and what the user
   can explore next.
 - [x] Remove **Refresh Now** as the primary post-link action. It is not the next
   step in setup and currently suggests that missing capabilities will be
@@ -214,7 +214,7 @@ These items were recorded from the first linked-Mac product test on
 - [x] Convert the simple-application fixture end-to-end as the schema reference
   profile.
 - [x] Convert the remaining focused fixture scenarios.
-- [x] Make `HALFixtures` load manifests through the centralized decoder.
+- [x] Make `GeordiFixtures` load manifests through the centralized decoder.
 - [x] Validate every manifest-backed synthetic profile in unit tests and the
   fixture validator.
 - [x] Make build verification fail when a committed profile is invalid or uses
@@ -231,7 +231,7 @@ These items were recorded from the first linked-Mac product test on
 - [x] Persist `synthetic` versus `linkedMac` as a user preference.
 - [x] Keep first launch synthetic and guarantee it performs no real collection.
 - [x] Add **Link to your Mac** to the fictional-data banner.
-- [x] Add a homepage welcome prompt above alerts explaining HAL and the fictional
+- [x] Add a homepage welcome prompt above alerts explaining geordi and the fictional
   profile.
 - [x] Allow both onboarding prompts to be dismissed while remaining synthetic.
 - [x] Add an obscure but discoverable data-source control in the sidebar footer.

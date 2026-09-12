@@ -8,7 +8,7 @@ Accepted on July 26, 2026 after the first Phase 0 product evaluation failed.
 
 The original prototype exposed fixture selection, entity-type filters, a text
 navigator, a graph, and a permanent inspector at launch. Although those pieces
-exercised the domain model, the product owner could not determine what HAL was
+exercised the domain model, the product owner could not determine what geordi was
 for or how the concepts related. This failed the Phase 0 clarity thesis.
 
 ## Decision
@@ -30,5 +30,5 @@ for or how the concepts related. This failed the Phase 0 clarity thesis.
 
 Phase 0 remains synthetic and isolated, but now models one persistent world
 that can be approached from multiple use cases. The next product evaluation
-should judge whether users understand why HAL exists before inspecting the
+should judge whether users understand why geordi exists before inspecting the
 details of any relationship.

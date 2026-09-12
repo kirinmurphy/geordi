@@ -1,8 +1,8 @@
 # System Profile Schema Versioning
 
-This document defines compatibility and migration rules for HAL's normalized
+This document defines compatibility and migration rules for geordi's normalized
 system-profile manifests. The canonical contract is
-`Sources/HALProfileSchema/Resources/system-profile.schema.json`.
+`Sources/GeordiProfileSchema/Resources/system-profile.schema.json`.
 
 Collector and composition manifests have their own adjacent schemas and
 independent version fields. They follow the same strict compatibility and
@@ -12,7 +12,7 @@ normalized system-profile version unless its emitted data contract changes.
 ## Compatibility contract
 
 `schemaVersion` is an integer major version. A profile is accepted only when
-its version equals the version supported by the running application. HAL does
+its version equals the version supported by the running application. geordi does
 not silently reinterpret an older or newer profile.
 
 Changes that do not alter the accepted document shape do not require a schema
@@ -30,7 +30,7 @@ A new schema version is required when a change:
 - makes a previously valid profile structurally invalid.
 
 Adding an optional property or enum case is still treated as a versioned
-change while HAL uses strict decoding and exact Swift enum parity. This avoids
+change while geordi uses strict decoding and exact Swift enum parity. This avoids
 profiles that validate in one component but cannot be decoded in another.
 
 ## Change procedure
@@ -76,7 +76,7 @@ Collector output is normalized into a versioned profile before domain or
 presentation use. Persisted scans retain the schema version used when they were
 created. Application startup must not mutate historical scans in place.
 
-When migrations exist, HAL should migrate into a new record or cache and retain
+When migrations exist, geordi should migrate into a new record or cache and retain
 the original until the replacement validates. A failed migration leaves the
 original untouched and presents it as unavailable due to version mismatch.
 

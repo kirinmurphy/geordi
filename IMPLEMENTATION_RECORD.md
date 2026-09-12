@@ -58,7 +58,7 @@ conservative package-name validation and is never executed.
 ### Collection issues
 
 Parser limitations remain discoverable in Collection Health but are described
-as HAL limitations rather than Mac faults. Permission-denied states retain
+as geordi limitations rather than Mac faults. Permission-denied states retain
 action-oriented language. Persistent local issue history was not introduced.
 
 ## Verification
@@ -71,7 +71,7 @@ action-oriented language. Persistent local issue history was not introduced.
 - `make verify` passed: strict formatting, 117 tests, all seven canonical
   synthetic fixtures, Debug build, application packaging, and native bundle
   smoke validation.
-- The development build was installed at `~/Applications/HAL.app` and launched.
+- The development build was installed at `~/Applications/geordi.app` and launched.
   Automated screenshot capture was unavailable in the execution environment,
   so no claim is made for pixel-level visual verification.
 

@@ -6,13 +6,13 @@ Accepted on July 26, 2026.
 
 ## Context
 
-Phase 0 must validate HAL's interaction model without real collection,
+Phase 0 must validate geordi's interaction model without real collection,
 persistence, mutation, permissions, or privileged components.
 
 ## Decisions
 
-- Use one Swift package with cohesive `HALDomain`, `HALFixtures`,
-  `HALVisualization`, and `HALApp` targets. Xcode opens `Package.swift`
+- Use one Swift package with cohesive `GeordiDomain`, `GeordiFixtures`,
+  `GeordiVisualization`, and `GeordiApp` targets. Xcode opens `Package.swift`
   directly and exposes the app scheme, avoiding generated project metadata.
 - Use SwiftUI for the native application shell and a custom SwiftUI
   `Canvas`-backed relationship view.
@@ -22,7 +22,7 @@ persistence, mutation, permissions, or privileged components.
   domain model so the canvas and inspector cannot diverge.
 - Model selection independently from type filters. A hidden selection is
   preserved, and search restores its type before focusing it.
-- Represent observed facts and HAL inferences as distinct evidence kinds.
+- Represent observed facts and geordi inferences as distinct evidence kinds.
   Ambiguous relationships use an explicit unresolved confidence and dashed
   orange presentation.
 - Use native Swift Testing and `swift-format` to avoid third-party dependencies.
