@@ -23,7 +23,7 @@ flowchart LR
 ## Safety boundaries
 
 - **Desktop first launch is synthetic.** Linking a Mac is explicit; observation stays local and read-only.
-- **Duplicate cleanup requires confirmation.** Use the report mode for inspection without deletion.
+- **Duplicate cleanup requires confirmation.** Use the report mode for inspection without deletion. Deletions default to the macOS Trash; permanent unlink requires `--hard-delete`. Already-reviewed duplicate groups are remembered per scan root (`~/.find-dupe-files/`) and can be skipped with `--unreviewed`.
 - **Setup previews before installing.** Inventory refresh changes the manifest, not the machine. Real installs require an explicit apply action and confirmation.
 - **Installed evidence is not a desired default.** Manually installed apps without a verified installer remain visible as manual inventory rather than guessed Homebrew packages.
 - **No automatic uninstall.** Differences between the Mac and its manifest are reported, not resolved by removing software.

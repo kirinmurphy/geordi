@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 """find-dupe-files — find duplicate files in any folder tree.
 
-Default mode is a guided 4-stage cleanup:
+Default mode is a guided 5-stage cleanup:
 
   Stage 1  byte-identical copies split across temp / permanent folders
            -> shown together, one prompt, batch-delete the temp copies
   Stage 2  byte-identical copies whose names are OS copy artifacts
            ('name 2.wav', 'name copy.wav') -> batch delete the copies,
            the bare-named original always survives
-  Stage 3  same filename in lossless + compressed formats -> reviewed
-           ONE BY ONE: no universal keep-rule (tunes keeps lossless,
-           mixes may want compressed), you pick per group
+  Stage 3  same filename in lossless + compressed formats, or WAV
+           copies with identical audio but different metadata/tags
+           -> reviewed ONE BY ONE: no universal keep-rule (tunes keeps
+           lossless, mixes may want compressed), you pick per group
   Stage 4  byte-identical or compatible-format groups -> one-by-one
            multi-select review
+  Stage 5  POSSIBLE duplicates, least confidence: same name with
+           version words ('remix', 'edit', ...) stripped and matching
+           OR unknown duration (e.g. same track at two bitrates).
+           A real remix has a different duration and is never shown.
+           These render last with an explicit lower-confidence warning.
 
 Cross-format matching is whitelist-based (COMPAT_PAIRS below): wav/mp3,
 aif/mp3, doc/docx etc. are flagged; mp3/mp4 or doc/xls never are.
@@ -25,13 +31,19 @@ Without a path argument, scans the CURRENT DIRECTORY.
 
 Safety: nothing is deleted without an explicit prompt (or --yes for
 scripts); non-tty stdin refuses destructive action; the interactive
-review needs a real terminal.
+review needs a real terminal. Deletions move files to the macOS Trash
+(~/.Trash) — recoverable until the Trash is emptied. --hard-delete
+unlinks permanently instead.
 
 Options:
   --report         read-only report (default is the guided review)
   --dur            read media durations (afinfo/ffprobe) for --report
   --temp-folders   only temp-folder duplicates; plan + prompt
-  --yes (-y)       skip prompts (scripts); stages 3+4 still skipped
+  --yes (-y)       skip prompts (scripts); interactive review skipped
+  --hard-delete    unlink permanently instead of moving to the Trash
+  --unreviewed     skip groups already shown in a previous run (seen-
+                   state stored per scan root in ~/.find-dupe-files)
+  --forget-seen    clear that seen-state so --unreviewed shows all again
   --temp-pattern   regex for temp dirs (default "^_{5,}")
   --min-size-mb N  ignore files smaller than N MB
 
@@ -39,13 +51,19 @@ Exit codes: 0 ok, 1 deletion failures, 2 aborted at a prompt.
 """
 
 import argparse
+import errno
 import hashlib
 import json
 import os
 import re
+import shutil
+import struct
 import subprocess
 import sys
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from pathlib import Path
 
 AUDIO_EXTS = {".wav", ".mp3", ".aif", ".aiff", ".m4a", ".flac", ".mp4",
               ".m4p", ".mpeg"}
@@ -76,7 +94,10 @@ remaster(ed)?|audio|video|hq|lyrics?|instrumental|rip|slowed|down|radio)\b"""
 
 
 def norm(stem):
-    s = re.sub(STRIP_WORDS, " ", stem.lower(), flags=re.VERBOSE)
+    # separators to spaces FIRST: '_remix' contains no \b word boundary
+    # (underscore is a word char), so STRIP_WORDS would never match
+    s = re.sub(r"[_\-.]+", " ", stem.lower())
+    s = re.sub(STRIP_WORDS, " ", s, flags=re.VERBOSE)
     return re.sub(r"[^a-z0-9]+", "", s)
 
 
@@ -113,12 +134,81 @@ def is_offline(path):
         return False
 
 
-def size_str(p):
-    """Human-readable size: bytes under 10 KB, KB below 1 MB, MB above."""
-    s = os.path.getsize(p)
+def format_size(s):
+    """Human-readable size from a byte count: bytes under 10 KB,
+    KB below 1 MB, MB above."""
     if s < 10_000:
         return f"{s} B"
     return f"{s / 1e6:.1f} MB" if s >= 1e6 else f"{s / 1e3:.1f} KB"
+
+
+def fmt_dur(sec):
+    """Human duration: 444 -> '7m24s'; 3700.5 -> '1h01m40.5s';
+    under a minute keeps one decimal ('42.3s')."""
+    if sec is None:
+        return "unknown"
+    if sec < 60:
+        return f"{sec:.1f}s"
+    h, rem = divmod(int(sec), 3600)
+    m, s = divmod(rem, 60)
+    frac = sec - int(sec)
+    if h:
+        return f"{h}h{m:02d}m{s:02d}.{int(frac * 10)}s"
+    return f"{m}m{s:02d}s"
+
+
+def trunc_mid(s, maxlen=30):
+    """Middle-truncate to maxlen with '...' where characters were cut —
+    keeps head and tail (track numbers and extensions stay visible)."""
+    if len(s) <= maxlen:
+        return s
+    keep = maxlen - 3  # room for the literal '...'
+    head = (keep + 1) // 2
+    tail = keep - head
+    return f"{s[:head]}...{s[-tail:]}"
+
+
+# ------------------------------------------------------- reviewed state
+
+def state_file(base):
+    """Path of the seen-state JSON for the scan root: one file per root,
+    keyed by a hash of its absolute path, in a dot-directory hidden from
+    Finder. FDF_STATE_DIR overrides the directory (tests)."""
+    root = os.environ.get("FDF_STATE_DIR") or \
+        os.path.join(Path.home(), ".find-dupe-files")
+    key = hashlib.sha1(base.encode()).hexdigest()[:16]
+    return Path(root) / f"{key}.json"
+
+
+def load_seen(base):
+    """Map group-key -> ISO timestamp of when it was last shown."""
+    try:
+        return dict(json.loads(
+            state_file(base).read_text()).get("seen", {}))
+    except (OSError, ValueError):
+        return {}
+
+
+def save_seen(base, seen):
+    try:
+        state_file(base).write_text(json.dumps(
+            {"version": 1, "base": base, "seen": seen}))
+    except OSError:
+        pass  # state is a convenience; never fail the run over it
+
+
+def group_key(kind, payload):
+    """Stable identity of a review group: its sorted member paths."""
+    if kind == "lossy":
+        paths = list(payload[0]) + list(payload[1])
+    else:
+        paths = list(payload)
+    return "|".join(sorted(paths))
+
+
+def size_str(p):
+    """Human-readable size of the file at path p."""
+    return format_size(os.path.getsize(p))
 
 
 def is_temp(fp, temp_re):
@@ -199,18 +289,292 @@ def name_groups(all_files):
     return out
 
 
-def delete_files(paths, base):
-    """Delete paths; print one row per file with its size.
-    Idempotent: a path that no longer exists (already deleted by an
-    earlier pass in this run) is skipped without error."""
+# ---------------------------------------------------------------- same audio
+
+def _hash_stream(f, length):
+    """Hash exactly `length` bytes from current file position; tolerate
+    EOF (malformed/truncated files): hashes whatever IS there and
+    returns (hashed_len, digest) — or None for a zero-byte read."""
+    h = hashlib.md5()
+    remaining = length
+    hashed = 0
+    while remaining:
+        chunk = f.read(min(1 << 20, remaining))
+        if not chunk:
+            break
+        h.update(chunk)
+        hashed += len(chunk)
+        remaining -= len(chunk)
+    if not hashed:
+        return None
+    return hashed, h.hexdigest()
+
+
+def mp3_audio_payload(path):
+    """(audio_frame_bytes, md5) for an mp3, ignoring tag wrappers:
+    ID3v2 header at the front and ID3v1 footer (128 B) at the tail are
+    metadata; the frames between them are the audio. None if the file
+    is not recognizable mp3."""
+    try:
+        with open(path, "rb") as f:
+            head = f.read(10)
+            if head[:3] == b"ID3":
+                # synchsafe integer: 4x7-bit groups
+                tag_size = ((head[6] & 0x7F) << 21) | \
+                           ((head[7] & 0x7F) << 14) | \
+                           ((head[8] & 0x7F) << 7) | (head[9] & 0x7F)
+                f.seek(10 + tag_size)
+            elif head[:2] in (b"\xff\xfb", b"\xff\xfa", b"\xff\xf3",
+                              b"\xff\xf2", b"\xff\xe3", b"\xff\xe2"):
+                f.seek(0)  # bare frame sync, no tag
+            else:
+                return None
+            start = f.tell()
+            f.seek(0, 2)
+            total = f.tell()
+            end = total
+            if total >= 128:
+                f.seek(total - 128)
+                if f.read(3) == b"TAG":
+                    end = total - 128  # ID3v1 footer
+            if end <= start:
+                return None
+            f.seek(start)
+            return _hash_stream(f, end - start)
+    except OSError:
+        return None
+
+
+def flac_audio_payload(path):
+    """(audio_frame_bytes, md5) for a FLAC: skip the fLaC magic and the
+    metadata blocks (last one flagged in its header), hash the frames."""
+    try:
+        with open(path, "rb") as f:
+            if f.read(4) != b"fLaC":
+                return None
+            while True:
+                blk = f.read(4)
+                if len(blk) < 4:
+                    return None
+                last = blk[0] & 0x80
+                size = (blk[1] << 16) | (blk[2] << 8) | blk[3]
+                f.seek(size, 1)
+                if last:
+                    break
+            frames_start = f.tell()
+            end = f.seek(0, 2)
+            f.seek(frames_start)
+            return _hash_stream(f, end - frames_start)
+    except OSError:
+        return None
+
+
+def audio_payload(path):
+    """(payload_len, md5_of_audio_payload) or None. Dispatches by
+    extension: wav -> data chunk; mp3 -> frames without ID3 tags;
+    flac -> frames without metadata blocks."""
+    ext = ext_of(path)
+    if ext == ".wav":
+        return wav_data_chunk(path)
+    if ext == ".mp3":
+        return mp3_audio_payload(path)
+    if ext == ".flac":
+        return flac_audio_payload(path)
+    return None
+
+
+def wav_data_chunk(path):
+    """For a PCM .wav file: (data_chunk_size, md5_of_data_chunk) if the
+    audio payload can be hashed without reading non-audio chunks; else
+    None. Parses the RIFF chunk table instead of hashing the whole file,
+    so container/metadata-only differences (LIST/INFO tags, junk chunks)
+    don't mask identical audio."""
+    try:
+        with open(path, "rb") as f:
+            hdr = f.read(12)
+            if len(hdr) < 12 or hdr[:4] != b"RIFF" or hdr[8:12] != b"WAVE":
+                return None
+            data_off = data_size = None
+            while True:
+                chdr = f.read(8)
+                if len(chdr) < 8:
+                    break
+                cid, csize = struct.unpack("<4sI", chdr)
+                if cid == b"data":
+                    # hash exactly the declared payload; chunks after
+                    # `data` (junk, DMRTX...) don't affect the audio
+                    data_off, data_size = f.tell(), csize
+                    break
+                f.seek(csize + (csize & 1), 1)
+            if data_off is None:
+                return None
+            h = hashlib.md5()
+            f.seek(data_off)
+            remaining = data_size
+            hashed = 0
+            while remaining:
+                chunk = f.read(min(1 << 20, remaining))
+                if not chunk:
+                    # malformed WAV: declared data size exceeds the actual
+                    # file (truncated write). Hash what IS there — the
+                    # audio itself — and report the real hashed length;
+                    # returning None here silently excluded these files
+                    # from same-audio matching
+                    break
+                h.update(chunk)
+                hashed += len(chunk)
+                remaining -= len(chunk)
+            if not hashed:
+                return None
+            return hashed, h.hexdigest()
+    except (OSError, struct.error):
+        return None
+
+
+def possible_dupe_groups(all_files):
+    """Least-confidence tier: audio files sharing a normalized name
+    (version words like 'remix' stripped by norm()), not byte-identical
+    and not filtered by any higher-confidence group by the caller.
+    Returns candidate groups; duration discrimination happens in the
+    caller (it decides what counts as a confident NON-dupe)."""
+    cands = []
+    for fp in all_files:
+        if ext_of(fp) not in AUDIO_EXTS:
+            continue
+        try:
+            if os.path.getsize(fp) == 0 or is_offline(fp):
+                continue
+        except OSError:
+            continue
+        cands.append(fp)
+    by_norm = defaultdict(list)
+    for fp in cands:
+        by_norm[norm(stem_of(fp))].append(fp)
+    out = [sorted(paths) for paths in by_norm.values() if len(paths) > 1]
+    out.sort(key=lambda g: -os.path.getsize(g[0]))
+    return out
+
+
+def same_audio_groups(all_files):
+    """WAV pairs with byte-identical audio payload but different
+    container bytes (same audio, re-tagged/re-muxed metadata).
+    Two passes so hashing stays cheap: only WAVs sharing a normalized
+    name with another WAV can ever form a group — everything else is
+    excluded WITHOUT reading its audio payload. Grouping is then by
+    data-hash within a name; only groups whose members differ in
+    FULL-FILE bytes (else byte_clusters already handled them) qualify."""
+    candidates = []
+    for fp in all_files:
+        if ext_of(fp) not in (".wav", ".mp3", ".flac"):
+            continue
+        try:
+            if os.path.getsize(fp) == 0 or is_offline(fp):
+                continue
+        except OSError:
+            continue
+        candidates.append(fp)
+
+    by_name = defaultdict(list)
+    for fp in candidates:
+        by_name[norm(stem_of(fp))].append(fp)
+
+    by_key = defaultdict(list)
+    hash_workers = min(8, max(4, os.cpu_count() or 4))
+
+    def _payload(fp):
+        return audio_payload(fp)
+
+    shared = {name: fps for name, fps in by_name.items() if len(fps) >= 2}
+    if shared:
+        n = sum(len(fps) for fps in shared.values())
+        total = sum(os.path.getsize(p) for fps in shared.values()
+                    for p in fps)
+        bulk = (f"{total / 1e9:.1f} GB" if total >= 1e9 else
+                f"{total / 1e6:.1f} MB" if total >= 1e6 else
+                f"{total / 1e3:.1f} KB" if total >= 10_000 else
+                f"{total} B")
+        print(f"  comparing audio of {n} same-named "
+              f"wav/mp3/flac files ({bulk})...")
+    for name, fps in shared.items():
+        # payload hashing is IO+md5 bound and releases the GIL — a small
+        # thread pool cuts wall time ~4x on the multi-GB same-name set
+        with ThreadPoolExecutor(max_workers=hash_workers) as pool:
+            for fp, info in zip(fps, pool.map(_payload, fps)):
+                if info is None:
+                    continue
+                plen, phash = info
+                # key includes payload length: identical md5 with
+                # different lengths is impossible, but the size makes
+                # intent explicit for callers
+                by_key[(name, plen, phash)].append(fp)
+
+    out = []
+    for (name, dsize, dhash), paths in by_key.items():
+        if len(paths) < 2:
+            continue
+        paths = sorted(paths)
+        # byte-identical files belong to earlier stages, not here.
+        # Equal SIZE is not proof of identical BYTES (metadata-only
+        # differences keep the size equal in many muxers) — verify with
+        # a full-file hash before excluding.
+        if len({os.path.getsize(p) for p in paths}) == 1:
+            hashes = {md5_file(p) for p in paths}
+            if len(hashes) == 1:
+                continue  # truly byte-identical -> stages 1/2 handled it
+        out.append(paths)
+    out.sort(key=lambda g: -os.path.getsize(g[0]))
+    return out
+
+
+def mac_trash(path, trash_dir=None):
+    """Move path into the user's Trash (~/.Trash) without ever
+    overwriting an existing Trash entry (collision -> 'name 2.ext').
+    Same-volume renames are atomic; a cross-device move falls back to
+    copy+delete. Returns the Trash destination path.
+    Note: Finder's 'Put Back' needs Apple Events; a CLI move shows the
+    file in the Trash but recovery is manual (drag it back out)."""
+    trash = Path(trash_dir or (Path.home() / ".Trash"))
+    trash.mkdir(exist_ok=True)
+    name = os.path.basename(path)
+    stem, ext = os.path.splitext(name)
+    dest = trash / name
+    n = 1
+    while dest.exists() or dest.is_symlink():
+        n += 1
+        dest = trash / f"{stem} {n}{ext}"
+    try:
+        os.rename(path, dest)
+    except OSError as e:
+        if e.errno != errno.EXDEV:
+            raise
+        shutil.move(path, str(dest))  # cross-device: copy+delete
+    return str(dest)
+
+
+def delete_files(paths, base, hard=False, trash_dir=None):
+    """Remove paths (or move them to the Trash unless hard=True);
+    print one row per file with its size. Idempotent: a path that no
+    longer exists (already deleted by an earlier pass in this run) is
+    skipped without error."""
     ok = failed = 0
+    # FDF_TRASH_DIR lets tests (and unusual setups) redirect the Trash;
+    # without it pty tests would move sandbox files into the real ~/.Trash
+    trash_dir = trash_dir or os.environ.get("FDF_TRASH_DIR")
     for p in paths:
         try:
             if not os.path.exists(p):
                 continue
             size = os.path.getsize(p)
-            os.remove(p)
-            print(f"deleted: {os.path.relpath(p, base)} ({size_str(p)})")
+            if hard:
+                os.remove(p)
+                # format from the CAPTURED size — size_str(p) after remove
+                # would raise FileNotFoundError and misreport
+                print(f"deleted: {os.path.relpath(p, base)} "
+                      f"({format_size(size)})")
+            else:
+                dest = mac_trash(p, trash_dir=trash_dir)
+                print(f"trashed: {os.path.relpath(p, base)} "
+                      f"({format_size(size)})")
             ok += 1
         except FileNotFoundError:
             # already deleted by an earlier stage in this run — fine
@@ -264,13 +628,15 @@ def print_loc(p, base, temp_re=None, prefix="  ", dur=None, label=None):
         tags += " [TEMP]"
     if is_offline(p):
         tags += " [OFFLINE]"
-    dur_s = f" {dur:.1f}s" if dur is not None else ""
+    dur_s = f" {fmt_dur(dur)}" if dur is not None else ""
     lab = f"{label:<7}" if label else ""
     print(f"{prefix}{lab}{d}{tags} ({size_str(p)}){dur_s}")
 
 
 def print_anchor(name, size=None, note=None):
-    """Section anchor: the filename. size: float MB or preformatted str."""
+    """Section anchor: the filename (middle-truncated). size: float MB
+    or preformatted str."""
+    name = trunc_mid(name)
     extra = []
     if size is not None:
         extra.append(size if isinstance(size, str) else f"{size:.1f} MB")
@@ -293,7 +659,7 @@ def confirm(msg, assume_yes):
     return answer.strip().lower() in ("y", "yes")
 
 
-def batch_stage(title, groups, assume_yes, base):
+def batch_stage(title, groups, assume_yes, base, hard=False):
     """Print DEL/KEEP sections anchored on filename, then one batch prompt.
     groups: list of (anchor, dels, keeps, note) tuples. Returns exit code.
     Paths deleted by an earlier stage in this run are pruned from the plan
@@ -323,11 +689,13 @@ def batch_stage(title, groups, assume_yes, base):
         for p in keeps:
             print_loc(p, base, prefix="  ", label="KEEP")
         print()
-    if confirm(f"Delete {n_del} files ({total:.1f} MB)? [y/N] ", assume_yes):
+    verb = "Delete" if hard else "Trash"
+    if confirm(f"{verb} {n_del} files ({total:.1f} MB)? [y/N] ", assume_yes):
         ok, failed = delete_files(
             [p for _, d, _, _ in groups for p in d if os.path.exists(p)],
-            base)
-        print(f"  {ok} deleted, {failed} failed\n")
+            base, hard=hard)
+        act = "deleted" if hard else "trashed"
+        print(f"  {ok} {act}, {failed} failed\n")
         return 0 if failed == 0 else 1
     if not assume_yes and not sys.stdin.isatty():
         print("  skipped — stdin is not a terminal (use --yes for scripts)\n")
@@ -441,12 +809,16 @@ def curses_select(rows, counter, total, group_title, sub_header, scan_root):
 
 # ---------------------------------------------------------------- modes
 
-def review_mode(all_files, base, temp_re, assume_yes):
-    """Four sequential stages (the default mode):
-      1. byte dupes, temp vs permanent  -> batch delete temp copies
-      2. byte dupes that are copy-suffixed (' 2', ' copy') -> batch delete
-      3. same filename, lossless + compressed -> one-by-one review
-      4. everything else -> one-by-one review
+def review_mode(all_files, base, temp_re, assume_yes, hard=False,
+                unreviewed=False):
+    """Five sequential stages (the default mode):
+      1. byte dupes, temp vs permanent  -> batch trash temp copies
+      2. byte dupes that are copy-suffixed (' 2', ' copy') -> batch trash
+      3. one-by-one review: lossless/compressed pairs, same-audio copies
+         (identical payload, different tags), remaining byte-identical
+         groups, compatible-format matches
+      4. compatible-format name matches continue in the same loop
+      5. POSSIBLE duplicates (least confidence) -> reviewed last
     """
     clusters = byte_clusters(all_files)
 
@@ -460,7 +832,7 @@ def review_mode(all_files, base, temp_re, assume_yes):
             stage1.append((anchor, inside, outside, ""))
             handled.add(tuple(c))
     rc = batch_stage("STAGE 1 — TEMP vs PERMANENT DUPLICATES",
-                     stage1, assume_yes, base)
+                     stage1, assume_yes, base, hard=hard)
     if rc == 1:
         return 1
 
@@ -493,7 +865,7 @@ def review_mode(all_files, base, temp_re, assume_yes):
             stage2.append((anchor, dels, keeps, "copy of an original above"))
             handled2.add(tuple(c))
     rc = batch_stage("STAGE 2 — COPY-SUFFIXED DUPLICATES (' 2', ' copy')",
-                     stage2, assume_yes, base)
+                     stage2, assume_yes, base, hard=hard)
     if rc == 1:
         return 1
 
@@ -527,13 +899,66 @@ def review_mode(all_files, base, temp_re, assume_yes):
     stage3_lossy = [pair for pair in stage3_lossy
                     if not all(is_temp(p, temp_re)
                                for pair in pair[0] + pair[1])]
+    # same audio, different container (re-tagged WAVs): exclude anything
+    # already in a stage 3 byte cluster so a group never renders twice
+    clustered = {p for c in stage3_byte for p in c}
+    stage3_audio = [g for g in same_audio_groups(all_files)
+                    if not any(p in clustered for p in g)
+                    and not all(is_temp(p, temp_re) for p in g)]
+
+    # --- stage 5: POSSIBLE dupes, least confidence ----------------------
+    # same normalized name (version words stripped), NOT covered by any
+    # higher-confidence group. Duration is the non-dupe discriminator:
+    # a real remix/other version has a different duration -> never shown.
+    # Equal or UNKNOWN duration stays flagged for human review.
+    covered = clustered | {p for c in clusters for p in c}
+    covered |= {p for g in stage3_audio for p in g}
+    covered |= {p for pair in stage3_lossy for p in pair[0] + pair[1]}
+    covered |= {p for paths in stage4_name for p in paths}
+    maybe_cand = [g for g in possible_dupe_groups(all_files)
+                  if not any(p in covered for p in g)
+                  and not all(is_temp(p, temp_re) for p in g)]
+    stage5 = []
+    if maybe_cand:
+        n_probe = sum(len(g) for g in maybe_cand)
+        print(f"  checking durations of {n_probe} possible-duplicate "
+              f"files...")
+        for g in maybe_cand:
+            durs = [_duration(p) for p in g]
+            if any(d is None for d in durs):
+                stage5.append(g)      # unreadable -> cannot clear it
+            elif max(durs) - min(durs) <= 1.0:
+                stage5.append(g)      # same length -> possible dupe
+            # else: different durations = different versions, confident
+            # NON-dupes -> dropped entirely
 
     # --- stages 3+4: one-by-one review, permanent locations only --------
+    n_confident = (len(stage3_lossy) + len(stage3_audio) +
+                   len(stage3_byte) + len(stage4_name))
     groups = [("lossy", pair) for pair in stage3_lossy] + \
+             [("audio", g) for g in stage3_audio] + \
              [("byte", c) for c in stage3_byte] + \
-             [("compat", p) for p in stage4_name]
+             [("compat", p) for p in stage4_name] + \
+             [("maybe", g) for g in stage5]
+    n_groups_all = len(groups)
+    seen_state = load_seen(base)
+    if unreviewed and seen_state:
+        fresh = [(k, p) for k, p in groups
+                 if group_key(k, p) not in seen_state]
+        n_hidden = len(groups) - len(fresh)
+        groups[:] = fresh
+        if n_hidden:
+            print(f"  ({n_hidden} previously reviewed groups hidden — "
+                  f"run with --forget-seen to see them again)\n")
     n_groups = len(groups)
-    print(f"=== STAGE 3 — MANUAL REVIEW: {n_groups} groups ===\n")
+    group_noun = "group" if n_groups == 1 else "groups"
+    print(f"=== STAGE 3 — MANUAL REVIEW: {n_groups} {group_noun} "
+          f"(of {n_groups_all} found) ===\n")
+    if n_confident < n_groups:
+        n_maybe = n_groups - n_confident
+        noun = "group is" if n_maybe == 1 else "groups are"
+        print(f"  ({n_maybe} {noun} marked POSSIBLE — lower confidence, "
+              f"shown last; skip freely)\n")
     if n_groups == 0:
         print("  nothing to review\n")
         return 0
@@ -551,14 +976,15 @@ def review_mode(all_files, base, temp_re, assume_yes):
         names = {os.path.basename(p) for p in paths}
         if len(names) == 1:
             name = next(iter(names))
-            header = f"Found: {name} ({size_str(paths[0])}) in"
+            header = f"Found: {trunc_mid(name)} ({size_str(paths[0])}) in"
             rows = [{"folder": _rel_dir(p, base),
                      "name": "", "path": p} for p in paths]
         else:
             header = (f"Found duplicate with different file names "
                       f"({size_str(max(paths, key=os.path.getsize))}):")
             rows = [{"folder": _rel_dir(p, base),
-                     "name": os.path.basename(p), "path": p} for p in paths]
+                     "name": trunc_mid(os.path.basename(p)),
+                     "path": p} for p in paths]
         return header, rows
 
     pos = 0
@@ -587,6 +1013,45 @@ def review_mode(all_files, base, temp_re, assume_yes):
                                  f" ({size_str(p)})",
                          "path": p} for p in paths]
                 group_title = "Lossless / Compressed Pairs"
+            elif kind == "audio":
+                # same audio payload, different container (re-tagged WAVs)
+                paths = [p for p in payload if os.path.exists(p)]
+                if len(paths) < 2:
+                    groups.pop(pos)
+                    if pos >= len(groups):
+                        pos = max(0, pos - 1)
+                    continue
+                header = ("Same audio, different tags — identical sound; "
+                          "keep whichever copy's metadata you prefer")
+                rows = [{"folder": _rel_dir(p, base),
+                         "name": f"{os.path.basename(p)}"
+                                 f"{' [OFFLINE]' if is_offline(p) else ''}"
+                                 f" ({size_str(p)})",
+                         "path": p} for p in paths]
+                group_title = "Same-Audio Copies"
+            elif kind == "maybe":
+                # least-confidence tier: same stripped name + matching or
+                # unreadable duration; genuinely different versions were
+                # already filtered by the duration check
+                paths = [p for p in payload if os.path.exists(p)]
+                if len(paths) < 2:
+                    groups.pop(pos)
+                    if pos >= len(groups):
+                        pos = max(0, pos - 1)
+                    continue
+                header = "**** POSSIBLE duplicates (lower confidence) ****"
+                rows = []
+                for p in paths:
+                    d = _duration(p)
+                    # exact bytes + precise duration: the deltas between
+                    # the copies ARE the evidence
+                    dur_s = f", {fmt_dur(d)}" if d is not None else ""
+                    rows.append({"folder": _rel_dir(p, base),
+                                 "name": trunc_mid(f"{os.path.basename(p)}"
+                                         f"{' [OFFLINE]' if is_offline(p) else ''}"
+                                         f" ({os.path.getsize(p):,} B{dur_s})", 48),
+                                 "path": p})
+                group_title = "Possible Duplicates"
             else:
                 paths = payload
                 # prune files deleted in earlier passes (e.g. LEFT back
@@ -599,6 +1064,8 @@ def review_mode(all_files, base, temp_re, assume_yes):
                     continue
                 header, rows = group_rows(paths, kind)
             seen.add(id(groups[pos]))
+            seen_state[group_key(kind, payload)] = \
+                datetime.now().isoformat(timespec="seconds")
             action, sel = curses_select(
                 rows, counter=f"{pos + 1}/{len(groups)}",
                 total=len(groups),
@@ -618,7 +1085,7 @@ def review_mode(all_files, base, temp_re, assume_yes):
                         sizes[p] = os.path.getsize(p)
                     except OSError:
                         sizes[p] = 0
-                ok, fl = delete_files(sel, base)
+                ok, fl = delete_files(sel, base, hard=hard)
                 deleted += ok
                 failed += fl
                 freed += sum(sizes.values())
@@ -643,6 +1110,7 @@ def review_mode(all_files, base, temp_re, assume_yes):
                     pos += 1
     except curses.error:
         print("(terminal does not support curses — stage 3 skipped)")
+    save_seen(base, seen_state)  # remember what was shown this run
     reviewed = len(seen)
     noun = "file" if deleted == 1 else "files"
     lead = "\n" if deleted else ""
@@ -657,7 +1125,7 @@ def review_mode(all_files, base, temp_re, assume_yes):
     return 0 if failed == 0 else 1
 
 
-def temp_folders_mode(all_files, base, temp_re, assume_yes):
+def temp_folders_mode(all_files, base, temp_re, assume_yes, hard=False):
     """Temp-folder-only duplicates: plan + prompt."""
     clusters = byte_clusters(all_files)
     groups, to_delete = [], []
@@ -687,10 +1155,12 @@ def temp_folders_mode(all_files, base, temp_re, assume_yes):
         for p in keeps:
             print_loc(p, base, prefix="  ", label="KEEP")
         print()
-    if confirm(f"Delete {n_del} files ({total:.1f} MB)? [y/N] ", assume_yes):
+    verb = "Delete" if hard else "Trash"
+    if confirm(f"{verb} {n_del} files ({total:.1f} MB)? [y/N] ", assume_yes):
         ok, failed = delete_files(
-            [p for _, d, _, _ in anchor_rows for p in d], base)
-        print(f"  {ok} deleted, {failed} failed")
+            [p for _, d, _, _ in anchor_rows for p in d], base, hard=hard)
+        act = "deleted" if hard else "trashed"
+        print(f"  {ok} {act}, {failed} failed")
         return 0 if failed == 0 else 1
     print("\nAborted — nothing deleted.")
     return 2
@@ -711,6 +1181,15 @@ def view_report(all_files, base, temp_re, want_dur):
         print(f"  byte-identical in: {', '.join(locs)}\n")
 
     groups = name_groups(all_files)
+    audio_groups = same_audio_groups(all_files)
+    audio_files = sum(len(g) - 1 for g in audio_groups)
+    print(f"=== SAME AUDIO, DIFFERENT TAGS: {len(audio_groups)} groups, "
+          f"{audio_files} redundant copies ===\n")
+    for g in audio_groups:
+        print_anchor(os.path.basename(g[0]), size=size_str(g[0]),
+                     note=f"x{len(g)}")
+        locs = [_rel_dir(p, base) for p in g]
+        print(f"  identical audio data in: {', '.join(locs)}\n")
     print(f"=== SAME NAME, DIFFERENT BYTES: {len(groups)} groups ===\n")
     if not groups:
         return 0
@@ -750,7 +1229,8 @@ def main():
         description="Find duplicate files in a folder tree (defaults to the "
                     "current directory).",
         epilog="examples:\n"
-               "  find-dupe-files                  # guided 3-stage cleanup\n"
+               "  find-dupe-files                  # guided 5-stage cleanup\n"
+               "  find-dupe-files --unreviewed     # skip already-reviewed groups\n"
                "  find-dupe-files --report         # read-only report\n"
                "  find-dupe-files ~/Music --report --dur   # + duration info\n"
                "  find-dupe-files --temp-folders   # temp dupes + prompt\n",
@@ -761,8 +1241,16 @@ def main():
                     help="only temp-folder duplicates; plan + prompt")
     ap.add_argument("-y", "--yes", action="store_true",
                     help="skip prompts (for scripts); interactive review skipped")
+    ap.add_argument("--hard-delete", action="store_true",
+                    help="unlink permanently instead of moving to the Trash")
+    ap.add_argument("--unreviewed", action="store_true",
+                    help="hide groups you were already shown in a previous "
+                         "run (seen-state is stored per scan root)")
+    ap.add_argument("--forget-seen", action="store_true",
+                    help="clear the seen-state for this scan root, so "
+                         "--unreviewed shows everything again")
     ap.add_argument("--report", action="store_true",
-                    help="read-only report (default is the guided 3-stage review)")
+                    help="read-only report (default is the guided 5-stage review)")
     ap.add_argument("--dur", action="store_true",
                     help="with --report: classify same-name media groups by duration")
     ap.add_argument("--temp-pattern", default=r"^_{5,}",
@@ -783,11 +1271,20 @@ def main():
     kind = "files" if not args.min_size_mb else f"files >= {args.min_size_mb} MB"
     print(f"Scanning {len(all_files)} {kind} under {base}\n")
 
+    if args.forget_seen:
+        try:
+            state_file(base).unlink()
+            print(f"cleared seen-state for {base}")
+        except FileNotFoundError:
+            print(f"no seen-state stored for {base}")
+        return 0
     if args.temp_folders:
-        return temp_folders_mode(all_files, base, temp_re, args.yes)
+        return temp_folders_mode(all_files, base, temp_re, args.yes,
+                                 hard=args.hard_delete)
     if args.report:
         return view_report(all_files, base, temp_re, args.dur)
-    return review_mode(all_files, base, temp_re, args.yes)
+    return review_mode(all_files, base, temp_re, args.yes,
+                       hard=args.hard_delete, unreviewed=args.unreviewed)
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ import re
 import select
 import shutil
 import struct
+import sys
 import tempfile
 import termios
 import time
@@ -37,10 +38,15 @@ def run_pty(steps, setup):
     Returns (screen_text, sandbox_dir). Caller cleans up dir."""
     td = tempfile.mkdtemp(prefix="geordi-pty-")
     setup(td)
+    # route deletions to a sandbox Trash — never the real ~/.Trash
+    fake_trash = os.path.join(td, "trash")
+    os.makedirs(fake_trash)
+    env = dict(os.environ, FDF_TRASH_DIR=fake_trash)
     pid, fd = pty.fork()
     if pid == 0:  # child: real CLI, fake terminal
         os.chdir(td)
         os.environ["TERM"] = "xterm-256color"
+        os.environ.update(env)
         os.execv(CLI, [CLI, td])
     # curses needs a real window size or the child dies instantly
     fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 120, 0, 0))
@@ -115,6 +121,28 @@ def make_byte_dupes(td):
             f.write(b"y" * 500)
 
 
+def make_same_audio_pair(td):
+    """Same audio payload, different LIST metadata -> 1 'audio' group."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from test_same_audio import make_wav
+    a, b = os.path.join(td, "a"), os.path.join(td, "b")
+    os.makedirs(a); os.makedirs(b)
+    make_wav(os.path.join(a, "track.wav"), 500,
+             b"INFOICRD\x05\x00\x00\x002010\x00")
+    make_wav(os.path.join(b, "track.wav"), 500, b"INFOZ" + b"q" * 100)
+
+
+def make_possible_dupe_pair(td):
+    """Same stripped name (remix word), different bytes, unreadable
+    duration -> 1 'maybe' (POSSIBLE) group, rendered last."""
+    a, b = os.path.join(td, "a"), os.path.join(td, "b")
+    os.makedirs(a); os.makedirs(b)
+    for d, pad in (("a", 500), ("b", 900)):
+        with open(os.path.join(d and os.path.join(td, d),
+                               "Artist_Song_remix.mp3"), "wb") as f:
+            f.write(b"ID3 fake" + b"\x00" * pad)
+
+
 def strip_ansi(text):
     """Remove ANSI escapes including charset selectors (ESC(B etc)."""
     return re.sub(r"\x1b(?:\[[0-9;]*[A-Za-z]|\(.|\).)", "", text)
@@ -131,7 +159,7 @@ class TestStage3Curses(unittest.TestCase):
         # we assert on the first full frame + filesystem outcomes instead.
         keys = [
             (b" ", "MANUAL REVIEW"),  # SPACE -> select a/book.doc (diff only)
-            (b"\r", ("deleted:", "already gone:")),
+            (b"\r", ("trashed:", "deleted:", "already gone:")),
             (b"q", "REVIEW COMPLETE"),  # Q on group 2 -> quit to summary
         ]
         text, td = run_pty(keys, make_byte_dupes)
@@ -162,13 +190,9 @@ class TestStage3Curses(unittest.TestCase):
             # standalone terminal sign-off; resolved group shrinks the count
             # 4. summary under the stage-3 section; REVIEW COMPLETE is the
             # standalone terminal sign-off; resolved group shrinks the count.
-            # The deletion row can legitimately read either 'deleted:' or
-            # 'already gone:' (macOS may reclaim the tmp file between the
-            # exists-check and remove — both mean the file is gone).
-            self.assertTrue(
-                "deleted: a/book.doc (500 B)" in flat
-                or "already gone: a/book.doc" in flat,
-                f"neither deleted nor already-gone row found:\n{flat[-400:]}")
+            # The deletion row MUST read 'trashed:' — the default moves
+            # the file into the sandbox Trash (FDF_TRASH_DIR).
+            self.assertIn("trashed: a/book.doc (500 B)", flat)
             # group1 resolved (1 remaining in queue); BOTH groups were
             # rendered (group2 via Q), so reviewed counts 2
             self.assertIn("2 of 2 duplicates reviewed, 1 remaining", flat)
@@ -189,6 +213,51 @@ class TestStage3Curses(unittest.TestCase):
             self.assertIn("0 files deleted (0 B), 0 failed", flat)
             self.assertIn("1 of 2 duplicates reviewed, 2 remaining", flat)
             self.assertIn("=== REVIEW COMPLETE ===", flat)
+        finally:
+            shutil.rmtree(td, ignore_errors=True)
+
+    def test_same_audio_group_renders_and_deletes(self):
+        """Same-audio/different-tags pair renders the audio branch header;
+        SPACE + ENTER deletes the selected copy, the twin survives."""
+        keys = [
+            (b" ", "MANUAL REVIEW"),
+            (b"\r", ("deleted:", "already gone:")),
+            (b"q", "REVIEW COMPLETE"),
+        ]
+        text, td = run_pty(keys, make_same_audio_pair)
+        try:
+            flat = strip_ansi(text)
+            self.assertIn("Same audio, different tags", flat)
+            self.assertIn("1/1 - Select What File(s) to DELETE", flat)
+            # audio branch renders per-file rows: name + full-file size
+            self.assertIn("./a/  track.wav (2070 B)", flat)
+            self.assertIn("./b/  track.wav (2158 B)", flat)
+            self.assertTrue(os.path.exists(os.path.join(td, "a", "track.wav"))
+                            or os.path.exists(os.path.join(td, "b", "track.wav")))
+            self.assertFalse(
+                os.path.exists(os.path.join(td, "a", "track.wav"))
+                and os.path.exists(os.path.join(td, "b", "track.wav")))
+            self.assertTrue(
+                "trashed: a/track.wav (2070 B)" in flat,
+                f"no 'trashed:' row found:\n{flat[-400:]}")
+            self.assertIn("1 of 1 duplicates reviewed, 0 remaining", flat)
+        finally:
+            shutil.rmtree(td, ignore_errors=True)
+
+    def test_possible_dupe_group_renders_last_with_warning(self):
+        """'maybe' group: POSSIBLE header renders, quit deletes nothing."""
+        keys = [(b"q", "REVIEW COMPLETE")]
+        text, td = run_pty(keys, make_possible_dupe_pair)
+        try:
+            flat = strip_ansi(text)
+            self.assertIn("POSSIBLE duplicates (lower confidence)", flat)
+            self.assertIn("1 group is marked POSSIBLE", flat)
+            self.assertIn("remix", flat)
+            # Q on the only group -> nothing deleted, files intact
+            for d in ("a", "b"):
+                self.assertTrue(os.path.exists(
+                    os.path.join(td, d, "Artist_Song_remix.mp3")))
+            self.assertIn("0 files deleted (0 B), 0 failed", flat)
         finally:
             shutil.rmtree(td, ignore_errors=True)
 

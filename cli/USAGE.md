@@ -14,6 +14,29 @@ bin/geordi setup mac --help
 `find-dupe-files` scans the current directory when no path is supplied.
 Arguments after a registered command prefix pass through unchanged.
 
+### Duplicate review stages
+
+`find-dupe-files` (guided mode) walks five stages:
+
+1. Byte-identical copies split across temp/permanent folders — batch prompt.
+2. Byte-identical OS copy-suffixed duplicates (` 2`, ` copy`) — batch prompt.
+3. Manual review, one group at a time: lossless/compressed pairs, same-audio
+   copies (identical audio payload, different metadata for wav/mp3/flac),
+   remaining byte-identical groups, and compatible-format name matches.
+4. Compatible-format name matches (whitelist-based) in the same review loop.
+5. POSSIBLE duplicates — least confidence: same name with version words
+   stripped and equal or unreadable duration. Rendered last, explicitly
+   labeled, never preselected.
+
+Deletions move files to the macOS Trash (recoverable until emptied);
+`--hard-delete` unlinks permanently instead. `--report` stays read-only.
+
+Seen-state: groups rendered in stage 3 are recorded per scan root in
+`~/.find-dupe-files/` (a dot-directory, hidden from Finder). Run with
+`--unreviewed` to skip already-reviewed groups, `--forget-seen` to clear
+the state. A group counts as seen when it is displayed — keeping
+everything is a decision too.
+
 ## Install
 
 Python 3 is required. Mac setup additionally requires Node.js.
@@ -41,7 +64,7 @@ Keep the checkout in place: installed commands are symlinks, not copied bundles.
 | --- | --- |
 | `geordi list` | List commands from the manifest |
 | `geordi help [command]` | Top-level help or forwarded command help |
-| `geordi find-dupe-files [args]` | Run the duplicate-review sidekick |
+| `geordi find-dupe-files [args]` | Run the duplicate-review sidekick (stages, Trash default, `--unreviewed`/`--forget-seen` seen-state) |
 | `geordi setup mac [args]` | Run `node bootstrap/bin/geordi-bootstrap.js mac [args]` |
 
 `geordi setup mac` defaults to preview. Use `--apply` for prompted installation,
