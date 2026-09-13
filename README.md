@@ -44,12 +44,22 @@ Product-facing identity is shared by the desktop, packaging scripts, and CLI. Sw
 
 Desktop requirements: macOS 15+, a compatible Swift 6.2+ toolchain, and Xcode tools. The dispatcher and duplicate-file sidekick use Python's standard library. The setup engine uses Node.js 20+.
 
-See [USAGE.md](cli/USAGE.md) for installation and commands, [DEVELOPMENT.md](DEVELOPMENT.md) for desktop development, and [bootstrap/README.md](bootstrap/README.md) for setup behavior.
+See [USAGE.md](cli/USAGE.md) for installation and commands, [DEVELOPMENT.md](docs/policies/development.md) for desktop development, and [bootstrap/README.md](bootstrap/README.md) for setup behavior.
 
-## Further documentation
+## Documentation
 
-- [Architecture](ARCHITECTURE.md) · [Configuration](CONFIGURATION.md)
-- [Current status](STATUS.md) · [Feature catalog](FEATURES.md)
-- [Testing](TESTING.md) · [Schema versioning](SCHEMA_VERSIONING.md)
-- [Privacy](PRIVACY.md) · [Security](SECURITY.md) · [User-data lifecycle](USER_DATA_LIFECYCLE.md)
-- [Product evaluation](PRODUCT_EVALUATION_GUIDE.md) · [Roadmap](ROADMAP.md)
+All documentation lives under `docs/`:
+
+| Folder | Contents |
+|---|---|
+| `docs/architecture/` | System design, configuration model, schema versioning, technology decisions |
+| `docs/product/` | Vision, features, roadmap, evaluation guides, status |
+| `docs/plans/` | Active and parked plans |
+| `docs/policies/` | Privacy, security, data lifecycle, testing, development, engineering |
+| `docs/real-data/` | Real-data wiring analysis and backlog |
+| `docs/decisions/` | Architecture decision records |
+| `docs/archive/` | Completed-phase and acceptance records |
+
+Start with [Architecture](docs/architecture/architecture.md), [Current status](docs/product/status.md), or [Testing](docs/policies/testing.md).
+
+Continuous Integration runs `make verify` (desktop), the CLI unittest suite, and the bootstrap Node suite on every push and pull request. A new push to the same branch cancels the older run.

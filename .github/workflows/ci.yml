@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to the same branch cancels the older run immediately.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    name: Desktop (make verify)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - name: Verify (format-check, tests, fixtures, build, bundle smoke)
+        run: make verify
+
+  cli:
+    name: CLI (python stdlib)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run CLI test suite
+        run: python3 -m unittest discover -s cli/test
+
+  bootstrap:
+    name: Bootstrap (node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run bootstrap test suite
+        run: npm test --prefix bootstrap
