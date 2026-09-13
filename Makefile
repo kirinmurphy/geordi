@@ -1,11 +1,15 @@
 SWIFT := swift
 SWIFT_FLAGS := --disable-sandbox
 
-.PHONY: build install-dev install-shortcut test test-unit test-ui fixtures format format-check verify run clean
+.PHONY: build install-dev install-shortcut test test-unit test-ui fixtures format format-check verify run bundle dist clean
 
 build:
 	$(SWIFT) build $(SWIFT_FLAGS)
 	./scripts/package-app.sh
+
+bundle:
+	$(SWIFT) build -c release $(SWIFT_FLAGS) --product GeordiApp
+	python3 scripts/make-bundle.py
 
 install-dev: build
 	./scripts/install-dev.sh
@@ -36,6 +40,9 @@ run:
 	./scripts/stop-dev.sh
 	$(MAKE) install-dev
 	./scripts/launch-dev.sh
+
+dist: bundle
+	cd .build/release && zip -qry Geordi.zip geordi.app
 
 clean:
 	$(SWIFT) package clean

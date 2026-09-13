@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geordi.dev/schemas/bundle-layout-v1.schema.json",
+  "title": "Bundle layout manifest (schema v1)",
+  "description": "Declares which repository paths are staged into the app bundle, where the CLI shim lives, and which placeholder substitutions rewrite command paths for the bundled layout. Code reads this manifest; it never hardcodes the layout.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cliRoot", "shim", "stage", "overrides"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cliRoot": {
+      "description": "Bundle-relative directory that becomes the CLI dispatcher's root (ROOT for Registry/resource resolution).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^(Resources|MacOS)(/[A-Za-z0-9._-]+)*$"
+    },
+    "shim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "bundlePath"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "bundlePath": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^MacOS/[A-Za-z0-9._-]+$" }
+      }
+    },
+    "stage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "bundlePath"],
+        "properties": {
+          "source": {
+            "description": "Repository-relative file or directory to stage.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "bundlePath": {
+            "description": "Bundle-relative destination under Contents/Resources/ (the CLI shim is the only MacOS/ code and is declared separately).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "pattern": "^Resources(/[A-Za-z0-9._-]+)+$"
+          }
+        }
+      }
+    },
+    "overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "bundlePath", "substitutions"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "bundlePath": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^Resources(/[A-Za-z0-9._-]+)+$" },
+          "substitutions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["key", "value"],
+              "properties": {
+                "key": {
+                  "description": "Placeholder token replaced verbatim in the staged file's text.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64,
+                  "pattern": "^@?[A-Za-z][A-Za-z0-9_-]*$"
+                },
+                "value": { "type": "string", "maxLength": 400 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "cliRoot": "Resources/geordi",
+  "shim": {
+    "source": "Resources/geordi-shim.py",
+    "bundlePath": "MacOS/geordi"
+  },
+  "stage": [
+    { "source": "cli/bin", "bundlePath": "Resources/geordi/cli/bin" },
+    { "source": "cli/geordi_cli", "bundlePath": "Resources/geordi/cli/geordi_cli" },
+    { "source": "cli/resources", "bundlePath": "Resources/geordi/cli/resources" },
+    { "source": "bootstrap/bin", "bundlePath": "Resources/geordi/bootstrap/bin" },
+    { "source": "bootstrap/src", "bundlePath": "Resources/geordi/bootstrap/src" },
+    { "source": "bootstrap/schema", "bundlePath": "Resources/geordi/bootstrap/schema" },
+    { "source": "bootstrap/resources", "bundlePath": "Resources/geordi/bootstrap/resources" },
+    { "source": "bootstrap/manifest.json", "bundlePath": "Resources/geordi/bootstrap/manifest.json" },
+    { "source": "bootstrap/catalog.json", "bundlePath": "Resources/geordi/bootstrap/catalog.json" },
+    { "source": "Sources/GeordiManifestKit/Resources", "bundlePath": "Resources/geordi/Sources/GeordiManifestKit/Resources" }
+  ],
+  "overrides": []
+}

@@ -5,6 +5,22 @@ from pathlib import Path, PurePosixPath
 from .schema import ManifestError, SchemaValidator, read_json
 
 
+def safe_resource(root, relative, field="path"):
+    """Resolve a manifest-declared path inside `root`, refusing absolute
+    paths, traversal, and symlink escapes. Shared by every manifest that
+    declares repository-relative paths."""
+    root = Path(root).resolve()
+    parts = PurePosixPath(relative).parts
+    if not parts or relative.startswith("/") or ".." in parts or "." in relative.split("/") or "\\" in relative:
+        raise ManifestError(f"{field}: expected a repository-relative path without traversal")
+    try:
+        resolved = (root / relative).resolve()
+        resolved.relative_to(root)
+    except (ValueError, OSError, RuntimeError) as error:
+        raise ManifestError(f"{field}: path escapes repository or contains a symlink loop") from error
+    return resolved
+
+
 class Registry:
     def __init__(self, root):
         self.root = Path(root).resolve()
@@ -48,15 +64,7 @@ class Registry:
                 self.resource(path, f"$.links[{index}].legacySources")
 
     def resource(self, relative, field="path"):
-        parts = PurePosixPath(relative).parts
-        if not parts or relative.startswith("/") or ".." in parts or "." in relative.split("/") or "\\" in relative:
-            raise ManifestError(f"{field}: expected a repository-relative path without traversal")
-        try:
-            resolved = (self.root / relative).resolve()
-            resolved.relative_to(self.root)
-        except (ValueError, OSError, RuntimeError) as error:
-            raise ManifestError(f"{field}: path escapes repository or contains a symlink loop") from error
-        return resolved
+        return safe_resource(self.root, relative, field)
 
     def link_name(self, link):
         return self.brand["cliCommand"] if link["name"] == "@cliCommand" else link["name"]
