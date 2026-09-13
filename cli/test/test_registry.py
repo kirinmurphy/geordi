@@ -58,7 +58,8 @@ class RegistryTests(Sandbox):
             with self.assertRaises(ManifestError):
                 self.registry()
         self.manifest = copy.deepcopy(original)
-        self.manifest["links"][1]["name"] = "geordi"
+        self.manifest["links"].append(
+            {"name": "geordi", "path": "bin/geordi", "legacySources": []})
         with self.assertRaisesRegex(ManifestError, "duplicate resolved"):
             self.registry()
 

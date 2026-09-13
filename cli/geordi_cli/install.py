@@ -16,6 +16,12 @@ class Installer:
 
     def plan(self):
         planned = []
+        # preflight every declared command source too: an install that
+        # leaves a manifest command unrunnable is a broken install
+        for command in self.registry.data["commands"]:
+            source = self.registry.resource(command["path"])
+            if not source.is_file() or not os.access(source, os.X_OK):
+                raise ManifestError(f"installation source missing or not executable: {source}")
         for link in self.registry.data["links"]:
             source = self.registry.resource(link["path"])
             if not source.is_file() or not os.access(source, os.X_OK):

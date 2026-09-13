@@ -42,6 +42,7 @@ class Sandbox(unittest.TestCase):
         bootstrap = self.root / "bootstrap/bin/geordi-bootstrap.js"
         bootstrap.parent.mkdir(parents=True)
         bootstrap.write_text("console.log(JSON.stringify({args:process.argv.slice(2),cwd:process.cwd()}));\n")
+        bootstrap.chmod(0o755)  # the installer preflights command sources
 
     @staticmethod
     def save(path, data):

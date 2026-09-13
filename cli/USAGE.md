@@ -52,11 +52,11 @@ python3 scripts/install-cli.py
 python3 scripts/install-cli.py --prefix "$HOME/.local"
 ```
 
-The installer creates `geordi` and the `find-dupe-files` compatibility link.
-Repeated installation is idempotent. It refuses unrelated occupied targets;
-there is no force flag. A legacy link into this checkout's
-`bin/sidekicks/find-dupe-files` can be migrated to `cli/bin/sidekicks/find-dupe-files`.
-Keep the checkout in place: installed commands are symlinks, not copied bundles.
+The installer creates the `geordi` link only — sidekicks run through it
+(`geordi find-dupe-files …`), not as loose PATH commands. Repeated
+installation is idempotent. It refuses unrelated occupied targets;
+there is no force flag. Keep the checkout in place: installed commands
+are symlinks, not copied bundles.
 
 ## Commands
 
@@ -83,8 +83,7 @@ collection as repeated JSON parameters. This example regenerates the current reg
 python3 cli/manage-commands.py \
   --command '{"command":["find-dupe-files"],"description":"Review duplicate files (current directory by default)","runtime":"python","path":"cli/bin/sidekicks/find-dupe-files","args":[]}' \
   --command '{"command":["setup","mac"],"description":"Preview missing Mac setup packages; use --apply to install","runtime":"node","path":"bootstrap/bin/geordi-bootstrap.js","args":["mac"]}' \
-  --link '{"name":"@cliCommand","path":"bin/geordi","legacySources":[]}' \
-  --link '{"name":"find-dupe-files","path":"cli/bin/sidekicks/find-dupe-files","legacySources":["bin/sidekicks/find-dupe-files"]}'
+  --link '{"name":"@cliCommand","path":"bin/geordi","legacySources":[]}'
 ```
 
 `@cliCommand` resolves the installed name from the canonical brand. All paths
