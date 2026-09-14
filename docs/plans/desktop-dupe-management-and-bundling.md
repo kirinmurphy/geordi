@@ -140,15 +140,19 @@ only report view first, destructive actions last) → A3 (in-app
 installer) → C onboarding card (ships with A3's surface, trivial once
 A3 exists).
 
-**Progress (2026-09-13):** A1–A2 shipped — `bundle-layout.json` (schema
-v1) + shim (`Resources/geordi-shim.py`) + `scripts/make-bundle.py` +
-`make bundle`/`make dist`; `codesign --verify --strict` green; smoke
-test passed for both the bundled path and a symlinked invocation
-(`geordi find-dupe-files --report` through a temp symlink, ad-hoc
-signature confirmed). One codesign lesson now encoded in the packer:
-the shim is nested code and must be signed before the outer bundle
-(--deep stays unused). 8 CLI tests cover the manifest and shim
-(`cli/test/test_bundle_layout.py`).
+**Progress (2026-09-13): ALL SHIPPED AND COMMITTED.** A1–A2 bundle
+packaging (`bf0e3f4`, `37c3b13`), B `--json` seam (`eb7ed07`), and
+A3/C/B-UI (`0dee5b1`: `geordi install-cli` manifest command,
+`CLIEnablementModel` link classification + repair-on-request,
+`CLICommandInventory` runtime decode powering the onboarding card's
+info tooltip and success inventory, dismissible CLIOnboardingCard with
+persisted preference, `DupeScan` schema-pinned decoder +
+`DupeReviewView` read-only group cards behind the link-Mac gate,
+`dupeReview` manifest destination). Gates at commit time: `make verify`
+green, swift test 191 passed, CLI 91 passed, bootstrap 45 passed.
+NOTE: the parallel bootstrap arc's later `commands.json` rewrite
+dropped the install-cli entry once — it was re-added onto their schema;
+both arcs' tests now assert containment rather than pinned counts.
 
 ## Verification
 
