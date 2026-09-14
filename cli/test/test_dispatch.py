@@ -15,9 +15,9 @@ class DispatchTests(Sandbox):
             result = self.run_cli(*args)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Test Toolkit", result.stdout)
-            self.assertIn("setup mac", result.stdout)
+            self.assertIn("geordi setup", result.stdout)
         self.assertIn("find-dupe-files", self.run_cli("list").stdout)
-        for args in [("bogus",), ("--wat",), ("list", "--wat"), ("--help", "junk"), ("setup",), ("setup", "windows")]:
+        for args in [("bogus",), ("--wat",), ("list", "--wat"), ("--help", "junk")]:
             self.assertEqual(self.run_cli(*args).returncode, 2)
         self.assertEqual(self.run_cli("setup", "--help").returncode, 0)
 
@@ -48,12 +48,12 @@ class DispatchTests(Sandbox):
     def test_bootstrap_route_default_has_no_apply_and_preserves_options(self):
         if shutil.which("node") is None:
             self.skipTest("Node.js unavailable for real Node route fixture")
-        result = self.run_cli("setup", "mac")
+        result = self.run_cli("setup")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout), {"args": ["mac"], "cwd": str(self.cwd)})
+        self.assertEqual(json.loads(result.stdout), {"args": [], "cwd": str(self.cwd)})
         args = ["--apply", "--yes", "--json", "--manifest=path with spaces"]
-        result = self.run_cli("setup", "mac", *args)
-        self.assertEqual(json.loads(result.stdout)["args"], ["mac", *args])
+        result = self.run_cli("setup", *args)
+        self.assertEqual(json.loads(result.stdout)["args"], args)
 
     def test_real_bootstrap_preview_in_isolated_checkout(self):
         from support import REPO
@@ -85,12 +85,12 @@ class DispatchTests(Sandbox):
                         '    sys.exit(99)\n')
         brew.chmod(0o755)
         env = {**os.environ, "PATH": str(isolated), "HOME": str(self.cwd)}
-        result = self.run_cli("setup", "mac", "--manifest", str(manifest), env=env)
+        result = self.run_cli("setup", "--manifest", str(manifest), env=env)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("preview", result.stdout.lower())
         self.assertEqual(manifest.read_bytes(), before)
         self.assertFalse((self.cwd / "missing").exists())
-        refused = self.run_cli("setup", "mac", "--apply", "--manifest", str(manifest), env=env)
+        refused = self.run_cli("setup", "--apply", "--manifest", str(manifest), env=env)
         self.assertEqual(refused.returncode, 2, refused.stderr)
         self.assertIn("--yes", refused.stderr)
         self.assertFalse((self.cwd / "missing").exists())
@@ -99,13 +99,13 @@ class DispatchTests(Sandbox):
         isolated = self.base / "path"
         isolated.mkdir()
         (isolated / "python3").symlink_to(sys.executable)
-        result = self.run_cli("setup", "mac", env={**os.environ, "PATH": str(isolated)})
+        result = self.run_cli("setup", env={**os.environ, "PATH": str(isolated)})
         self.assertEqual(result.returncode, 127)
         self.assertIn("Node.js is required", result.stderr)
 
     def test_missing_command_resource_is_controlled_error(self):
         (self.root / "bootstrap/bin/geordi-bootstrap.js").unlink()
-        result = self.run_cli("setup", "mac")
+        result = self.run_cli("setup")
         self.assertEqual(result.returncode, 2)
         self.assertIn("resource missing", result.stderr)
         self.assertNotIn("Traceback", result.stderr)

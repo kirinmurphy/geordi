@@ -15,11 +15,24 @@
         "setup",
         "mac"
       ],
-      "description": "Preview missing Mac setup packages; use --apply to install",
+      "description": "Set up this Mac: preview missing registered apps; --apply installs",
       "runtime": "node",
       "path": "bootstrap/bin/geordi-bootstrap.js",
       "args": [
         "mac"
+      ]
+    },
+    {
+      "command": [
+        "migrate",
+        "manifest"
+      ],
+      "description": "Migrate the legacy combined setup manifest (v2) into catalog + machine manifest",
+      "runtime": "node",
+      "path": "bootstrap/bin/geordi-bootstrap.js",
+      "args": [
+        "migrate",
+        "manifest"
       ]
     }
   ],
@@ -28,6 +41,13 @@
       "name": "@cliCommand",
       "path": "bin/geordi",
       "legacySources": []
+    },
+    {
+      "name": "find-dupe-files",
+      "path": "cli/bin/sidekicks/find-dupe-files",
+      "legacySources": [
+        "bin/sidekicks/find-dupe-files"
+      ]
     }
   ]
 }

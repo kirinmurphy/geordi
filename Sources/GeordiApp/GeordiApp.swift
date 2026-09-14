@@ -106,6 +106,7 @@ final class AppModel {
     case shellPath
     case filesystem
     case performance
+    case dupeReview
     case entity(EntityID)
 
     var profileID: String? {
@@ -118,6 +119,7 @@ final class AppModel {
       case .shellPath: "shellPath"
       case .filesystem: "filesystem"
       case .performance: "performance"
+      case .dupeReview: "dupeReview"
       case .entity: nil
       }
     }
@@ -166,6 +168,13 @@ final class AppModel {
   private(set) var graphHistory: [EntityID] = []
   private(set) var graphHistoryIndex = -1
 
+  // MARK: CLI enablement (plan A3/C) and dupe scan (plan B)
+
+  let cliEnablement = CLIEnablementModel()
+  let cliInventory: CLICommandInventory?
+  var cliOnboardingDismissed: Bool
+  var dupeScanState: DupeScanState = .idle
+
   init(
     configuration: AppConfiguration,
     applicationClassifications: ApplicationClassificationConfiguration?,
@@ -196,6 +205,8 @@ final class AppModel {
     dataSourceMode = initialMode
     welcomeDismissed = preferences.syntheticWelcomeDismissed()
     linkedCompletionDismissed = preferences.linkedCompletionDismissed()
+    cliInventory = CLICommandInventory.bundled()
+    cliOnboardingDismissed = preferences.cliOnboardingDismissed()
     let snapshot: GraphSnapshot
     if initialMode == .linkedMac {
       do {
@@ -403,6 +414,38 @@ final class AppModel {
       return
     }
     refreshLiveData(linkOnSuccess: true)
+  }
+
+  // MARK: CLI enablement (plan A3/C)
+
+  func dismissCLIOnboarding() {
+    cliOnboardingDismissed = true
+    preferences.setCLIOnboardingDismissed(true)
+  }
+
+  func refreshCLILinkStatus() async {
+    await cliEnablement.refresh()
+  }
+
+  func enableCLI() async {
+    await cliEnablement.enable()
+    if case .succeeded = cliEnablement.phase {
+      dismissCLIOnboarding()
+    }
+  }
+
+  // MARK: Dupe scan (plan B) — read-only; destructive actions come later
+
+  func runDupeScan() async {
+    guard !isSynthetic else { return }
+    dupeScanState = .running
+    let runner = CLIInvocation()
+    do {
+      let document = try await runner.runJSONScan()
+      dupeScanState = .loaded(document)
+    } catch {
+      dupeScanState = .failed(error.localizedDescription)
+    }
   }
 
   func refreshLiveData(linkOnSuccess: Bool = false) {
@@ -662,7 +705,7 @@ final class AppModel {
       selection = syntheticSelection(for: destination)
     case .applications:
       selection = nil
-    case .startup, .commandLine, .shellPath:
+    case .startup, .commandLine, .shellPath, .dupeReview:
       selection = nil
     case .filesystem:
       selection = nil

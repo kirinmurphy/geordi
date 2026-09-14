@@ -60,7 +60,7 @@
           "id": {
             "enum": [
               "overview", "storage", "applications", "startup", "commandLine",
-              "shellPath", "filesystem", "performance"
+              "shellPath", "filesystem", "performance", "dupeReview"
             ]
           },
           "breadcrumb": {

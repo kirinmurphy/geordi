@@ -19,53 +19,117 @@
   "destinations": [
     {
       "id": "overview",
-      "breadcrumb": ["Home"],
-      "entityTypes": ["application", "resource", "incident"]
+      "breadcrumb": [
+        "Home"
+      ],
+      "entityTypes": [
+        "application",
+        "resource",
+        "incident"
+      ]
     },
     {
       "id": "storage",
-      "breadcrumb": ["Home", "Storage"],
-      "entityTypes": ["file", "packageManager"],
+      "breadcrumb": [
+        "Home",
+        "Storage"
+      ],
+      "entityTypes": [
+        "file",
+        "packageManager"
+      ],
       "explorationContextID": "storage",
       "syntheticFocusEntityID": "resource.storage",
       "syntheticNeighborhoodDepth": 2
     },
     {
       "id": "applications",
-      "breadcrumb": ["Home", "Installed software"],
-      "entityTypes": ["application", "packageManager", "shellFramework", "package", "persistence"],
+      "breadcrumb": [
+        "Home",
+        "Installed software"
+      ],
+      "entityTypes": [
+        "application",
+        "packageManager",
+        "shellFramework",
+        "package",
+        "persistence"
+      ],
       "explorationContextID": "applications"
     },
     {
       "id": "startup",
-      "breadcrumb": ["Home", "Startup activity"],
-      "entityTypes": ["application", "persistence", "process"],
+      "breadcrumb": [
+        "Home",
+        "Startup activity"
+      ],
+      "entityTypes": [
+        "application",
+        "persistence",
+        "process"
+      ],
       "explorationContextID": "startup"
     },
     {
       "id": "commandLine",
-      "breadcrumb": ["Home", "Command-line environment"],
-      "entityTypes": ["packageManager", "shellFramework", "package", "process"],
+      "breadcrumb": [
+        "Home",
+        "Command-line environment"
+      ],
+      "entityTypes": [
+        "packageManager",
+        "shellFramework",
+        "package",
+        "process"
+      ],
       "explorationContextID": "command-line"
     },
     {
       "id": "shellPath",
-      "breadcrumb": ["Home", "Command-line environment", "PATH Visualizer"],
-      "entityTypes": ["application", "resource", "incident"],
+      "breadcrumb": [
+        "Home",
+        "Command-line environment",
+        "PATH Visualizer"
+      ],
+      "entityTypes": [
+        "application",
+        "resource",
+        "incident"
+      ],
       "explorationContextID": "shell-path"
     },
     {
       "id": "filesystem",
-      "breadcrumb": ["Home", "Filesystem Map"],
-      "entityTypes": ["application", "resource", "incident"],
+      "breadcrumb": [
+        "Home",
+        "Filesystem Map"
+      ],
+      "entityTypes": [
+        "application",
+        "resource",
+        "incident"
+      ],
       "explorationContextID": "filesystem"
     },
     {
       "id": "performance",
-      "breadcrumb": ["Home", "Performance"],
-      "entityTypes": ["process"],
+      "breadcrumb": [
+        "Home",
+        "Performance"
+      ],
+      "entityTypes": [
+        "process"
+      ],
       "syntheticFocusEntityID": "incident.build",
       "syntheticNeighborhoodDepth": 2
+    },
+    {
+      "id": "dupeReview",
+      "breadcrumb": [
+        "Home",
+        "Duplicate review"
+      ],
+      "entityTypes": []
     }
   ]
 }

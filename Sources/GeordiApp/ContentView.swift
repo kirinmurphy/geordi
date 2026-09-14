@@ -13,6 +13,14 @@ struct ContentView: View {
   @State private var linkedStatusExpanded = false
   @State private var freshnessHoverTask: Task<Void, Never>?
 
+  /// Part C: the onboarding card shows until dismissed or the CLI is
+  /// actually installed; dismissal state is a persisted preference.
+  private var cliCardVisible: Bool {
+    !model.cliOnboardingDismissed
+      && model.cliEnablement.status
+        != .installed(target: model.cliEnablement.linkLocation + "/" + AppBrand.cliCommand)
+  }
+
   init(
     configuration: AppConfiguration,
     applicationClassifications: ApplicationClassificationConfiguration?,
@@ -188,6 +196,8 @@ struct ContentView: View {
           ApplicationBrowserView(model: model)
         case .startup, .storage, .commandLine:
           ExplorationBrowserView(model: model)
+        case .dupeReview:
+          DupeReviewView(model: model)
         case .entity(let id):
           if let entity = model.fixture.entity(id), entity.type == .application {
             ApplicationStoryView(model: model, application: entity)
@@ -236,6 +246,15 @@ struct ContentView: View {
           }
         }
         Section("Tools") {
+          if cliCardVisible {
+            CLIOnboardingCard(
+              model: model.cliEnablement,
+              inventory: model.cliInventory,
+              onDismiss: { model.dismissCLIOnboarding() }
+            )
+            .onAppear { Task { await model.refreshCLILinkStatus() } }
+          }
+          navigationButton("Duplicate review", symbol: "square.on.square", destination: .dupeReview)
           navigationButton("Shell PATH Lab", symbol: "terminal", destination: .shellPath)
         }
       }

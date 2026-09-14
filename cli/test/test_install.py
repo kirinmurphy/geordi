@@ -14,7 +14,6 @@ class InstallTests(Sandbox):
             self.assertEqual(result.returncode, 0, result.stderr)
         directory = self.base / "prefix/bin"
         self.assertEqual((directory / "geordi").resolve(), self.root / "bin/geordi")
-        self.assertFalse((directory / "find-dupe-files").exists())
         result = self.run_cli("--help", command=directory / "geordi")
         self.assertIn("Test Toolkit", result.stdout)
         result = self.run_cli("find-dupe-files", "--help",

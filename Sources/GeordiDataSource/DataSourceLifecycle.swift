@@ -18,6 +18,8 @@ public protocol DataSourcePreferenceStore: Sendable {
 extension DataSourcePreferenceStore {
   public func linkedCompletionDismissed() -> Bool { false }
   public func setLinkedCompletionDismissed(_ dismissed: Bool) {}
+  public func cliOnboardingDismissed() -> Bool { false }
+  public func setCLIOnboardingDismissed(_ dismissed: Bool) {}
 }
 
 public final class UserDefaultsDataSourcePreferenceStore: DataSourcePreferenceStore,
@@ -27,6 +29,7 @@ public final class UserDefaultsDataSourcePreferenceStore: DataSourcePreferenceSt
     static let mode = "dataSource.mode"
     static let welcomeDismissed = "dataSource.syntheticWelcomeDismissed"
     static let linkedCompletionDismissed = "dataSource.linkedCompletionDismissed"
+    static let cliOnboardingDismissed = "tools.cliOnboardingDismissed"
   }
 
   private let defaults: UserDefaults
@@ -57,6 +60,14 @@ public final class UserDefaultsDataSourcePreferenceStore: DataSourcePreferenceSt
 
   public func setLinkedCompletionDismissed(_ dismissed: Bool) {
     defaults.set(dismissed, forKey: Key.linkedCompletionDismissed)
+  }
+
+  public func cliOnboardingDismissed() -> Bool {
+    defaults.bool(forKey: Key.cliOnboardingDismissed)
+  }
+
+  public func setCLIOnboardingDismissed(_ dismissed: Bool) {
+    defaults.set(dismissed, forKey: Key.cliOnboardingDismissed)
   }
 }
 

@@ -98,6 +98,7 @@ struct AtlasDetailView: View {
     case .applications: "What software is installed?"
     case .startup: "What starts automatically?"
     case .commandLine: "How is the command-line environment assembled?"
+    case .dupeReview: "Where are duplicate files costing space?"
     case .shellPath: "How does the shell build PATH?"
     case .filesystem: "Where does observed software live?"
     case .performance:
@@ -127,6 +128,8 @@ struct AtlasDetailView: View {
       "Package managers, packages, shell frameworks, and observed processes are connected by retained ownership and runtime evidence."
     case .shellPath:
       "Analyze explicitly pasted shell configuration as a deterministic sequence. Variables \(AppBrand.displayName) cannot resolve remain visible instead of being guessed."
+    case .dupeReview:
+      "Duplicate groups are ranked by confidence, from identical bytes to same-name hunches. This view only reports; deletion happens from the command-line review or a future app surface."
     case .filesystem:
       "A curated hierarchy of explanatory locations and observed paths; \(AppBrand.displayName) has not indexed the whole disk."
     case .performance:
