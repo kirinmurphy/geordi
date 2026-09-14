@@ -494,7 +494,7 @@ def same_audio_groups(all_files):
                 f"{total / 1e3:.1f} KB" if total >= 10_000 else
                 f"{total} B")
         print(f"  comparing audio of {n} same-named "
-              f"wav/mp3/flac files ({bulk})...")
+              f"wav/mp3/flac files ({bulk})...", file=sys.stderr)
     for name, fps in shared.items():
         # payload hashing is IO+md5 bound and releases the GIL — a small
         # thread pool cuts wall time ~4x on the multi-GB same-name set
@@ -1166,6 +1166,58 @@ def temp_folders_mode(all_files, base, temp_re, assume_yes, hard=False):
     return 2
 
 
+# ---------------------------------------------------------------- json mode
+
+def collect_report(all_files, base):
+    """Group data for --report AND --json: pure detection, zero state.
+    Returns (byte_clusters, same_audio_groups, name_groups) with name
+    groups normalized to bare sorted path lists."""
+    return (byte_clusters(all_files),
+            same_audio_groups(all_files),
+            [sorted(paths) for _title, paths in name_groups(all_files)])
+
+
+def json_report(clusters, audio, names, base, temp_re):
+    """Machine-readable scan result for the desktop consumer.
+    Contract: one JSON document, schema_version-pinned. Groups carry a
+    stable group_key (sorted member paths), a confidence tier, and per-
+    file path/size/mtime. State-free: never reads or writes seen-state,
+    so GUI review can never mask CLI review. Durations deliberately
+    absent in v1 (see plan)."""
+    tiers = (
+        ("byte-identical", clusters),
+        ("same-audio-payload", audio),
+        ("same-name-different-bytes", names),
+    )
+    groups = []
+    for tier, group_list in tiers:
+        for paths in group_list:
+            members = []
+            for p in paths:
+                try:
+                    st = os.stat(p)
+                    size, mtime = st.st_size, int(st.st_mtime)
+                except OSError:
+                    size, mtime = None, None
+                members.append({"path": p, "size": size, "mtime": mtime,
+                                "temp": is_temp(p, temp_re)})
+            groups.append({
+                "tier": tier,
+                "group_key": group_key("lossy" if tier == "same-audio-payload" else "files", paths),
+                "count": len(paths),
+                "files": members,
+            })
+    doc = {
+        "schema_version": 1,
+        "scan_root": base,
+        "generated": datetime.now().isoformat(timespec="seconds"),
+        "group_count": len(groups),
+        "groups": groups,
+    }
+    print(json.dumps(doc, indent=2))
+    return 0
+
+
 def view_report(all_files, base, temp_re, want_dur):
     """Read-only report."""
     clusters = byte_clusters(all_files)
@@ -1232,6 +1284,7 @@ def main():
                "  find-dupe-files                  # guided 5-stage cleanup\n"
                "  find-dupe-files --unreviewed     # skip already-reviewed groups\n"
                "  find-dupe-files --report         # read-only report\n"
+               "  find-dupe-files --json           # machine-readable report\n"
                "  find-dupe-files ~/Music --report --dur   # + duration info\n"
                "  find-dupe-files --temp-folders   # temp dupes + prompt\n",
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1251,6 +1304,9 @@ def main():
                          "--unreviewed shows everything again")
     ap.add_argument("--report", action="store_true",
                     help="read-only report (default is the guided 5-stage review)")
+    ap.add_argument("--json", action="store_true",
+                    help="machine-readable report (JSON, schema_version 1); "
+                         "implies --report; state-free")
     ap.add_argument("--dur", action="store_true",
                     help="with --report: classify same-name media groups by duration")
     ap.add_argument("--temp-pattern", default=r"^_{5,}",
@@ -1269,7 +1325,8 @@ def main():
         floor = args.min_size_mb * 1e6
         all_files = [f for f in all_files if os.path.getsize(f) >= floor]
     kind = "files" if not args.min_size_mb else f"files >= {args.min_size_mb} MB"
-    print(f"Scanning {len(all_files)} {kind} under {base}\n")
+    if not args.json:
+        print(f"Scanning {len(all_files)} {kind} under {base}\n")
 
     if args.forget_seen:
         try:
@@ -1283,6 +1340,9 @@ def main():
                                  hard=args.hard_delete)
     if args.report:
         return view_report(all_files, base, temp_re, args.dur)
+    if args.json:
+        clusters, audio, names = collect_report(all_files, base)
+        return json_report(clusters, audio, names, base, temp_re)
     return review_mode(all_files, base, temp_re, args.yes,
                        hard=args.hard_delete, unreviewed=args.unreviewed)
 

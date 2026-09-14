@@ -31,6 +31,17 @@ Arguments after a registered command prefix pass through unchanged.
 Deletions move files to the macOS Trash (recoverable until emptied);
 `--hard-delete` unlinks permanently instead. `--report` stays read-only.
 
+Machine-readable output: `find-dupe-files --json` prints one JSON
+document (stdout only; progress goes to stderr) with
+`{"schema_version": 1, "scan_root", "generated", "group_count",
+"groups": [...]}`. Each group carries a confidence `tier`
+(`byte-identical`, `same-audio-payload`, `same-name-different-bytes`),
+a stable `group_key` (sorted member paths), and per-file
+`path`/`size`/`mtime`/`temp`. JSON mode is state-free: it never reads
+or writes the seen-state directory, and durations are deliberately
+absent in schema v1. This is the seam the geordi desktop app consumes;
+any shape change requires a `schema_version` bump.
+
 Seen-state: groups rendered in stage 3 are recorded per scan root in
 `~/.find-dupe-files/` (a dot-directory, hidden from Finder). Run with
 `--unreviewed` to skip already-reviewed groups, `--forget-seen` to clear
