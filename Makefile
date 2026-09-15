@@ -44,5 +44,8 @@ run:
 dist: bundle
 	cd .build/release && zip -qry Geordi.zip geordi.app
 
+dmg: bundle
+	python3 scripts/make-dmg.py
+
 clean:
 	$(SWIFT) package clean

@@ -18,6 +18,11 @@ mkdir -p "$contents/MacOS" "$contents/Resources"
 install -m 755 "$binary" "$contents/MacOS/GeordiApp"
 install -m 644 "$project_dir/Resources/GeordiApp-Info.plist" "$contents/Info.plist"
 install -m 644 "$project_dir/Resources/GeordiApp.icns" "$contents/Resources/GeordiApp.icns"
+# SwiftPM module resource bundles (Bundle.module lookups) - without them
+# collectors cannot load their manifests and collection fails.
+for resource_bundle in "$project_dir"/.build/$configuration/*.bundle(N); do
+  cp -R "$resource_bundle" "$contents/Resources/"
+done
 
 plutil -replace CFBundleDisplayName -string "$product_display_name" "$contents/Info.plist"
 plutil -replace CFBundleName -string "$product_display_name" "$contents/Info.plist"

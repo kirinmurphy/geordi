@@ -84,12 +84,19 @@ def main():
     (contents / "MacOS").mkdir(parents=True)
     (contents / "Resources").mkdir(parents=True)
 
-    # GUI binary + icon
+    # GUI binary + icon + SwiftPM module resource bundles. Collectors load
+    # their manifests via Bundle.module, which resolves Contents/Resources/
+    # <module>.bundle next to the executable — a bundle without them boots
+    # but fails read-only collection ("Not Collected" everywhere).
     shutil.copy2(binary, contents / "MacOS" / brand["executable"])
     (contents / "MacOS" / brand["executable"]).chmod(0o755)
     icon = REPO / "Resources" / f"{brand['executable']}.icns"
     check(icon.is_file(), f"missing app icon: {icon}")
     shutil.copy2(icon, contents / "Resources" / f"{brand['executable']}.icns")
+    for resource_bundle in sorted(binary.parent.glob("*.bundle")):
+        shutil.copytree(
+            resource_bundle, contents / "Resources" / resource_bundle.name,
+            ignore=shutil.ignore_patterns(".DS_Store"))
 
     # Info.plist: template placeholders from the brand manifest
     plist_text = (REPO / "Resources" / f"{brand['executable']}-Info.plist").read_text(encoding="utf-8")
