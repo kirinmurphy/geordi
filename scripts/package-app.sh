@@ -8,6 +8,10 @@ binary="$project_dir/.build/$configuration/GeordiApp"
 bundle="$project_dir/.build/$configuration/GeordiApp.app"
 contents="$bundle/Contents"
 
+# Repack from scratch: a stale .app from an earlier run contains read-only
+# resource bundles that cp cannot overwrite.
+rm -rf "$bundle"
+
 if [[ ! -x "$binary" ]]; then
   print -u2 "Missing GeordiApp executable at $binary"
   print -u2 "Run 'swift build --product GeordiApp' first."
