@@ -34,6 +34,15 @@
         "migrate",
         "manifest"
       ]
+    },
+    {
+      "command": [
+        "install-cli"
+      ],
+      "description": "Install or repair the geordi command link (no sudo)",
+      "runtime": "python",
+      "path": "cli/bin/install-cli",
+      "args": []
     }
   ],
   "links": [

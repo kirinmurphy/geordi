@@ -9,8 +9,9 @@ from geordi_cli.schema import ManifestError, SchemaValidator, read_json
 class RegistryTests(Sandbox):
     def test_committed_manifest_validates(self):
         commands = {tuple(c["command"]) for c in self.registry().data["commands"]}
-        # my arc's registry dependents; the bootstrap arc may add more
-        self.assertTrue({("find-dupe-files",), ("install-cli",)} <= commands)
+        # Both arcs' registry commands must coexist: find-dupe-files (sidekicks),
+        # install-cli (installation), and the bootstrap arc's setup/migrate.
+        self.assertTrue({("find-dupe-files",), ("install-cli",), ("setup", "mac"), ("migrate", "manifest")} <= commands)
 
     def test_unknown_fields_invalid_enums_and_types(self):
         mutations = [
@@ -54,7 +55,7 @@ class RegistryTests(Sandbox):
 
     def test_duplicate_prefix_reserved_and_link_collisions(self):
         original = copy.deepcopy(self.manifest)
-        for tokens in [["setup"], ["setup", "mac"], ["list"], ["help", "more"], ["migrate", "x"]]:
+        for tokens in [["setup"], ["setup", "mac"], ["list"], ["help", "more"], ["migrate"]]:
             self.manifest = copy.deepcopy(original)
             self.dummy(tokens)
             with self.assertRaises(ManifestError):
