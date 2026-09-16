@@ -15,4 +15,8 @@ extension Font {
   /// The minimum text size used by \(AppBrand.displayName). Footnote is intentionally larger than
   /// the caption and caption2 styles previously used for secondary copy.
   static let small: Font = .system(size: TypeSize.sm)
+
+  /// The typographic floor (13pt) — replaces SwiftUI's caption/caption2,
+  /// which render below the minimum readable size.
+  static let caption: Font = .system(size: TypeSize.caption)
 }

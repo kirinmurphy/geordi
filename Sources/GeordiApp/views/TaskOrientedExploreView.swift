@@ -94,7 +94,7 @@ private struct QuestionCard: View {
         Text(title)
           .font(.subsection.bold())
           .multilineTextAlignment(.leading)
-          .lineLimit(2)
+          .lineLimit(3)
           .fixedSize(horizontal: false, vertical: true)
         Spacer(minLength: 4)
         // Always laid out so hover never changes the card's height.

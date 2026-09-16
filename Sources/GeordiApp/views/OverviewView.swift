@@ -241,15 +241,7 @@ struct OverviewView: View {
                 symbol: "folder",
                 tint: .green,
                 title: file.name,
-                trailing:
-                  model.isSynthetic
-                  ? detail("Synthetic size", in: file) ?? ""
-                    // Sizes are deliberately not measured by the read-only
-                    // rebuildable-data scan; classification is what makes
-                    // these rows distinct from arbitrary files.
-                  : [detail("Classification", in: file), detail("Rebuildability", in: file)]
-                    .compactMap { $0 }
-                    .joined(separator: " · ")
+                trailing: reclaimTrailing(file)
               ) { model.focus(file) }
             }
           }
@@ -550,6 +542,21 @@ struct OverviewView: View {
 
   private var reclaimCandidates: [Entity] {
     model.reclaimCandidates
+  }
+
+  /// Trailing detail for a reclaimable row: the measured size when the
+  /// bounded scan produced one, otherwise what distinguishes the row
+  /// (classification and rebuildability).
+  private func reclaimTrailing(_ file: Entity) -> String {
+    if model.isSynthetic {
+      return detail("Synthetic size", in: file) ?? ""
+    }
+    if let size = detail("Size", in: file), size != "Not collected" {
+      return size
+    }
+    return [detail("Classification", in: file), detail("Rebuildability", in: file)]
+      .compactMap { $0 }
+      .joined(separator: " · ")
   }
 
   /// The alert's size figure is derived from the graph, never hard-coded:

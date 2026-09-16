@@ -143,7 +143,7 @@ struct PathActionMenu: View {
           .truncationMode(.middle)
           .textSelection(.enabled)
         Image(systemName: "chevron.down")
-          .font(.system(size: 12, weight: .bold))
+          .font(.small.bold())
           .foregroundStyle(.secondary)
       }
     }

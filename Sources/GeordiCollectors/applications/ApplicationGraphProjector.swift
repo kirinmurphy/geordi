@@ -259,7 +259,8 @@ public struct ApplicationGraphProjector: Sendable {
                 Detail("Classification", value.classificationLabel),
                 Detail("Rebuildability", value.rebuildability.rawValue.capitalized),
                 Detail("Path", value.path),
-                Detail("Size", "Not collected"),
+                Detail(
+                  "Size", value.measuredSize?.displayLabel ?? "Not collected"),
                 Detail("Evidence rule", value.evidenceRuleID),
                 Detail("Evidence confidence", value.evidenceConfidence.plainLanguage),
                 Detail("Evidence explanation", value.evidenceExplanation),

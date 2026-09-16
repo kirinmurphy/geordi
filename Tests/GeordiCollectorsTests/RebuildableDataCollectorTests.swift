@@ -121,6 +121,81 @@ struct RebuildableDataCollectorTests {
     #expect(snapshot.scan.collectorRuns.contains { $0.collectorID == RebuildableDataCollector.id })
   }
 
+  @Test("Size walk counts allocated bytes once, skips symlinks and excluded names")
+  func sizeMeasurement() throws {
+    let base = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let root = base.appending(path: "home/root", directoryHint: .isDirectory)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    try Data(repeating: 0x41, count: 10_000).write(to: root.appending(path: "a.bin"))
+    let sub = root.appending(path: "sub", directoryHint: .isDirectory)
+    try FileManager.default.createDirectory(at: sub, withIntermediateDirectories: true)
+    try Data(repeating: 0x42, count: 5_000).write(to: sub.appending(path: "b.bin"))
+    try FileManager.default.createSymbolicLink(
+      at: root.appending(path: "link"), withDestinationURL: root.appending(path: "a.bin"))
+    try FileManager.default.createDirectory(
+      at: root.appending(path: ".git"), withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: base) }
+
+    let output = RebuildableDataCollector(
+      configuration: configuration(paths: [("root", "$USER_HOME/root")]),
+      userHome: base.appending(path: "home"),
+      inspector: FileSystemRebuildableDataInspector(),
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+
+    let measurement = try #require(
+      output.observations.first { $0.value.locationID == "root" }?.value.measuredSize)
+    #expect(!measurement.isTruncated)
+    // a.bin + sub + b.bin + link + .git are all entries; b.bin lives in sub.
+    #expect(measurement.entryCount == 5)
+    // Both files counted (allocated ≥ logical), symlink not followed,
+    // .git skipped from the walk's byte total.
+    #expect(measurement.allocatedBytes >= 15_000)
+    #expect(measurement.allocatedBytes < 40_000)
+  }
+
+  @Test("Size walk truncates at the entry budget and reports a lower bound")
+  func sizeTruncation() throws {
+    let base = FileManager.default.temporaryDirectory
+      .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    let root = base.appending(path: "home/root", directoryHint: .isDirectory)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    for name in ["a", "b", "c"] {
+      try Data(repeating: 0x41, count: 1_000).write(to: root.appending(path: "\(name).bin"))
+    }
+    defer { try? FileManager.default.removeItem(at: base) }
+
+    var config = configuration(paths: [("root", "$USER_HOME/root")])
+    config = RebuildableDataConfiguration(
+      measurementPolicy: RebuildableDataMeasurementPolicy(
+        maxEntriesPerLocation: 2,
+        maxDepth: 8,
+        maxDurationMilliseconds: 5_000,
+        cancellationCheckIntervalEntries: 256,
+        stayOnFileSystem: true,
+        symbolicLinkPolicy: .doNotFollow,
+        hardLinkPolicy: .countAllocatedBytesOncePerFileID,
+        clonePolicy: .allocatedBytesMayOverlap
+      ),
+      classifications: config.classifications,
+      detectors: config.detectors
+    )
+
+    let output = RebuildableDataCollector(
+      configuration: config,
+      userHome: base.appending(path: "home"),
+      inspector: FileSystemRebuildableDataInspector(),
+      clock: FixedClock(timestamp)
+    ).collect(scanID: "scan")
+
+    let measurement = try #require(
+      output.observations.first { $0.value.locationID == "root" }?.value.measuredSize)
+    #expect(measurement.isTruncated)
+    #expect(measurement.entryCount == 2)
+    #expect(measurement.displayLabel.hasPrefix("≥"))
+  }
+
   private func configuration(
     paths: [(id: String, path: String)]
   ) -> RebuildableDataConfiguration {

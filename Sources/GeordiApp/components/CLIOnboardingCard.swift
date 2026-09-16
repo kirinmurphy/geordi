@@ -138,7 +138,7 @@ struct CLIOnboardingCard: View {
           ])
       }
       Text("Link: \(model.linkLocation)/\(AppBrand.cliCommand)")
-        .font(.caption2)
+        .font(.small)
         .foregroundStyle(.tertiary)
     }
   }

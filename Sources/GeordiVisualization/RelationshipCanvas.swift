@@ -3,6 +3,8 @@ import GeordiDomain
 import SwiftUI
 
 public enum TypeSize {
+  /// The typographic floor — nothing in the UI renders smaller than this.
+  public static let caption: CGFloat = 13
   public static let sm: CGFloat = 14
   public static let base: CGFloat = 15
   public static let large: CGFloat = 17

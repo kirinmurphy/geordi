@@ -9,11 +9,18 @@ struct GuideNode: Identifiable, Hashable {
   let symbol: String
 }
 
-/// Shared styling for explanatory reference panels. Deliberately visually
-/// distinct from observation panels — muted paper card, an overline chip,
-/// bounded width — so supporting theory never reads as interactive
-/// findings. Every "how this works" surface on the destination pages
-/// renders through this one component.
+/// Dark forest green — the reference palette. Deliberately distinct from
+/// the blue used by observation and action surfaces, so supporting theory
+/// reads as its own layer of the page.
+enum ReferencePalette {
+  static let ink = Color(red: 0.13, green: 0.35, blue: 0.22)
+}
+
+/// Shared styling for explanatory reference panels. Distinct from
+/// observation panels — forest-green card, an overline chip, bounded
+/// width — so supporting theory never reads as interactive findings.
+/// Every "how this works" surface on the destination pages renders
+/// through this one component.
 struct ReferencePanel<Content: View>: View {
   let title: String
   var maxWidth: CGFloat = 860
@@ -22,28 +29,33 @@ struct ReferencePanel<Content: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       Label("Reference", systemImage: "text.book.closed")
-        .font(.caption2.weight(.semibold))
+        .font(.small.weight(.semibold))
         .tracking(1.2)
         .textCase(.uppercase)
-        .foregroundStyle(.indigo)
+        .foregroundStyle(ReferencePalette.ink)
       Text(title)
         .font(.section.bold())
       content()
     }
     .padding(20)
     .frame(maxWidth: maxWidth, alignment: .leading)
-    .background(Color.indigo.opacity(0.06), in: RoundedRectangle(cornerRadius: 16))
+    .background(ReferencePalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
     .overlay {
-      RoundedRectangle(cornerRadius: 16).stroke(Color.indigo.opacity(0.3))
+      RoundedRectangle(cornerRadius: 16).stroke(ReferencePalette.ink.opacity(0.35))
     }
   }
 }
 
-/// The node flow used by the destination reference guides (wide row of
-/// connected nodes, compact 2-up loop when space is tight). Icons are
-/// deliberately larger than row icons — these are landmarks, not list
-/// items.
+/// The node flow used by the destination reference guides: the wide
+/// left-to-right connected columns are the primary layout (four nodes at
+/// 170pt fit the panel's content width); the vertical stack is only a
+/// narrow-window fallback. Icons are landmark-sized, arrows vertically
+/// centered against the node row.
 struct ReferenceFlow: View {
+  /// Row height the wide-layout arrows center against; matches the flow
+  /// nodes' minimum height.
+  private static let nodeRowHeight: CGFloat = 150
+
   let nodes: [GuideNode]
 
   var body: some View {
@@ -54,13 +66,12 @@ struct ReferenceFlow: View {
   }
 
   private var wide: some View {
-    // Left-to-right connected columns — the primary layout. Four nodes
-    // at 170pt plus connectors fit the panel's 820pt content width, so
-    // ViewThatFits picks this on any normal window; the vertical stack
-    // below is only a narrow-window fallback.
     HStack(alignment: .top, spacing: 10) {
       ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
-        if index > 0 { connector("arrow.right") }
+        if index > 0 {
+          connector("arrow.right")
+            .frame(height: Self.nodeRowHeight)
+        }
         flowNode(node).frame(width: 170)
       }
     }
@@ -77,8 +88,8 @@ struct ReferenceFlow: View {
 
   private func connector(_ symbol: String) -> some View {
     Image(systemName: symbol)
-      .font(.system(size: 15, weight: .semibold))
-      .foregroundStyle(.indigo)
+      .font(.system(size: 17, weight: .bold))
+      .foregroundStyle(ReferencePalette.ink)
       .accessibilityHidden(true)
   }
 
@@ -86,7 +97,7 @@ struct ReferenceFlow: View {
     VStack(alignment: .leading, spacing: 8) {
       Image(systemName: node.symbol)
         .font(.system(size: 30, weight: .medium))
-        .foregroundStyle(.indigo)
+        .foregroundStyle(ReferencePalette.ink)
       Text(node.title)
         .font(.rowTitle)
       Text(node.explanation)
@@ -94,14 +105,14 @@ struct ReferenceFlow: View {
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
+    .frame(maxWidth: .infinity, minHeight: Self.nodeRowHeight, alignment: .topLeading)
     .padding(14)
     .background(
       Color(nsColor: .controlBackgroundColor),
       in: RoundedRectangle(cornerRadius: 12)
     )
     .overlay {
-      RoundedRectangle(cornerRadius: 12).stroke(Color.indigo.opacity(0.18))
+      RoundedRectangle(cornerRadius: 12).stroke(ReferencePalette.ink.opacity(0.2))
     }
   }
 }

@@ -57,7 +57,7 @@ struct DupeReviewView: View {
         }
         Spacer()
         Text("Read-only — nothing is deleted from this view")
-          .font(.caption2)
+          .font(.small)
           .foregroundStyle(.tertiary)
       }
 
@@ -111,22 +111,22 @@ struct DupeReviewView: View {
       ForEach(group.files) { file in
         HStack(spacing: 8) {
           Text(file.fileName)
-            .font(.system(size: 11, design: .monospaced))
+            .font(.system(size: 13, design: .monospaced))
             .textSelection(.enabled)
           if file.temp {
             Text("TEMP")
-              .font(.caption2.bold())
+              .font(.small.bold())
               .foregroundStyle(.orange)
           }
           Spacer()
           if let size = file.size {
             Text(ByteCountFormatter.string(fromByteCount: Int64(size), countStyle: .file))
-              .font(.caption2)
+              .font(.small)
               .foregroundStyle(.secondary)
           }
         }
         Text(file.path)
-          .font(.caption2)
+          .font(.small)
           .foregroundStyle(.tertiary)
           .textSelection(.enabled)
       }

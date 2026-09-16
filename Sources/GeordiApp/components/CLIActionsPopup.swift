@@ -64,7 +64,7 @@ struct CLIActionsPopup: View {
         Text(
           "All commands run through the \(AppBrand.cliCommand) link on your PATH (\(linkLocation)/\(AppBrand.cliCommand)); repair-cli restores it if the app moves."
         )
-        .font(.caption)
+        .font(.small)
         .foregroundStyle(.tertiary)
       }
       .padding(22)

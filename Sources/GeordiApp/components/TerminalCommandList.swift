@@ -28,18 +28,18 @@ struct TerminalCommandList: View {
         }
         if !group.id.isEmpty {
           Text("# \(group.id)")
-            .font(.custom("Courier New", size: 12).bold())
+            .font(.custom("Courier New", size: 13).bold())
             .foregroundStyle(Color(red: 0.42, green: 0.62, blue: 0.82))
             .padding(.bottom, 4)
         }
         ForEach(group.entries) { item in
           VStack(alignment: .leading, spacing: 2) {
             Text("$ \(item.usage)")
-              .font(.custom("Courier New", size: 13).weight(.medium))
+              .font(.custom("Courier New", size: 14).weight(.medium))
               .foregroundStyle(Color(white: 0.93))
               .textSelection(.enabled)
             Text(item.summary)
-              .font(.custom("Courier New", size: 12))
+              .font(.custom("Courier New", size: 13))
               .foregroundStyle(Color(white: 0.6))
               .textSelection(.enabled)
           }

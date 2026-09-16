@@ -48,11 +48,12 @@ public struct FileSystemRebuildableDataInspector: RebuildableDataInspecting {
 
 public struct RebuildableDataCollector: Sendable {
   public static let id: CollectorID = "rebuildable-data"
-  public static let version = 1
+  public static let version = 2
 
   private let configuration: RebuildableDataConfiguration
   private let userHome: URL
   private let inspector: any RebuildableDataInspecting
+  private let sizeScanner: RebuildableDataSizeScanner
   private let clock: any TimeSource
 
   public init(
@@ -64,6 +65,8 @@ public struct RebuildableDataCollector: Sendable {
     self.configuration = configuration
     self.userHome = userHome.standardizedFileURL
     self.inspector = inspector
+    self.sizeScanner = RebuildableDataSizeScanner(
+      policy: configuration.measurementPolicy, clock: clock)
     self.clock = clock
   }
 
@@ -104,6 +107,12 @@ public struct RebuildableDataCollector: Sendable {
             continue
           }
           let inspection = inspector.inspectLocation(at: url)
+          let measuredSize =
+            inspection.status == .present && inspection.isDirectory == true
+              && inspection.isSymbolicLink != true
+            ? sizeScanner.measure(
+              at: url, excludedDescendantNames: Set(detector.excludedDescendantNames))
+            : nil
           observations.append(
             observation(
               scanID: scanID,
@@ -112,7 +121,8 @@ public struct RebuildableDataCollector: Sendable {
               location: location,
               url: url,
               classification: classification,
-              inspection: inspection
+              inspection: inspection,
+              measuredSize: measuredSize
             )
           )
           if inspection.status == .permissionDenied || inspection.status == .unreadable {
@@ -163,7 +173,8 @@ public struct RebuildableDataCollector: Sendable {
     location: RebuildableDataLocation,
     url: URL,
     classification: RebuildableDataClassification,
-    inspection: RebuildableDataInspection
+    inspection: RebuildableDataInspection,
+    measuredSize: RebuildableDataSizeMeasurement?
   ) -> CollectedObservation<RebuildableDataValue> {
     CollectedObservation(
       id: ObservationID("rebuildable-data:\(detector.id):\(location.id)"),
@@ -192,7 +203,8 @@ public struct RebuildableDataCollector: Sendable {
         managerLabel: detector.manager?.label,
         status: inspection.status,
         isDirectory: inspection.isDirectory,
-        isSymbolicLink: inspection.isSymbolicLink
+        isSymbolicLink: inspection.isSymbolicLink,
+        measuredSize: measuredSize
       )
     )
   }
