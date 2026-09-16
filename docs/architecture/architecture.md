@@ -5,6 +5,24 @@
 Build a local, testable system that separates observed facts from inferred
 relationships, presentation, and user-authorized actions.
 
+## Repository composition
+
+The repository's three surfaces (desktop app, CLI, setup engine) are wired
+together through manifest resources, not hardcoded registries:
+
+```mermaid
+flowchart LR
+  Brand[Product identity manifest] --> Desktop[Native desktop app]
+  Brand --> CLI[CLI dispatcher]
+  Commands[Command manifest] --> CLI
+  CLI --> Sidekicks[Standalone sidekicks]
+  CLI --> Setup[Mac setup engine]
+  Catalog[Setup catalog] --> Setup
+  Machine[User machine manifest] --> Setup
+  Desktop --> Synthetic[Synthetic profiles by default]
+  Desktop --> Linked[Explicitly linked read-only observations]
+```
+
 ## System shape
 
 ```text

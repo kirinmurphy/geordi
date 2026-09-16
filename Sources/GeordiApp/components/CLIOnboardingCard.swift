@@ -93,7 +93,7 @@ struct CLIOnboardingCard: View {
 
   private var descriptionText: Text {
     var attributed = AttributedString(
-      "Enables \(AppBrand.cliCommand) on your PATH so terminal sessions and agents can use the same tools this window shows. No sudo; the app never enables it without your press. "
+      "Enables \(AppBrand.cliCommand) on your PATH for terminal sessions and agents — no sudo, only when you press Enable. "
     )
     attributed.foregroundColor = Color.secondary
     if inventoryAvailable {

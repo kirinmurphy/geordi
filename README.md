@@ -1,6 +1,7 @@
 # geordi
 
-A native Mac system explorer with a CLI sidekick and a manifest-backed Mac setup engine. One folder, one repository.
+A native Mac system explorer with a CLI sidekick and a manifest-backed Mac
+setup engine. One folder, one repository.
 
 | Surface | Purpose | Location |
 |---|---|---|
@@ -8,70 +9,44 @@ A native Mac system explorer with a CLI sidekick and a manifest-backed Mac setup
 | CLI | Dispatch helper scripts, including duplicate-file review | `bin/`, `cli/` |
 | Mac setup | Compare desired software with installed inventory; preview and explicitly apply missing installs | `bootstrap/` |
 
-```mermaid
-flowchart LR
-  Brand[Product identity manifest] --> Desktop[Native desktop app]
-  Brand --> CLI[CLI dispatcher]
-  Commands[Command manifest] --> CLI
-  CLI --> Sidekicks[Standalone sidekicks]
-  CLI --> Setup[Mac setup engine]
-  Inventory[Bootstrap manifest] --> Setup
-  Desktop --> Synthetic[Synthetic profiles by default]
-  Desktop --> Linked[Explicitly linked read-only observations]
-```
-
 ## Getting started
 
-| You want | Do this | Details |
-|---|---|---|
-| Work on geordi (development) | `make install-dev` then `make run` — debug build installs to `~/Applications/geordi.app`; CLI runs from the repo via `python3 scripts/install-cli.py` | Dev loop is `make verify` before committing |
-| Install the packaged app | Grab `geordi-<version>.dmg`, drag to `/Applications`, right-click → Open on first launch (ad-hoc signed), enable the CLI from the onboarding card | Build it with `make dmg`; see [Install & uninstall](docs/install-and-uninstall.md) |
-| CLI only | `python3 scripts/install-cli.py` (repo checkout) or `geordi repair-cli` (bundled) | `geordi --help` lists commands |
+| You want | Do this |
+|---|---|
+| Work on geordi | `make run` — builds, installs a debug app to `~/Applications/geordi.app`, and launches it. Verify with `make verify` before committing |
+| Install the packaged app | `make dmg`, drag to `/Applications`, right-click → Open on first launch (ad-hoc signed) |
+| Use the CLI | Enable it from the Home card, or run `python3 scripts/install-cli.py` from a checkout. `geordi --help` lists commands |
+| Turn the CLI off | `rm /opt/homebrew/bin/geordi` — the Home card returns; `geordi repair-cli` restores the link |
 
-What each install puts on disk — app, PATH symlink, Application Support
-data, preferences, duplicate-review state — and how to remove every trace
-is documented in [docs/install-and-uninstall.md](docs/install-and-uninstall.md).
+What each install puts on disk, and how to remove every trace:
+[docs/install-and-uninstall.md](docs/install-and-uninstall.md).
+Command reference: [cli/USAGE.md](cli/USAGE.md). Setup engine: [bootstrap/README.md](bootstrap/README.md).
 
 ## Safety boundaries
 
 - **Desktop first launch is synthetic.** Linking a Mac is explicit; observation stays local and read-only.
-- **Duplicate cleanup requires confirmation.** Use the report mode for inspection without deletion. Deletions default to the macOS Trash; permanent unlink requires `--hard-delete`. Already-reviewed duplicate groups are remembered per scan root (`~/.find-dupe-files/`) and can be skipped with `--unreviewed`.
-- **Setup previews before installing.** Inventory refresh changes the manifest, not the machine. Real installs require an explicit apply action and confirmation.
-- **Installed evidence is not a desired default.** Manually installed apps without a verified installer remain visible as manual inventory rather than guessed Homebrew packages.
-- **No automatic uninstall.** Differences between the Mac and its manifest are reported, not resolved by removing software.
+- **Duplicate cleanup requires confirmation.** Report mode only inspects; deletions default to the macOS Trash, and `--hard-delete` is the only permanent path.
+- **Setup previews before installing.** Inventory refresh changes the manifest, not the machine; real installs require an explicit apply and confirmation.
+- **No automatic uninstall.** Differences between the Mac and its manifest are reported, never resolved by removing software.
 
 ## Configuration
 
+All growable knowledge lives in versioned, schema-validated manifest
+resources — code never hardcodes which instances exist.
+
 | Contract | Source |
 |---|---|
-| Product identity | `Sources/GeordiManifestKit/Resources/product-brand.json` and its versioned schema |
-| Desktop collection and display | Schema-backed resources under the corresponding Swift modules |
-| Synthetic and normalized live profiles | `Sources/GeordiProfileSchema/Resources/system-profile.schema.json` |
-| CLI commands | Versioned command registry under `cli/` |
-| Software setup and installed inventory | `bootstrap/manifest.json` and its versioned schema |
-
-Product-facing identity is shared by the desktop, packaging scripts, and CLI. Swift module names are build identifiers rather than additional display-name configuration.
+| Product identity | `Sources/GeordiManifestKit/Resources/product-brand.json` |
+| System profile schema | `Sources/GeordiProfileSchema/Resources/system-profile.schema.json` |
+| CLI commands | `cli/resources/commands.json` |
+| Setup catalog, schemas, and legacy fixture | `bootstrap/catalog.json`, `bootstrap/schema/`, `bootstrap/manifest.json` |
 
 ## Development
 
-Desktop requirements: macOS 15+, a compatible Swift 6.2+ toolchain, and Xcode tools. The dispatcher and duplicate-file sidekick use Python's standard library. The setup engine uses Node.js 20+.
+macOS 15+, a Swift 6.2+ toolchain, Python 3 (CLI uses stdlib only), Node.js 20+
+(setup engine). `make verify` runs the same jobs CI does on every push: format
+check, tests, fixture validation, build, and UI smoke.
 
-See [USAGE.md](cli/USAGE.md) for installation and commands, [DEVELOPMENT.md](docs/policies/development.md) for desktop development, and [bootstrap/README.md](bootstrap/README.md) for setup behavior.
-
-## Documentation
-
-All documentation lives under `docs/`:
-
-| Folder | Contents |
-|---|---|
-| `docs/architecture/` | System design, configuration model, schema versioning, technology decisions |
-| `docs/product/` | Vision, features, roadmap, evaluation guides, status |
-| `docs/plans/` | Active and parked plans |
-| `docs/policies/` | Privacy, security, data lifecycle, testing, development, engineering |
-| `docs/real-data/` | Real-data wiring analysis and backlog |
-| `docs/decisions/` | Architecture decision records |
-| `docs/archive/` | Completed-phase and acceptance records |
-
-Start with [Architecture](docs/architecture/architecture.md), [Current status](docs/product/status.md), or [Testing](docs/policies/testing.md).
-
-Continuous Integration runs `make verify` (desktop), the CLI unittest suite, and the bootstrap Node suite on every push and pull request. A new push to the same branch cancels the older run.
+Status and plans: [docs/product/status.md](docs/product/status.md),
+[docs/plans/](docs/plans/). Architecture and design records:
+[docs/architecture/](docs/architecture/), [docs/decisions/](docs/decisions/).

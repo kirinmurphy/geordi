@@ -94,7 +94,9 @@ let package = Package(
     ),
     .testTarget(
       name: "GeordiAppTests",
-      dependencies: ["GeordiApp", "GeordiCollectors", "GeordiDataSource", "GeordiDomain"]
+      dependencies: [
+        "GeordiApp", "GeordiCollectors", "GeordiDataSource", "GeordiDomain", "GeordiFixtures",
+      ]
     ),
   ],
   swiftLanguageModes: [.v6]

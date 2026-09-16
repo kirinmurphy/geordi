@@ -2,23 +2,14 @@ import GeordiDomain
 import SwiftUI
 
 /// Centered modal popup listing the CLI command inventory, grouped by
-/// the manifest-declared category ("setup" or "utility"): a two-column
-/// table — command column at 33% width, description at 67% — over a
-/// dimmed backdrop. Info only: dismissed by the backdrop, the close
-/// button, or Escape.
+/// the manifest-declared category ("setup" or "utility"). Commands render
+/// on a simulated dark terminal screen in Courier — one `$ command` line
+/// per entry with a dim description underneath. Info only: dismissed by
+/// the backdrop, the close button, or Escape.
 struct CLIActionsPopup: View {
   let inventory: CLICommandInventory?
   let linkLocation: String
   let onClose: () -> Void
-
-  /// The command column is 33% of the table width; the description takes
-  /// the remaining 67%. The default matches the panel's ideal width so
-  /// the first frame is already proportioned.
-  @State private var tableWidth: CGFloat = 516
-
-  private var commandColumnWidth: CGFloat {
-    tableWidth * 0.33
-  }
 
   private var groupedEntries: [(category: String, entries: [CLICommandInventory.Entry])] {
     guard let inventory else { return [] }
@@ -68,64 +59,10 @@ struct CLIActionsPopup: View {
           .accessibilityLabel("Close")
         }
 
-        ScrollView {
-          Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 8) {
-            GridRow {
-              Text("Command")
-              Text("Description")
-            }
-            .font(.small.weight(.semibold))
-            .foregroundStyle(.secondary)
-
-            GridRow {
-              Divider()
-              Divider()
-            }
-
-            ForEach(groupedEntries, id: \.category) { group in
-              GridRow {
-                Text(categoryLabel(group.category).uppercased())
-                  .font(.caption2.weight(.semibold))
-                  .foregroundStyle(.tertiary)
-                  .gridCellColumns(2)
-              }
-              ForEach(group.entries) { entry in
-                GridRow {
-                  Text(entry.usage)
-                    .font(.system(size: 11, design: .monospaced).weight(.medium))
-                    .textSelection(.enabled)
-                    .frame(minWidth: commandColumnWidth, alignment: .leading)
-                  Text(entry.summary)
-                    .font(.small)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                GridRow {
-                  Divider()
-                  Divider()
-                }
-              }
-            }
-          }
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .background(
-            GeometryReader { geo in
-              Color.clear
-                .onAppear { tableWidth = geo.size.width }
-                .onChange(of: geo.size.width) { _, new in tableWidth = new }
-            }
-          )
-        }
-        .frame(maxHeight: 360)
+        terminalScreen
 
         Text(
-          "Setup commands run through the geordi command on your PATH — Enable CLI installs that link, and repair-cli repairs it (for example after moving the app)."
-        )
-        .font(.caption)
-        .foregroundStyle(.tertiary)
-
-        Text(
-          "After enabling, \(AppBrand.cliCommand) is linked at \(linkLocation)/\(AppBrand.cliCommand)."
+          "All commands run through the \(AppBrand.cliCommand) link on your PATH (\(linkLocation)/\(AppBrand.cliCommand)); repair-cli restores it if the app moves."
         )
         .font(.caption)
         .foregroundStyle(.tertiary)
@@ -141,5 +78,51 @@ struct CLIActionsPopup: View {
       }
       .shadow(color: .black.opacity(0.25), radius: 24, y: 8)
     }
+  }
+
+  /// The simulated terminal: near-black screen, Courier command lines,
+  /// dim comment-style group headers. Selectable so commands can be
+  /// copied straight into a shell.
+  private var terminalScreen: some View {
+    ScrollView {
+      VStack(alignment: .leading, spacing: 0) {
+        ForEach(Array(groupedEntries.enumerated()), id: \.element.category) {
+          index, group in
+          if index > 0 {
+            Divider()
+              .overlay(Color.white.opacity(0.08))
+              .padding(.vertical, 10)
+          }
+          Text("# \(categoryLabel(group.category).uppercased())")
+            .font(.custom("Courier New", size: 11).bold())
+            .foregroundStyle(Color(red: 0.42, green: 0.62, blue: 0.82))
+            .padding(.bottom, 4)
+          ForEach(group.entries) { entry in
+            VStack(alignment: .leading, spacing: 2) {
+              Text("$ \(entry.usage)")
+                .font(.custom("Courier New", size: 12).weight(.medium))
+                .foregroundStyle(Color(white: 0.93))
+                .textSelection(.enabled)
+              Text(entry.summary)
+                .font(.custom("Courier New", size: 11))
+                .foregroundStyle(Color(white: 0.58))
+                .textSelection(.enabled)
+            }
+            .padding(.vertical, 3)
+          }
+        }
+      }
+      .padding(16)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(
+        Color(red: 0.07, green: 0.08, blue: 0.09),
+        in: RoundedRectangle(cornerRadius: 10)
+      )
+      .overlay {
+        RoundedRectangle(cornerRadius: 10)
+          .stroke(Color.white.opacity(0.12))
+      }
+    }
+    .frame(maxHeight: 360)
   }
 }

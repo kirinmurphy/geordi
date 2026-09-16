@@ -602,6 +602,22 @@ final class AppModel {
     GraphNavigator(graph: fixture).search(searchQuery, visibleTypes: visibleTypes)
   }
 
+  /// Reclaimable-data candidates for the Home page. Synthetic mode selects
+  /// the files that contribute to the storage resource; linked mode selects
+  /// the rebuildable locations observed by the versioned detectors. Keeping
+  /// the selection here (not in the view) makes the Home-page contract
+  /// unit-testable against real fixtures and real collector projections.
+  var reclaimCandidates: [Entity] {
+    if !isSynthetic {
+      return fixture.entities.filter {
+        $0.type == .file && $0.detail(.rebuildability) != nil
+      }
+    }
+    let ids = Set(
+      fixture.relationships.filter { $0.target == "resource.storage" }.map(\.source))
+    return fixture.entities.filter { ids.contains($0.id) && $0.type == .file }
+  }
+
   var presentedGraph: SystemGraph {
     switch destination {
     case .entity(let id):

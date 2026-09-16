@@ -67,8 +67,9 @@ struct OverviewView: View {
               symbol: "internaldrive.fill",
               tint: .orange,
               title: "Reclaimable storage is getting large",
-              subtitle: "24.4 GB of synthetic cache and downloads can be rebuilt or fetched again",
-              trailing: "24.4 GB"
+              subtitle:
+                "\(reclaimAlertSize) of caches and downloads can be rebuilt or fetched again",
+              trailing: reclaimAlertSize
             ) { model.navigate(to: .storage) }
           }
 
@@ -82,7 +83,6 @@ struct OverviewView: View {
         if !packageManagers.isEmpty || !softwareSourceCategories.isEmpty {
           inventorySection(
             title: "Software Sources",
-            subtitle: "Package managers with their observed applications and packages",
             symbol: "shippingbox"
           ) {
             ForEach(packageManagers) { manager in
@@ -181,7 +181,6 @@ struct OverviewView: View {
         if !runtimeCapabilities.isEmpty {
           inventorySection(
             title: "Runtimes & Developer Tools",
-            subtitle: "Executable capabilities that answered a version query",
             symbol: "terminal"
           ) {
             ForEach(Array(runtimeCapabilities.enumerated()), id: \.element.id) {
@@ -200,8 +199,6 @@ struct OverviewView: View {
         if !commandLineSoftware.isEmpty {
           inventorySection(
             title: "Command-Line Inventory",
-            subtitle:
-              "Executable commands organized by their observed installation location",
             symbol: "terminal"
           ) {
             TextField("Search commands", text: $commandSearch)
@@ -547,14 +544,23 @@ struct OverviewView: View {
   }
 
   private var reclaimCandidates: [Entity] {
-    if !model.isSynthetic {
-      return model.fixture.entities.filter {
-        $0.type == .file && $0.detail(.rebuildability) != nil
-      }
+    model.reclaimCandidates
+  }
+
+  /// The alert's size figure is derived from the graph, never hard-coded:
+  /// the synthetic profile's "Synthetic size" details sum to the advertised
+  /// total. Empty synthetic sizes fall back to a count-based summary.
+  private var reclaimAlertSize: String {
+    let gigabytes = reclaimCandidates.compactMap { file -> Double? in
+      guard
+        let raw = file.details.first(where: { $0.label == "Synthetic size" })?.value
+      else { return nil }
+      return Double(raw.prefix { $0.isNumber || $0 == "." })
+    }.reduce(0, +)
+    if gigabytes > 0 {
+      return String(format: "%.1f GB", gigabytes)
     }
-    let ids = Set(
-      model.fixture.relationships.filter { $0.target == "resource.storage" }.map(\.source))
-    return model.fixture.entities.filter { ids.contains($0.id) && $0.type == .file }
+    return "\(reclaimCandidates.count) locations"
   }
 
   private var packageManagers: [Entity] {

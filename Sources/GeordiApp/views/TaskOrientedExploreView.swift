@@ -1,6 +1,10 @@
 import GeordiDomain
 import SwiftUI
 
+/// Home-page entry cards: one question per card, answered visually —
+/// a large symbol and a title. The former one-line explanations remain
+/// only as hover tooltips so the page stays scannable without walls of
+/// text (detail lives one click away in each destination view).
 struct TaskOrientedExploreView: View {
   let model: AppModel
   let startTour: () -> Void
@@ -8,14 +12,8 @@ struct TaskOrientedExploreView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       HStack {
-        VStack(alignment: .leading, spacing: 3) {
-          Text("What do you want to understand?")
-            .font(.section.bold())
-          Text(
-            "Start with a question. \(AppBrand.displayName) will show the summary before the technical evidence."
-          )
-          .foregroundStyle(.secondary)
-        }
+        Text("What do you want to understand?")
+          .font(.section.bold())
         Spacer()
         if model.isSynthetic {
           Button {
@@ -35,45 +33,45 @@ struct TaskOrientedExploreView: View {
         ),
         spacing: 16
       ) {
-        questionCard(
-          "Understand an application",
+        QuestionCard(
+          title: "Understand an application",
           explanation:
             "See why it may be active, where it came from, and what \(AppBrand.displayName) associates with it.",
           symbol: "app.badge.checkmark"
         ) {
           model.navigate(to: .applications)
         }
-        questionCard(
-          "See what starts automatically",
+        QuestionCard(
+          title: "See what starts automatically",
           explanation: "Trace startup declarations to the software they may activate.",
           symbol: "power"
         ) {
           model.navigate(to: .startup)
         }
-        questionCard(
-          "Explore reclaimable data",
+        QuestionCard(
+          title: "Explore reclaimable data",
           explanation: "Understand rebuildable locations without implying that deletion is safe.",
           symbol: "arrow.3.trianglepath"
         ) {
           model.navigate(to: .storage)
         }
-        questionCard(
-          "Browse command-line tools",
+        QuestionCard(
+          title: "Browse command-line tools",
           explanation: "Find runtimes, packages, ownership, aliases, and unclassified commands.",
           symbol: "terminal"
         ) {
           model.navigate(to: .commandLine)
         }
-        questionCard(
-          "Visualize shell PATH",
+        QuestionCard(
+          title: "Visualize shell PATH",
           explanation:
             "Paste a shell profile and trace source, prepend, append, and replacement operations.",
           symbol: "point.3.connected.trianglepath.dotted"
         ) {
           model.navigate(to: .shellPath)
         }
-        questionCard(
-          "Understand where software lives",
+        QuestionCard(
+          title: "Understand where software lives",
           explanation: "Explore a curated filesystem hierarchy without indexing the entire disk.",
           symbol: "folder.badge.gearshape"
         ) {
@@ -82,20 +80,6 @@ struct TaskOrientedExploreView: View {
       }
     }
     .accessibilityIdentifier("taskOrientedExplore")
-  }
-
-  private func questionCard(
-    _ title: String,
-    explanation: String,
-    symbol: String,
-    action: @escaping () -> Void
-  ) -> some View {
-    QuestionCard(
-      title: title,
-      explanation: explanation,
-      symbol: symbol,
-      action: action
-    )
   }
 }
 
@@ -110,27 +94,26 @@ private struct QuestionCard: View {
     Button(action: action) {
       VStack(alignment: .leading, spacing: 12) {
         Image(systemName: symbol)
-          .font(.system(size: 38, weight: .semibold))
+          .font(.system(size: 40, weight: .semibold))
           .foregroundStyle(.blue)
-          .frame(height: 46, alignment: .top)
+          .frame(height: 48, alignment: .top)
         Text(title)
           .font(.subsection.bold())
           .multilineTextAlignment(.leading)
-        Text(explanation)
-          .font(.paragraph)
-          .foregroundStyle(.secondary)
-          .multilineTextAlignment(.leading)
           .fixedSize(horizontal: false, vertical: true)
-        Spacer(minLength: 10)
-        HStack {
-          Spacer()
-          Label("Explore", systemImage: "arrow.right")
-            .font(.secondary.bold())
-            .foregroundStyle(.blue)
+        Spacer(minLength: 4)
+        if isHovering {
+          HStack {
+            Spacer()
+            Label("Explore", systemImage: "arrow.right")
+              .font(.secondary.bold())
+              .foregroundStyle(.blue)
+          }
+          .transition(.opacity)
         }
       }
       .padding(18)
-      .frame(maxWidth: .infinity, minHeight: 230, alignment: .topLeading)
+      .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
       .background(
         isHovering ? Color.accentColor.opacity(0.11) : Color(nsColor: .controlBackgroundColor),
         in: RoundedRectangle(cornerRadius: 14)
@@ -147,6 +130,8 @@ private struct QuestionCard: View {
     }
     .buttonStyle(.plain)
     .pointerCursor()
+    .help(explanation)
     .onHover { isHovering = $0 }
+    .animation(.easeInOut(duration: 0.15), value: isHovering)
   }
 }
