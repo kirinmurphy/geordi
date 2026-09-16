@@ -227,14 +227,16 @@ struct ContentView: View {
 
       Divider()
 
-      List {
-        Section {
+      // Navigation column: a plain scroll stack — a sidebar List ignores
+      // background styling — inside a subtle inset card.
+      ScrollView {
+        VStack(alignment: .leading, spacing: 1) {
           navigationButton("Home", symbol: "laptopcomputer", destination: .overview)
-        }
-        // Mirrors the Home question cards one-to-one — same destinations,
-        // same order, same symbols — so the sidebar and the Home page are
-        // two views of one navigation contract.
-        Section("Explore") {
+            .padding(.bottom, 6)
+          // Mirrors the Home question cards one-to-one — same destinations,
+          // same order, same symbols — so the sidebar and the Home page are
+          // two views of one navigation contract.
+          sectionLabel("Explore")
           navigationButton(
             "What starts automatically", symbol: "power", destination: .startup)
           navigationButton(
@@ -252,16 +254,14 @@ struct ContentView: View {
               destination: .performance)
           }
         }
+        .padding(10)
       }
-      // The navigation column reads as a subtle inset card beneath the
-      // title, separated from it by the divider and breathing room.
-      .scrollContentBackground(.hidden)
-      .padding(.horizontal, 10)
-      .padding(.top, 6)
       .background(
         Color(nsColor: .controlBackgroundColor).opacity(0.55),
         in: RoundedRectangle(cornerRadius: 12)
       )
+      .padding(.horizontal, 10)
+      .padding(.top, 8)
 
       Divider()
       VStack(alignment: .leading, spacing: 10) {
@@ -537,5 +537,15 @@ struct ContentView: View {
         .hoverHighlight(hPadding: 8, vPadding: 4)
     }
     .buttonStyle(.plain)
+  }
+
+  private func sectionLabel(_ title: String) -> some View {
+    Text(title)
+      .font(.small.weight(.semibold))
+      .textCase(.uppercase)
+      .foregroundStyle(.secondary)
+      .padding(.leading, 8)
+      .padding(.top, 6)
+      .padding(.bottom, 3)
   }
 }
