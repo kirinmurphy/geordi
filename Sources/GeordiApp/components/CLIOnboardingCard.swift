@@ -123,18 +123,19 @@ struct CLIOnboardingCard: View {
           .foregroundStyle(.green)
       }
       if let inventory {
-        VStack(alignment: .leading, spacing: 3) {
-          ForEach(inventory.entries) { entry in
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-              Text(entry.usage)
-                .font(.system(size: 11, design: .monospaced).weight(.medium))
-              Text(entry.summary)
-                .font(.small)
-                .foregroundStyle(.secondary)
-            }
-          }
-        }
-        .padding(.leading, 22)
+        TerminalCommandList(
+          groups: [
+            TerminalCommandList.Group(
+              id: "",
+              entries: inventory.entries.enumerated().map { index, entry in
+                TerminalCommandList.Item(
+                  id: "success-\(index)-\(entry.usage)",
+                  usage: entry.usage,
+                  summary: entry.summary
+                )
+              }
+            )
+          ])
       }
       Text("Link: \(model.linkLocation)/\(AppBrand.cliCommand)")
         .font(.caption2)

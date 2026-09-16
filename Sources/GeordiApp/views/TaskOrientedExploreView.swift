@@ -26,12 +26,14 @@ struct TaskOrientedExploreView: View {
         }
       }
 
+      // Five fixed columns: one row on the Home page. Card titles cap at
+      // two lines; explanations live in the hover tooltip.
       LazyVGrid(
         columns: Array(
-          repeating: GridItem(.flexible(minimum: 220), spacing: 16),
-          count: 3
+          repeating: GridItem(.flexible(minimum: 150), spacing: 14),
+          count: 5
         ),
-        spacing: 16
+        spacing: 14
       ) {
         QuestionCard(
           title: "See what starts automatically",
@@ -92,6 +94,7 @@ private struct QuestionCard: View {
         Text(title)
           .font(.subsection.bold())
           .multilineTextAlignment(.leading)
+          .lineLimit(2)
           .fixedSize(horizontal: false, vertical: true)
         Spacer(minLength: 4)
         // Always laid out so hover never changes the card's height.
@@ -104,7 +107,7 @@ private struct QuestionCard: View {
         .opacity(isHovering ? 1 : 0)
       }
       .padding(18)
-      .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+      .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
       .background(
         isHovering ? Color.accentColor.opacity(0.11) : Color(nsColor: .controlBackgroundColor),
         in: RoundedRectangle(cornerRadius: 14)

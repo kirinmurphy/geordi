@@ -244,7 +244,12 @@ struct OverviewView: View {
                 trailing:
                   model.isSynthetic
                   ? detail("Synthetic size", in: file) ?? ""
-                  : detail("Size", in: file) ?? "Not collected"
+                    // Sizes are deliberately not measured by the read-only
+                    // rebuildable-data scan; classification is what makes
+                    // these rows distinct from arbitrary files.
+                  : [detail("Classification", in: file), detail("Rebuildability", in: file)]
+                    .compactMap { $0 }
+                    .joined(separator: " · ")
               ) { model.focus(file) }
             }
           }

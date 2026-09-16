@@ -35,7 +35,7 @@ private struct ApplicationAnatomyView: View {
   }
 
   private var connector: some View {
-    Image(systemName: "arrow.left.and.right").foregroundStyle(.blue).accessibilityHidden(true)
+    Image(systemName: "arrow.left.and.right").foregroundStyle(.indigo).accessibilityHidden(true)
   }
 
   private func anatomyNode(
@@ -44,7 +44,7 @@ private struct ApplicationAnatomyView: View {
     VStack(spacing: 7) {
       Image(systemName: symbol)
         .font(.system(size: 30, weight: .medium))
-        .foregroundStyle(emphasized ? .white : .blue)
+        .foregroundStyle(emphasized ? .white : .indigo)
       Text(title).font(.rowTitle).multilineTextAlignment(.center)
       Text(detail).font(.small).foregroundStyle(emphasized ? .white.opacity(0.85) : .secondary)
         .multilineTextAlignment(.center)
@@ -52,7 +52,8 @@ private struct ApplicationAnatomyView: View {
     .padding(14)
     .frame(maxWidth: .infinity, minHeight: 120)
     .background(
-      emphasized ? Color.blue : Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 12)
+      emphasized ? Color.indigo : Color.indigo.opacity(0.08),
+      in: RoundedRectangle(cornerRadius: 12)
     )
     .foregroundStyle(emphasized ? .white : .primary)
   }

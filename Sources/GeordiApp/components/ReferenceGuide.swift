@@ -16,7 +16,7 @@ struct GuideNode: Identifiable, Hashable {
 /// renders through this one component.
 struct ReferencePanel<Content: View>: View {
   let title: String
-  var maxWidth: CGFloat = 820
+  var maxWidth: CGFloat = 860
   @ViewBuilder let content: () -> Content
 
   var body: some View {
@@ -25,16 +25,16 @@ struct ReferencePanel<Content: View>: View {
         .font(.caption2.weight(.semibold))
         .tracking(1.2)
         .textCase(.uppercase)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(.indigo)
       Text(title)
         .font(.section.bold())
       content()
     }
     .padding(20)
     .frame(maxWidth: maxWidth, alignment: .leading)
-    .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 16))
+    .background(Color.indigo.opacity(0.06), in: RoundedRectangle(cornerRadius: 16))
     .overlay {
-      RoundedRectangle(cornerRadius: 16).stroke(Color.secondary.opacity(0.18))
+      RoundedRectangle(cornerRadius: 16).stroke(Color.indigo.opacity(0.3))
     }
   }
 }
@@ -54,10 +54,14 @@ struct ReferenceFlow: View {
   }
 
   private var wide: some View {
-    HStack(spacing: 10) {
+    // Left-to-right connected columns — the primary layout. Four nodes
+    // at 170pt plus connectors fit the panel's 820pt content width, so
+    // ViewThatFits picks this on any normal window; the vertical stack
+    // below is only a narrow-window fallback.
+    HStack(alignment: .top, spacing: 10) {
       ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
         if index > 0 { connector("arrow.right") }
-        flowNode(node).frame(width: 190)
+        flowNode(node).frame(width: 170)
       }
     }
   }
@@ -73,7 +77,8 @@ struct ReferenceFlow: View {
 
   private func connector(_ symbol: String) -> some View {
     Image(systemName: symbol)
-      .foregroundStyle(.blue)
+      .font(.system(size: 15, weight: .semibold))
+      .foregroundStyle(.indigo)
       .accessibilityHidden(true)
   }
 
@@ -81,7 +86,7 @@ struct ReferenceFlow: View {
     VStack(alignment: .leading, spacing: 8) {
       Image(systemName: node.symbol)
         .font(.system(size: 30, weight: .medium))
-        .foregroundStyle(.blue)
+        .foregroundStyle(.indigo)
       Text(node.title)
         .font(.rowTitle)
       Text(node.explanation)
@@ -92,9 +97,12 @@ struct ReferenceFlow: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(14)
     .background(
-      Color(nsColor: .windowBackgroundColor).opacity(0.6),
+      Color(nsColor: .controlBackgroundColor),
       in: RoundedRectangle(cornerRadius: 12)
     )
+    .overlay {
+      RoundedRectangle(cornerRadius: 12).stroke(Color.indigo.opacity(0.18))
+    }
   }
 }
 

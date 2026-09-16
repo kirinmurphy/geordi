@@ -80,49 +80,28 @@ struct CLIActionsPopup: View {
     }
   }
 
-  /// The simulated terminal: near-black screen, Courier command lines,
-  /// dim comment-style group headers. Selectable so commands can be
-  /// copied straight into a shell.
+  /// The simulated terminal: shared TerminalCommandList so the popup and
+  /// the Home success state render identically. Selectable so commands
+  /// can be copied straight into a shell.
   private var terminalScreen: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        ForEach(Array(groupedEntries.enumerated()), id: \.element.category) {
-          index, group in
-          if index > 0 {
-            Divider()
-              .overlay(Color.white.opacity(0.08))
-              .padding(.vertical, 10)
-          }
-          Text("# \(categoryLabel(group.category).uppercased())")
-            .font(.custom("Courier New", size: 11).bold())
-            .foregroundStyle(Color(red: 0.42, green: 0.62, blue: 0.82))
-            .padding(.bottom, 4)
-          ForEach(group.entries) { entry in
-            VStack(alignment: .leading, spacing: 2) {
-              Text("$ \(entry.usage)")
-                .font(.custom("Courier New", size: 12).weight(.medium))
-                .foregroundStyle(Color(white: 0.93))
-                .textSelection(.enabled)
-              Text(entry.summary)
-                .font(.custom("Courier New", size: 11))
-                .foregroundStyle(Color(white: 0.58))
-                .textSelection(.enabled)
-            }
-            .padding(.vertical, 3)
-          }
-        }
-      }
-      .padding(16)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(
-        Color(red: 0.07, green: 0.08, blue: 0.09),
-        in: RoundedRectangle(cornerRadius: 10)
-      )
-      .overlay {
-        RoundedRectangle(cornerRadius: 10)
-          .stroke(Color.white.opacity(0.12))
-      }
+      TerminalCommandList(groups: commandGroups)
     }
     .frame(maxHeight: 360)
+  }
+
+  private var commandGroups: [TerminalCommandList.Group] {
+    groupedEntries.map { group in
+      TerminalCommandList.Group(
+        id: categoryLabel(group.category).uppercased(),
+        entries: group.entries.enumerated().map { index, entry in
+          TerminalCommandList.Item(
+            id: "\(group.category)-\(index)-\(entry.usage)",
+            usage: entry.usage,
+            summary: entry.summary
+          )
+        }
+      )
+    }
   }
 }
