@@ -80,6 +80,7 @@ struct AppBanner: View {
               .font(.small.bold())
           }
           .buttonStyle(.plain)
+          .hoverHighlight(hPadding: 4, vPadding: 2)
           .help("Dismiss notification")
           .accessibilityLabel("Dismiss \(title)")
         }

@@ -13,14 +13,6 @@ struct ContentView: View {
   @State private var linkedStatusExpanded = false
   @State private var freshnessHoverTask: Task<Void, Never>?
 
-  /// Part C: the onboarding card shows until dismissed or the CLI is
-  /// actually installed; dismissal state is a persisted preference.
-  private var cliCardVisible: Bool {
-    !model.cliOnboardingDismissed
-      && model.cliEnablement.status
-        != .installed(target: model.cliEnablement.linkLocation + "/" + AppBrand.cliCommand)
-  }
-
   init(
     configuration: AppConfiguration,
     applicationClassifications: ApplicationClassificationConfiguration?,
@@ -246,14 +238,6 @@ struct ContentView: View {
           }
         }
         Section("Tools") {
-          if cliCardVisible {
-            CLIOnboardingCard(
-              model: model.cliEnablement,
-              inventory: model.cliInventory,
-              onDismiss: { model.dismissCLIOnboarding() }
-            )
-            .onAppear { Task { await model.refreshCLILinkStatus() } }
-          }
           navigationButton("Duplicate review", symbol: "square.on.square", destination: .dupeReview)
           navigationButton("Shell PATH Lab", symbol: "terminal", destination: .shellPath)
         }
@@ -303,17 +287,11 @@ struct ContentView: View {
         model.navigateBack()
       } label: {
         Label("Back", systemImage: "chevron.left")
+          .hoverHighlight()
       }
-      .buttonStyle(.borderless)
+      .buttonStyle(.plain)
       .disabled(!model.canNavigateBack)
       .keyboardShortcut("[", modifiers: .command)
-
-      Button {
-        model.navigateHome()
-      } label: {
-        Label("Home", systemImage: "house")
-      }
-      .buttonStyle(.borderless)
 
       Divider().frame(height: 22)
 
@@ -325,9 +303,15 @@ struct ContentView: View {
               .foregroundStyle(.tertiary)
           }
           if index == 0, title == "Home", model.destination != .overview {
-            Text("Home")
-              .font(.secondary.weight(.medium))
-              .foregroundStyle(.secondary)
+            Button {
+              model.navigateHome()
+            } label: {
+              Text("Home")
+                .font(.secondary.weight(.medium))
+                .foregroundStyle(.primary)
+                .hoverHighlight()
+            }
+            .buttonStyle(.plain)
           } else {
             Text(title)
               .font(index == model.breadcrumb.count - 1 ? .rowTitle : .secondary)
@@ -365,6 +349,7 @@ struct ContentView: View {
           }
         }
         .buttonStyle(.plain)
+        .hoverHighlight()
         .onHover(perform: scheduleFreshnessStatusPresentation)
         .popover(isPresented: $linkedStatusExpanded, arrowEdge: .bottom) {
           CollectionHealthPanel(model: model, exportAction: exportRedactedDiagnostics)
@@ -522,6 +507,7 @@ struct ContentView: View {
       Label(title, systemImage: symbol)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
+        .hoverHighlight(hPadding: 8, vPadding: 4)
     }
     .buttonStyle(.plain)
   }

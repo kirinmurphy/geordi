@@ -88,6 +88,7 @@ struct FilesystemMapView: View {
             }
           }
           .buttonStyle(.plain)
+          .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 14)
         }
       }
     }
@@ -120,6 +121,7 @@ struct FilesystemMapView: View {
       }
     }
     .buttonStyle(.plain)
+    .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 12)
   }
 
   private var inspector: some View {

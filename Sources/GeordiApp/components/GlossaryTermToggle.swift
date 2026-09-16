@@ -22,6 +22,7 @@ struct GlossaryTermToggle: View {
       .foregroundStyle(.primary)
     }
     .buttonStyle(.plain)
+    .pointerCursor()
     .onHover { hovering in
       hoverTask?.cancel()
       guard hovering else { return }

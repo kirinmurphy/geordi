@@ -363,6 +363,7 @@ struct InventoryRow: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .pointerCursor()
     .padding(.horizontal, -16)
     .onHover { isHovering = $0 }
   }

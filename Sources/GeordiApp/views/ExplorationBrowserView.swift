@@ -545,6 +545,7 @@ struct EntityBrowserRow: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .pointerCursor()
     .onHover { hovering = $0 }
   }
 

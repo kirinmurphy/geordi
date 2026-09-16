@@ -77,6 +77,7 @@ struct InspectorView: View {
           Image(systemName: "info.circle")
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 4, vPadding: 2)
         .foregroundStyle(EntityVisualStyle.color(for: entity.type))
         .help("Explain \(entity.type.label.lowercased())")
         .accessibilityLabel("About \(entity.type.label)")
@@ -177,6 +178,7 @@ struct InspectorView: View {
           }
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 12)
         .help("Open \(member.name)")
       }
     }

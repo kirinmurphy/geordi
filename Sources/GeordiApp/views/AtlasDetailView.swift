@@ -194,6 +194,7 @@ struct SearchField: View {
                 }
               }
               .buttonStyle(.plain)
+              .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 12)
             }
           }
         }

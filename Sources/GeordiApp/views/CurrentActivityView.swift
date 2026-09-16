@@ -74,6 +74,7 @@ struct WelcomePrompt: View {
           Image(systemName: "xmark")
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 4, vPadding: 2)
         .accessibilityLabel("Dismiss welcome")
       }
       Text(
@@ -201,6 +202,7 @@ struct LiveCoverageNotice: View {
               .controlSize(.small)
             Button("Dismiss") { model.dismissLinkedCompletion() }
               .buttonStyle(.plain)
+              .hoverHighlight(hPadding: 6, vPadding: 3)
               .controlSize(.small)
           }
         }

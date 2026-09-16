@@ -263,6 +263,7 @@ struct ApplicationStoryView: View {
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 14)
         .help("Open the full relationship map")
         .accessibilityLabel("Open the full relationship map for \(application.name)")
       }

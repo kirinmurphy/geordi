@@ -2,14 +2,16 @@ import GeordiDomain
 import SwiftUI
 
 /// The Part C onboarding card: dismissible first-launch card with an
-/// "Enable CLI" CTA, an info tooltip listing the CLI inventory before
-/// deciding, and the same inventory re-shown in the success state.
-/// Display copy lives here as manifest-derived values; the card is
-/// never shown as a modal launch-time dialog.
+/// "Enable CLI" CTA, an inline "View CLI Actions" link (click opens a
+/// centered popup listing the CLI inventory) and the same inventory
+/// re-shown in the success state. Display copy lives here as
+/// manifest-derived values; the card is never shown as a modal
+/// launch-time dialog.
 struct CLIOnboardingCard: View {
   @Bindable var model: CLIEnablementModel
   let inventory: CLICommandInventory?
   let onDismiss: () -> Void
+  let onShowActions: () -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -26,15 +28,25 @@ struct CLIOnboardingCard: View {
             .font(.small.bold())
         }
         .buttonStyle(.plain)
-        .help("Dismiss — you can enable the CLI later from the Tools section")
+        .hoverHighlight(hPadding: 4, vPadding: 2)
+        .help("Dismiss — you can enable the CLI later from the Home page")
         .accessibilityLabel("Dismiss CLI onboarding")
       }
 
-      Text(
-        "Enables \(AppBrand.cliCommand) on your PATH so terminal sessions and agents can use the same tools this window shows. No sudo; the app never enables it without your press."
-      )
-      .font(.small)
-      .foregroundStyle(.secondary)
+      descriptionText
+        .font(.small)
+        .onHover { hovering in
+          withAnimation(.easeInOut(duration: 0.12)) { linkUnderlined = hovering }
+        }
+        .environment(
+          \.openURL,
+          OpenURLAction { url in
+            if url.absoluteString == Self.actionsURL.absoluteString {
+              onShowActions()
+              return .handled
+            }
+            return .systemAction
+          })
 
       switch model.phase {
       case .succeeded:
@@ -44,6 +56,7 @@ struct CLIOnboardingCard: View {
           Button("Enable CLI") {
             Task { await model.enable() }
           }
+          .buttonStyle(AppButtonStyle(.standard))
           .disabled(model.phase == .running)
           if case .running = model.phase {
             ProgressView()
@@ -56,7 +69,6 @@ struct CLIOnboardingCard: View {
               .lineLimit(2)
           }
           Spacer()
-          inventoryHelp
         }
       }
     }
@@ -70,17 +82,35 @@ struct CLIOnboardingCard: View {
     .accessibilityIdentifier("cliOnboardingCard")
   }
 
-  /// Info icon with the full command inventory — shown BEFORE enabling
-  /// (tooltip) and again in the success state (below).
-  @ViewBuilder private var inventoryHelp: some View {
-    if let inventory, !inventory.entries.isEmpty {
-      Image(systemName: "info.circle")
-        .foregroundStyle(.secondary)
-        .help(inventory.entries.map { "\($0.usage) — \($0.summary)" }.joined(separator: "\n"))
-        .accessibilityLabel(
-          "CLI commands: "
-            + inventory.entries.map { "\($0.usage): \($0.summary)" }.joined(separator: "; "))
+  /// The description with the "View CLI Actions" link embedded IN the
+  /// text flow (true inline — it wraps with the paragraph). SwiftUI Text
+  /// cannot restyle one substring on hover precisely, so the whole
+  /// paragraph tracks hover and toggles the link's underline — the hover
+  /// affordance the user asked for. Click is intercepted via the openURL
+  /// environment action and opens the CLI actions popup.
+  private static let actionsURL = URL(string: "geordi://cli-actions")!
+  @State private var linkUnderlined = false
+
+  private var descriptionText: Text {
+    var attributed = AttributedString(
+      "Enables \(AppBrand.cliCommand) on your PATH so terminal sessions and agents can use the same tools this window shows. No sudo; the app never enables it without your press. "
+    )
+    attributed.foregroundColor = Color.secondary
+    if inventoryAvailable {
+      var link = AttributedString("View CLI Actions")
+      link.foregroundColor = Color.accentColor
+      if linkUnderlined {
+        link.underlineStyle = .single
+      }
+      link.link = Self.actionsURL
+      attributed += link
     }
+    return Text(attributed)
+  }
+
+  private var inventoryAvailable: Bool {
+    guard let inventory else { return false }
+    return !inventory.entries.isEmpty
   }
 
   @ViewBuilder private var successInventory: some View {

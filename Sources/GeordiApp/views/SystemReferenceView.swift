@@ -77,6 +77,7 @@ struct ReferenceConceptPanel: View {
             .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 4, vPadding: 2)
         .keyboardShortcut(.cancelAction)
         .accessibilityLabel("Close concept details")
       }
@@ -316,6 +317,7 @@ struct SystemReferenceView: View {
             }
           }
           .buttonStyle(.plain)
+          .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 14)
           .accessibilityLabel("\(item.title). \(item.detail)")
           .accessibilityHint("Shows more context")
         }
@@ -351,6 +353,7 @@ struct SystemReferenceView: View {
           }
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 13)
         .accessibilityHint("Shows more context")
       }
     }
@@ -421,6 +424,7 @@ struct SystemReferenceView: View {
           }
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 13)
         .accessibilityHint("Shows more context")
       }
     }
@@ -508,6 +512,7 @@ struct SystemReferenceView: View {
           }
         }
         .buttonStyle(.plain)
+        .hoverHighlight(hPadding: 0, vPadding: 0, cornerRadius: 13)
         .accessibilityHint("Shows more context")
       }
     }

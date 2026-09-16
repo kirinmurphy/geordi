@@ -13,6 +13,16 @@ struct OverviewView: View {
   @State private var expandedSoftwareGroups = Set<String>()
   @State private var hoveredSoftwareGroupID: String?
   @State private var applicationFilterPresented = false
+  @State private var cliActionsPresented = false
+
+  /// Part C: the onboarding card shows on the Home page until dismissed
+  /// or the CLI is actually installed; dismissal state is a persisted
+  /// preference.
+  private var cliCardVisible: Bool {
+    !model.cliOnboardingDismissed
+      && model.cliEnablement.status
+        != .installed(target: model.cliEnablement.linkLocation + "/" + AppBrand.cliCommand)
+  }
 
   var body: some View {
     ScrollView {
@@ -22,6 +32,16 @@ struct OverviewView: View {
             linkAction: model.linkToMac,
             dismissAction: model.dismissWelcome
           )
+        }
+
+        if cliCardVisible {
+          CLIOnboardingCard(
+            model: model.cliEnablement,
+            inventory: model.cliInventory,
+            onDismiss: { model.dismissCLIOnboarding() },
+            onShowActions: { cliActionsPresented = true }
+          )
+          .onAppear { Task { await model.refreshCLILinkStatus() } }
         }
 
         TaskOrientedExploreView(model: model) {
@@ -239,6 +259,18 @@ struct OverviewView: View {
     }
     .scrollIndicators(.visible)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .overlay {
+      if cliActionsPresented {
+        CLIActionsPopup(
+          inventory: model.cliInventory,
+          linkLocation: model.cliEnablement.linkLocation,
+          onClose: { cliActionsPresented = false }
+        )
+        .transition(.opacity)
+        .zIndex(10)
+      }
+    }
+    .animation(.easeInOut(duration: 0.15), value: cliActionsPresented)
     .sheet(isPresented: $guidedProofPresented) {
       GuidedProofView(model: model) {
         guidedProofPresented = false
@@ -264,6 +296,7 @@ struct OverviewView: View {
             }
           }
           .buttonStyle(.plain)
+          .hoverHighlight(hPadding: 4, vPadding: 2)
           .fixedSize()
           .popover(isPresented: $applicationFilterPresented, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
@@ -496,6 +529,7 @@ struct OverviewView: View {
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .pointerCursor()
     .background(
       hoveredSoftwareGroupID == id
         ? Color.accentColor.opacity(0.14) : Color.secondary.opacity(0.035)

@@ -146,6 +146,7 @@ private struct QuestionCard: View {
       .contentShape(RoundedRectangle(cornerRadius: 14))
     }
     .buttonStyle(.plain)
+    .pointerCursor()
     .onHover { isHovering = $0 }
   }
 }
