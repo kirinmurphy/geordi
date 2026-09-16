@@ -18,6 +18,9 @@ public enum SystemProfileSchema {
   }
 
   public static func decode(_ data: Data) throws -> SystemProfileDocument {
+    // Synthetic profiles carry display copy that may include the
+    // {{productName}} token; expand it before validation and decoding.
+    let data = try ProductBrand.current.expandingTokens(in: data)
     try validateAgainstDeclarativeSchema(data)
     let decoder = JSONDecoder()
     let document: SystemProfileDocument

@@ -8,7 +8,11 @@ reproduction of any prop.
 - Design: a glowing electric-blue diamond core inside four rounded
   metal corner blocks on a dark squircle — a futuristic "portal" motif.
 - Master: `GeordiApp-1024.png` (1024×1024, derived from the user-supplied
-  `portal_icon_variant_final` artwork, downscaled from 1254×1254)
+  `portal_icon_variant_final` artwork, downscaled from 1254×1254, then
+  flattened edge-to-edge — the artwork's transparent margin was filled
+  with the border color and the content scaled to the tile edge via
+  `swift scripts/make-icon-master.swift`, otherwise the icon reads
+  smaller than full-bleed neighbors at Dock size)
 - Packaged asset: `GeordiApp.icns`, rebuilt from the master with the
   standard pipeline below.
 

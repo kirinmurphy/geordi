@@ -177,6 +177,19 @@ struct FixtureTests {
       })
   }
 
+  @Test("Loaded fixture graphs carry no raw brand templates")
+  func fixtureGraphsAreExpanded() {
+    for graph in FixtureCatalog.all {
+      let copy =
+        [graph.metadata.summary]
+        + graph.entities.flatMap { [$0.name, $0.summary] + $0.details.map(\.value) }
+        + graph.relationships.map(\.explanation)
+      #expect(
+        !copy.contains { $0.contains("{{") },
+        "raw {{productName}} template survived decoding")
+    }
+  }
+
   @Test("Synthetic provider preserves deterministic scan context")
   func syntheticProviderContext() {
     let timestamp = Date(timeIntervalSince1970: 1_753_545_600)

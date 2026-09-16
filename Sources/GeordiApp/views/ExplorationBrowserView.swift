@@ -2,173 +2,22 @@ import GeordiDomain
 import GeordiVisualization
 import SwiftUI
 
-private struct GuideNode: Identifiable {
-  let id: String
-  let title: String
-  let explanation: String
-  let symbol: String
-}
+/// Max width for observation list columns. Page headers stay full-bleed;
+/// the rows beneath are bounded so long lists stay scannable.
+private let explorationContentMaxWidth: CGFloat = 880
 
-private struct ConceptualSystemMap: View {
-  let destination: AppModel.Destination
-
-  private var nodes: [GuideNode] {
-    switch destination {
-    case .startup:
-      [
-        GuideNode(
-          id: "declaration", title: "Declaration",
-          explanation: "A plist records a request to launch something.", symbol: "doc.text"),
-        GuideNode(
-          id: "service", title: "Launch service",
-          explanation: "macOS evaluates scope, timing, and restart policy.", symbol: "gearshape.2"),
-        GuideNode(
-          id: "software", title: "Owning software",
-          explanation:
-            "\(AppBrand.displayName) connects the declaration to an app when evidence supports it.",
-          symbol: "app.badge"),
-        GuideNode(
-          id: "process", title: "Running process",
-          explanation: "A separate observation—configuration alone does not prove it ran.",
-          symbol: "waveform.path.ecg"),
-      ]
-    case .storage:
-      [
-        GuideNode(
-          id: "application", title: "Application",
-          explanation: "Software reads, writes, downloads, and derives data.", symbol: "app"),
-        GuideNode(
-          id: "support", title: "Working data",
-          explanation: "Settings and support data may be essential or user-authored.",
-          symbol: "folder.badge.gearshape"),
-        GuideNode(
-          id: "rebuildable", title: "Rebuildable data",
-          explanation: "Caches and derived artifacts can often be recreated.",
-          symbol: "arrow.triangle.2.circlepath"),
-        GuideNode(
-          id: "decision", title: "Evidence before action",
-          explanation: "Size and classification inform a decision; they do not authorize deletion.",
-          symbol: "checklist"),
-      ]
-    case .commandLine:
-      [
-        GuideNode(
-          id: "source", title: "Install source",
-          explanation: "A package manager, installer, or user-local location introduces software.",
-          symbol: "shippingbox"),
-        GuideNode(
-          id: "package", title: "Installed package",
-          explanation: "A package may be requested directly or pulled in as a dependency.",
-          symbol: "cube.box"),
-        GuideNode(
-          id: "capability", title: "Capability",
-          explanation: "Runtimes and tools provide commands used by other software.",
-          symbol: "hammer"),
-        GuideNode(
-          id: "path", title: "Command on PATH",
-          explanation: "Shell search order determines which executable a name resolves to.",
-          symbol: "terminal"),
-      ]
-    default: []
-    }
-  }
-
-  private var title: String {
-    switch destination {
-    case .startup: "How automatic startup actually works"
-    case .storage: "How reclaimable data fits into application storage"
-    case .commandLine: "How command-line software becomes available"
-    default: "How this system works"
-    }
-  }
-
-  var body: some View {
-    if !nodes.isEmpty {
-      VStack(alignment: .leading, spacing: 14) {
-        Text(title).font(.section.bold())
-        Text(
-          "Follow the arrows through the system. The observations below show what \(AppBrand.displayName) actually found."
-        )
-        .foregroundStyle(.secondary)
-        ViewThatFits(in: .horizontal) {
-          wideWorkflow
-          compactWorkflow
-        }
-      }
-      .padding(20)
-      .background(
-        LinearGradient(
-          colors: [.blue.opacity(0.10), .purple.opacity(0.06)], startPoint: .topLeading,
-          endPoint: .bottomTrailing),
-        in: RoundedRectangle(cornerRadius: 18)
-      )
-      .overlay { RoundedRectangle(cornerRadius: 18).stroke(.blue.opacity(0.25)) }
-    }
-  }
-
-  private var wideWorkflow: some View {
-    HStack(spacing: 8) {
-      ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
-        if index > 0 { connector("arrow.right") }
-        workflowNode(node).frame(width: 172)
-      }
-    }
-  }
-
-  private var compactWorkflow: some View {
-    Grid(horizontalSpacing: 8, verticalSpacing: 8) {
-      GridRow {
-        workflowNode(nodes[0])
-        connector("arrow.right")
-        workflowNode(nodes[1])
-      }
-      GridRow {
-        Color.clear.frame(height: 18)
-        Color.clear.frame(height: 18)
-        connector("arrow.down")
-      }
-      GridRow {
-        workflowNode(nodes[3])
-        connector("arrow.left")
-        workflowNode(nodes[2])
-      }
-    }
-  }
-
-  private func connector(_ symbol: String) -> some View {
-    Image(systemName: symbol)
-      .foregroundStyle(.blue)
-      .accessibilityHidden(true)
-  }
-
-  private func workflowNode(_ node: GuideNode) -> some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Image(systemName: node.symbol).font(.section).foregroundStyle(.blue)
-      Text(node.title).font(.rowTitle)
-      Text(node.explanation)
-        .font(.small)
-        .foregroundStyle(.secondary)
-        .fixedSize(horizontal: false, vertical: true)
-    }
-    .padding(14)
-    .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
-    .background(.background.opacity(0.82), in: RoundedRectangle(cornerRadius: 12))
-  }
-
-}
-
+/// Reference-styled anatomy hub for the applications page.
 private struct ApplicationAnatomyView: View {
-  let model: AppModel
   let applications: [Entity]
 
   private var sample: Entity? { applications.first }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      Text("An application is more than its icon").font(.section.bold())
+    ReferencePanel(title: "An application is more than its icon") {
       Text(
         "\(AppBrand.displayName) treats an app as the center of a small system. Choose an app below to replace this anatomy lesson with its real evidence."
       )
+      .font(.small)
       .foregroundStyle(.secondary)
       HStack(spacing: 10) {
         anatomyNode("Installed from", "Source and provenance", "shippingbox")
@@ -182,8 +31,6 @@ private struct ApplicationAnatomyView: View {
           anatomyNode("Reads & writes", "Support, settings, caches", "folder")
         }
       }
-      .padding(16)
-      .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14))
     }
   }
 
@@ -195,13 +42,15 @@ private struct ApplicationAnatomyView: View {
     _ title: String, _ detail: String, _ symbol: String, emphasized: Bool = false
   ) -> some View {
     VStack(spacing: 7) {
-      Image(systemName: symbol).font(.section).foregroundStyle(emphasized ? .white : .blue)
+      Image(systemName: symbol)
+        .font(.system(size: 30, weight: .medium))
+        .foregroundStyle(emphasized ? .white : .blue)
       Text(title).font(.rowTitle).multilineTextAlignment(.center)
       Text(detail).font(.small).foregroundStyle(emphasized ? .white.opacity(0.85) : .secondary)
         .multilineTextAlignment(.center)
     }
     .padding(14)
-    .frame(maxWidth: .infinity, minHeight: 112)
+    .frame(maxWidth: .infinity, minHeight: 120)
     .background(
       emphasized ? Color.blue : Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 12)
     )
@@ -236,7 +85,7 @@ struct ApplicationBrowserView: View {
       )
       ScrollView {
         VStack(alignment: .leading, spacing: 22) {
-          ApplicationAnatomyView(model: model, applications: applications)
+          ApplicationAnatomyView(applications: applications)
           HStack(spacing: 12) {
             TextField("Search applications", text: $query)
               .textFieldStyle(.roundedBorder)
@@ -285,6 +134,8 @@ struct ApplicationBrowserView: View {
               Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 14))
           }
         }
+        .frame(maxWidth: explorationContentMaxWidth, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(20)
       }
       .scrollIndicators(.visible)
@@ -307,13 +158,14 @@ struct ExplorationBrowserView: View {
       )
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 20) {
-          ConceptualSystemMap(destination: model.destination)
+          if let guide = referenceGuide {
+            guide.panel
+              .frame(maxWidth: .infinity, alignment: .center)
+          }
           if let context, let presentation, hasMembers(presentation) {
             VStack(alignment: .leading, spacing: 5) {
               Text("What \(AppBrand.displayName) observed on this Mac")
                 .font(.section.bold())
-              Text(observationLead)
-                .foregroundStyle(.secondary)
             }
             ForEach(presentation.sections) { section in
               if !section.groups.isEmpty {
@@ -333,24 +185,14 @@ struct ExplorationBrowserView: View {
             )
           }
         }
+        .frame(maxWidth: explorationContentMaxWidth, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(20)
       }
       .scrollIndicators(.visible)
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .accessibilityIdentifier("explorationContextBrowser")
-  }
-
-  private var observationLead: String {
-    switch model.destination {
-    case .startup:
-      "Declarations are grouped with the software \(AppBrand.displayName) can connect them to; unresolved declarations stay explicit."
-    case .storage:
-      "Each location includes its classification, measured size when available, and the application relationship behind it."
-    case .commandLine:
-      "The inventory is organized as an ecosystem—sources and managers first, capabilities and installed artifacts second."
-    default: "Open an observed node to see its bounded evidence and relationships."
-    }
   }
 
   private var explanation: String {
@@ -363,6 +205,15 @@ struct ExplorationBrowserView: View {
       "Browse retained roles and discovery sources. \(AppBrand.displayName) does not infer a command’s purpose from its name."
     default:
       model.explorationContext?.question ?? ""
+    }
+  }
+
+  private var referenceGuide: ReferenceGuide? {
+    switch model.destination {
+    case .startup: .startup
+    case .storage: .storage
+    case .commandLine: .commandLine
+    default: nil
     }
   }
 
@@ -384,44 +235,33 @@ struct ExplorationBrowserView: View {
     VStack(alignment: .leading, spacing: 8) {
       Text(section.title)
         .font(.subsection.bold())
-      Text(section.explanation)
-        .font(.secondary)
-        .foregroundStyle(.secondary)
       ForEach(section.groups) { group in
-        DisclosureGroup {
-          VStack(spacing: 0) {
-            if let actionEntityID = group.actionEntityID,
-              let owner = model.fixture.entity(actionEntityID)
-            {
-              EntityBrowserRow(
-                entity: owner,
-                subtitle: "Owning software · Open its bounded relationships",
-                action: { model.focus(owner) }
-              )
-              Divider()
-            }
-            ForEach(group.entityIDs, id: \.rawValue) { id in
-              if let entity = model.fixture.entity(id) {
+        if !group.entityIDs.isEmpty || group.actionEntityID != nil {
+          GroupDisclosure(title: group.title, count: group.entityIDs.count) {
+            VStack(spacing: 0) {
+              if let actionEntityID = group.actionEntityID,
+                let owner = model.fixture.entity(actionEntityID)
+              {
                 EntityBrowserRow(
-                  entity: entity,
-                  subtitle: entitySubtitle(entity),
-                  action: { model.focus(entity) }
+                  entity: owner,
+                  subtitle: "Owning software · Open its bounded relationships",
+                  action: { model.focus(owner) }
                 )
                 Divider()
               }
+              ForEach(group.entityIDs, id: \.rawValue) { id in
+                if let entity = model.fixture.entity(id) {
+                  EntityBrowserRow(
+                    entity: entity,
+                    subtitle: entitySubtitle(entity),
+                    action: { model.focus(entity) }
+                  )
+                  Divider()
+                }
+              }
             }
+            .padding(.leading, 12)
           }
-          .padding(.leading, 12)
-        } label: {
-          HStack {
-            Text(group.title)
-              .font(.rowTitle)
-            Spacer()
-            Text("\(group.entityIDs.count)")
-              .font(.small)
-              .foregroundStyle(.secondary)
-          }
-          .padding(.vertical, 5)
         }
       }
     }
@@ -437,9 +277,6 @@ struct ExplorationBrowserView: View {
     VStack(alignment: .leading, spacing: 8) {
       Text(context.unresolvedTitle ?? "Unclassified")
         .font(.subsection.bold())
-      Text("These entities remain explicit instead of being assigned a guessed category.")
-        .font(.secondary)
-        .foregroundStyle(.secondary)
       ForEach(ids, id: \.rawValue) { id in
         if let entity = model.fixture.entity(id) {
           EntityBrowserRow(
@@ -491,6 +328,48 @@ struct ExplorationBrowserView: View {
   }
 }
 
+/// A state-controlled disclosure for observed groups. Replaces the older
+/// uncontrolled `DisclosureGroup`, whose chevron promised an expandable
+/// list but frequently failed to reveal one on macOS.
+struct GroupDisclosure<Content: View>: View {
+  let title: String
+  let count: Int
+  @ViewBuilder let content: () -> Content
+  @State private var expanded = false
+  @State private var hovering = false
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      Button {
+        withAnimation(.easeInOut(duration: 0.15)) { expanded.toggle() }
+      } label: {
+        HStack(spacing: 10) {
+          Image(systemName: expanded ? "chevron.down" : "chevron.right")
+            .font(.small.bold())
+            .foregroundStyle(.secondary)
+            .frame(width: 14)
+          Text(title)
+            .font(.rowTitle)
+          Spacer()
+          Text("\(count)")
+            .font(.small)
+            .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 4)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .pointerCursor()
+      .background(hovering ? Color.accentColor.opacity(0.06) : .clear)
+      .onHover { hovering = $0 }
+      if expanded {
+        content()
+      }
+    }
+  }
+}
+
 struct ExplorationHeader: View {
   let title: String
   let explanation: String
@@ -521,7 +400,8 @@ struct EntityBrowserRow: View {
     Button(action: action) {
       HStack(spacing: 12) {
         Image(systemName: entity.presentation?.symbol ?? symbol)
-          .frame(width: 22)
+          .font(.system(size: 19, weight: .medium))
+          .frame(width: 28)
           .foregroundStyle(.blue)
         VStack(alignment: .leading, spacing: 3) {
           Text(entity.name)

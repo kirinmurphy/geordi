@@ -12,7 +12,9 @@ public struct Glossary: Codable, Sendable {
       let manifest = Bundle.module.url(forResource: "glossary", withExtension: "json"),
       let schema = Bundle.module.url(forResource: "glossary.schema", withExtension: "json")
     else { throw GlossaryError.resourceUnavailable }
-    return try decode(Data(contentsOf: manifest), schema: Data(contentsOf: schema))
+    let brand = ProductBrand.current
+    return try decode(
+      try brand.expandingTokens(in: Data(contentsOf: manifest)), schema: Data(contentsOf: schema))
   }
 
   public static func decode(_ data: Data, schema: Data) throws -> Self {

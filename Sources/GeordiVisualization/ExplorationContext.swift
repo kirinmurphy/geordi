@@ -21,7 +21,10 @@ public struct ExplorationContextConfiguration: Codable, Hashable, Sendable {
     else {
       throw ExplorationContextError.resourceUnavailable
     }
-    return try decode(Data(contentsOf: manifestURL), schema: Data(contentsOf: schemaURL))
+    let brand = ProductBrand.current
+    return try decode(
+      try brand.expandingTokens(in: Data(contentsOf: manifestURL)),
+      schema: Data(contentsOf: schemaURL))
   }
 
   public static func decode(_ data: Data, schema: Data) throws -> Self {

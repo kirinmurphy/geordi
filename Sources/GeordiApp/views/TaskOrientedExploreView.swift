@@ -34,14 +34,6 @@ struct TaskOrientedExploreView: View {
         spacing: 16
       ) {
         QuestionCard(
-          title: "Understand an application",
-          explanation:
-            "See why it may be active, where it came from, and what \(AppBrand.displayName) associates with it.",
-          symbol: "app.badge.checkmark"
-        ) {
-          model.navigate(to: .applications)
-        }
-        QuestionCard(
           title: "See what starts automatically",
           explanation: "Trace startup declarations to the software they may activate.",
           symbol: "power"
