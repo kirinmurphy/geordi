@@ -227,8 +227,8 @@ struct ContentView: View {
 
       Divider()
 
-      // Navigation column: a plain scroll stack — a sidebar List ignores
-      // background styling — inside a subtle inset card.
+      // Navigation band: full-bleed and content-sized — it ends at the
+      // last item instead of stretching to fill the column.
       ScrollView {
         VStack(alignment: .leading, spacing: 1) {
           navigationButton("Home", symbol: "laptopcomputer", destination: .overview)
@@ -254,14 +254,12 @@ struct ContentView: View {
               destination: .performance)
           }
         }
-        .padding(10)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
       }
-      .background(
-        Self.sidebarInsetFill,
-        in: RoundedRectangle(cornerRadius: 12)
-      )
-      .padding(.horizontal, 10)
-      .padding(.top, 8)
+      .fixedSize(horizontal: false, vertical: true)
+      .background(Self.sidebarNavFill)
+      Spacer(minLength: 0)
 
       Divider()
       VStack(alignment: .leading, spacing: 10) {
@@ -304,6 +302,9 @@ struct ContentView: View {
       }
       .padding(14)
     }
+    // Opaque ground for the whole column — covers the sidebar material's
+    // blue-tinted gradient with a flat window background.
+    .background(Color(nsColor: .windowBackgroundColor))
     .navigationSplitViewColumnWidth(min: 210, ideal: 235, max: 280)
     .accessibilityIdentifier("globalSidebar")
   }
@@ -549,12 +550,13 @@ struct ContentView: View {
       .padding(.bottom, 3)
   }
 
-  /// A fill that is genuinely LIGHTER than the sidebar material in both
-  /// appearances. `controlBackgroundColor` is darker than the sidebar in
-  /// dark mode, which inverted the intended inset effect.
-  private static let sidebarInsetFill = Color(
+  /// Solid blue-gray fill for the navigation band — flat in both
+  /// appearances, no translucency, distinct from the column ground.
+  private static let sidebarNavFill = Color(
     nsColor: NSColor(name: nil) { appearance in
       let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-      return isDark ? NSColor.white.withAlphaComponent(0.06) : NSColor.white.withAlphaComponent(0.5)
+      return isDark
+        ? NSColor(red: 0.20, green: 0.24, blue: 0.30, alpha: 1)
+        : NSColor(red: 0.88, green: 0.91, blue: 0.94, alpha: 1)
     })
 }
