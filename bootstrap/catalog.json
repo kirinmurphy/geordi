@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "git",
+      "label": "Git",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "command",
+          "value": "git"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Install Apple Command Line Tools with xcode-select --install, complete the dialog, then rerun."
+      }
+    },
+    {
+      "id": "brew",
+      "label": "Homebrew",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "command",
+          "value": "brew"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Install Homebrew following https://brew.sh, add its bin directory to PATH, then rerun. Homebrew installation is not automated."
+      }
+    },
+    {
+      "id": "hermes",
+      "label": "Hermes",
+      "group": "cli",
+      "detect": [
+        {
+          "type": "command",
+          "value": "hermes"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Install Hermes using the official instructions at https://hermes-agent.nousresearch.com/docs ; command detection records its resolved path, not a guessed Homebrew package."
+      }
+    },
+    {
+      "id": "cmux",
+      "label": "cmux",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/cmux.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "cmux"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "vscode",
+      "label": "Visual Studio Code",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Visual Studio Code.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "visual-studio-code"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "dropbox",
+      "label": "Dropbox",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Dropbox.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "dropbox"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "native-access",
+      "label": "Native Access",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Native Access.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "native-access"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "chatgpt",
+      "label": "ChatGPT",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/ChatGPT.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "chatgpt"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "docker",
+      "label": "Docker Desktop",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Docker.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "docker-desktop"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "brave",
+      "label": "Brave Browser",
+      "group": "apps",
+      "detect": [
+        {
+          "type": "app",
+          "value": "/Applications/Brave Browser.app"
+        }
+      ],
+      "install": {
+        "type": "brewCask",
+        "package": "brave-browser"
+      },
+      "dependsOn": [
+        "brew"
+      ]
+    },
+    {
+      "id": "codex",
+      "label": "Codex",
+      "group": "agents",
+      "detect": [
+        {
+          "type": "command",
+          "value": "codex"
+        }
+      ],
+      "install": {
+        "type": "npmGlobal",
+        "package": "@openai/codex"
+      }
+    },
+    {
+      "id": "claude",
+      "label": "Claude Code",
+      "group": "agents",
+      "detect": [
+        {
+          "type": "command",
+          "value": "claude"
+        }
+      ],
+      "install": {
+        "type": "npmGlobal",
+        "package": "@anthropic-ai/claude-code"
+      }
+    },
+    {
+      "id": "oh-my-zsh",
+      "label": "Oh My Zsh",
+      "group": "shell",
+      "enabled": false,
+      "detect": [
+        {
+          "type": "path",
+          "value": "$HOME/.oh-my-zsh"
+        }
+      ],
+      "install": {
+        "type": "manual",
+        "instructions": "Review and follow https://ohmyz.sh ; shell configuration is not changed by bootstrap."
+      }
+    }
+  ]
+}

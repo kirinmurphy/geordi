@@ -1,12 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readdir, readFile } from 'node:fs/promises'
-import { loadManifest, validateManifest } from '../src/manifest.js'
+import { loadManifest, validateManifest, validateCatalog, loadCatalogFile } from '../src/manifest.js'
 import { validateSchema } from '../schema/validate.js'
 const fixture = JSON.parse(await readFile(new URL('./fixtures/integration.json', import.meta.url)))
 const fresh = () => structuredClone(fixture)
-test('canonical manifest and every committed fixture validate', async () => {
-  await loadManifest(new URL('../manifest.json', import.meta.url))
+test('catalog and machine-manifest fixtures validate against their schemas', async () => {
+  await loadCatalogFile(new URL('../catalog.json', import.meta.url))
   for (const file of await readdir(new URL('./fixtures/', import.meta.url))) if (file.endsWith('.json')) await loadManifest(new URL('./fixtures/' + file, import.meta.url))
 })
 test('unknown keys, invalid types, enums, and missing fields give paths', () => {
@@ -17,7 +17,7 @@ test('unknown keys, invalid types, enums, and missing fields give paths', () => 
     [m => m.items[0].install.package = '--evil', /install\.package/],
     [m => m.items[0].install.extra = 1, /install\.extra: unknown/],
     [m => delete m.items[0].detect, /items\[0\]\.detect: required/],
-    [m => m.schemaVersion = 1, /schemaVersion/],
+    [m => m.schemaVersion = 2, /schemaVersion/],
     [m => m.items[0].install.type = 'fake', /install\.type/],
     [m => m.items[0].detect = [], /detect/],
     [m => m.inventory.brew.formulae = {}, /formulae: expected array/]
@@ -26,8 +26,18 @@ test('unknown keys, invalid types, enums, and missing fields give paths', () => 
 })
 test('duplicate item identifiers and installer targets rejected', () => {
   const m = fresh(); m.items.push(structuredClone(m.items[0]))
-  assert.throws(() => validateManifest(m), /duplicate present/)
-  m.items[2].id = 'another'; assert.throws(() => validateManifest(m), /duplicate npmGlobal:present/)
+  assert.throws(() => validateManifest(m), /duplicate item id/)
+  m.items[2].id = 'another'; assert.throws(() => validateManifest(m), /duplicate install target/)
+})
+test('catalog duplicates and dependency errors rejected too', () => {
+  const catalog = { schemaVersion: 1, items: [structuredClone(fresh().items[0]), structuredClone(fresh().items[0])] }
+  assert.throws(() => validateCatalog(catalog), /duplicate item id/)
+  const [a] = fresh().items
+  const withBadDep = { ...a, id: 'x', dependsOn: ['nope'] }
+  assert.throws(() => validateCatalog({ schemaVersion: 1, items: [withBadDep] }), /unknown dependency nope/)
+  const withCycleA = { ...a, id: 'a', dependsOn: ['b'] }
+  const withCycleB = { ...a, id: 'b', dependsOn: ['a'] }
+  assert.throws(() => validateCatalog({ schemaVersion: 1, items: [withCycleA, withCycleB] }), /cycle/)
 })
 test('unknown, cyclic and disabled dependency edges rejected', () => {
   const m = fresh(); m.items[0].dependsOn = ['bogus']

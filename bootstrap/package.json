@@ -7,7 +7,7 @@
     "geordi-bootstrap": "./bin/geordi-bootstrap.js"
   },
   "scripts": {
-    "check": "node ./bin/geordi-bootstrap.js --check",
+    "check": "node ./bin/geordi-bootstrap.js mac --check",
     "validate": "node ./bin/geordi-bootstrap.js validate",
     "test": "node --test"
   },

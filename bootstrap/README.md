@@ -6,13 +6,30 @@ Commands and fresh-Mac prerequisites: [USAGE.md](USAGE.md).
 
 ---
 
-## Defaults versus observed inventory
+## Catalog and machine manifest
 
-`manifest.json` has two distinct sets:
+Two documents with different jobs (see
+`docs/plans/setup-registration-and-gui.md`):
+
+| Document | Contents | Location | Portability |
+| --- | --- | --- | --- |
+| `catalog.json` (schema v1) | Reusable item definitions only: detect, install, dependencies. No inventory, no per-user choices | Repo, validated by tests | Ships with the engine |
+| Machine manifest (schema v3) | The user's registered defaults (`items`) + observed `inventory` + `inventoryConfig` | `~/Library/Application Support/geordi/machine-manifest.json` by default (`resources/paths.json`); override with `--manifest PATH` | The file a new machine needs |
+
+`migrate` is the one-time split of a legacy combined schema-v2 manifest
+(`items` + `inventory` in one file): registered items and inventory move into
+the machine manifest; definitions absent from the catalog are contributed to
+it — existing catalog entries are never mutated. The legacy file is left
+unchanged. A fresh machine manifest starts empty: nothing installs until the
+user registers. `GEORDI_BOOTSTRAP_HOME` redirects `$HOME` for tests.
+
+## Registered defaults versus observed inventory
+
+The machine manifest has two distinct sets:
 
 | Field | Meaning |
 | --- | --- |
-| `items` | Intentional defaults, including defaults not installed now; disabled shell defaults remain disabled |
+| `items` | Registered defaults, including defaults not installed now; disabled shell defaults remain disabled |
 | `inventory.brew.formulae` | Every installed formula, **including transitive dependencies**, using exact `full_name` |
 | `inventory.brew.casks` | Every installed cask, using exact `full_token` |
 | `inventory.brew.taps` | Actual `brew tap` output; empty is valid with API-based core/cask |
@@ -64,18 +81,22 @@ that any package manager owns it. The desktop app is independently inventoried.
 
 ## Central schema and migration
 
-`schema/manifest-v2.schema.json` is the sole structural contract. The small generic
-interpreter in `schema/validate.js` supports only its declared JSON Schema subset
-and rejects unsupported keywords. It validates required fields, unknown keys,
-types, enums, variants, patterns, uniqueness, and array bounds with field paths.
-`src/manifest.js` adds semantic uniqueness, dependency graph, and provenance
-reference checks without maintaining another structural field list.
+Three schemas share one item-definitions fragment
+(`schema/item-v1.schema.json`): `machine-v3.schema.json` (machine manifest),
+`catalog-v1.schema.json` (catalog), and `manifest-v2.schema.json` (legacy
+combined manifests, migration input only). The small generic interpreter in
+`schema/validate.js` supports only its declared JSON Schema subset — including
+`definitions` and cross-file fragment references — and rejects unsupported
+keywords. It validates required fields, unknown keys, types, enums, variants,
+patterns, uniqueness, and array bounds with field paths. `src/manifest.js`
+adds semantic uniqueness, dependency graph, and provenance reference checks
+without maintaining another structural field list.
 
-Version 2 intentionally rejects prototype v1 manifests. Migration used here:
-retain default item intent; convert unsupported/bootstrap installers to explicit
-manual instructions; replace command execution probes with metadata-only checks;
-add dependencies/config and an initially empty inventory; then run live sync.
-Custom v1 users must make the same explicit migration—no automatic package-name
+Version 3 intentionally rejects combined v2 manifests as machine manifests;
+`migrate` is the only path from v2 to v3. The earlier v1-to-v2 migration
+(retain default item intent; explicit manual instructions; metadata-only
+checks; then live sync) remains a one-time historical step. Custom v1 users
+must make the same explicit migration—no automatic package-name
 inference or silent schema upgrade occurs.
 
 ## Verification

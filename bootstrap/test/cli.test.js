@@ -62,11 +62,16 @@ test('sync is explicit and never installs', async () => {
 })
 test('unknown and unsafe flag combinations rejected before reads', async () => {
   const bad = [['--sync','--apply'], ['--apply','--json'], ['--sync','--json'], ['--check','--apply'], ['--yes'], ['--wat'], ['--manifest'], ['list','--apply'], ['mac','a','b'], ['--sync','missing']]
-  for (const args of bad) assert.throws(() => parseArgs(args), undefined, args.join(' '))
+  for (const args of bad) await assert.rejects(() => parseArgs(args, { GEORDI_BOOTSTRAP_HOME: '/tmp/x' }), undefined, args.join(' '))
+  await assert.rejects(() => parseArgs(['migrate', 'mac'], { GEORDI_BOOTSTRAP_HOME: '/tmp/x' }))
+  await assert.rejects(() => parseArgs(['migrate', '--apply'], { GEORDI_BOOTSTRAP_HOME: '/tmp/x' }))
 })
 test('help needs no manifest or Homebrew', async () => {
   const { deps, logs } = setup(); deps.loadManifest = () => { throw new Error('unexpected read') }
   assert.equal(await runCli(['mac', '--help'], deps), 0)
   assert.match(logs[0], /--apply/)
 })
-test('manifest option preserves equals in path', () => assert.equal(parseArgs(['--manifest=a=b.json']).manifestPath, 'a=b.json'))
+test('manifest option preserves equals in path', async () => {
+  const options = await parseArgs(['--manifest=a=b.json'], { GEORDI_BOOTSTRAP_HOME: '/tmp/x' })
+  assert.equal(options.manifestPath, 'a=b.json')
+})

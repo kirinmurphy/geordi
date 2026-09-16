@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geordi.local/schemas/bootstrap-item-v1.json",
+  "title": "Geordi bootstrap item definition (shared fragment)",
+  "definitions": {
+    "brewPackage": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9+_.@-]*(/[A-Za-z0-9][A-Za-z0-9+_.@-]*){0,2}$"
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group": {
+          "enum": [
+            "cli",
+            "apps",
+            "agents",
+            "shell"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "detect": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "enum": [
+                  "command",
+                  "app",
+                  "path"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "type",
+              "value"
+            ]
+          },
+          "minItems": 1
+        },
+        "install": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "enum": [
+                    "brewFormula",
+                    "brewCask"
+                  ]
+                },
+                "package": {
+                  "$ref": "#/definitions/brewPackage"
+                }
+              },
+              "required": [
+                "type",
+                "package"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "npmGlobal"
+                },
+                "package": {
+                  "type": "string",
+                  "pattern": "^(?:@[a-z0-9._-]+/)?[a-z0-9][a-z0-9._-]*$"
+                }
+              },
+              "required": [
+                "type",
+                "package"
+              ]
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "manual"
+                },
+                "instructions": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "type",
+                "instructions"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "group",
+        "detect",
+        "install"
+      ]
+    }
+  }
+}

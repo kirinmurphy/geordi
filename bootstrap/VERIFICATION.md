@@ -19,6 +19,20 @@ installs, upgrades, removals, app launches, or Swift builds were performed.
 | Homebrew drift | No missing/untracked formulae, casks, or taps |
 | Small-file check | All 19 JavaScript files below 300 lines |
 
+## Catalog/machine-manifest split (slice 1, 2026-09-13)
+
+| Gate | Observed result |
+| --- | --- |
+| `npm test` after the split | 45 passed, 0 failed (incl. 5 new migrate suites) |
+| `npm run validate` | Machine-manifest fixture valid, schema v3 |
+| Sandbox `migrate --yes` of the real legacy manifest | 13 registered items, catalog 13 definitions, legacy file untouched |
+| `mac --check` against the migrated sandbox machine manifest | 56/60 present, 4 missing — matches the pre-split live state |
+| Repeated sandbox `migrate --force` | Byte-stable machine manifest and catalog |
+| Fixture parity | `catalog.json` validates against `catalog-v1.schema.json`; fixture validates against `machine-v3.schema.json`; tests fail on drift |
+
+The observed check ran with `GEORDI_BOOTSTRAP_HOME` pointed at a temp
+directory; no real user data was read or written.
+
 Missing defaults are `chatgpt`, `codex`, and `claude`. Command absence is relative
 to the current process PATH. Defaults not Homebrew-managed are `cmux`, `vscode`,
 `dropbox`, `native-access`, `chatgpt`, `docker`, and `brave`; all except ChatGPT

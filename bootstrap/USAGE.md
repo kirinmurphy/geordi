@@ -8,10 +8,19 @@ node bootstrap/bin/geordi-bootstrap.js mac --sync          # update inventory on
 node bootstrap/bin/geordi-bootstrap.js mac --apply         # real install, [y/N]
 node bootstrap/bin/geordi-bootstrap.js mac --apply --yes   # explicit script approval
 node bootstrap/bin/geordi-bootstrap.js mac chatgpt --apply # target + dependencies
+node bootstrap/bin/geordi-bootstrap.js migrate --yes       # one-time v2 -> v3 split, [y/N]
 ```
 
+The **machine manifest** (registered defaults + observed inventory) lives at
+`~/Library/Application Support/geordi/machine-manifest.json` by default.
+`--manifest PATH` selects another location — point it at a synced folder to
+carry your registrations to a new machine. Item **definitions** come from the
+repo's `catalog.json`. A legacy combined schema-v2 manifest is converted by
+`migrate --legacy PATH`; the legacy file is left unchanged and the split is
+refused if the machine manifest already exists (pass `--force` to replace it).
+
 From this directory: `npm test`, `npm run validate`, `npm run check`.
-`--manifest PATH` selects another manifest. `--help` works without Homebrew.
+`--help` works without Homebrew.
 Internal aliases: `check`, `list`, `validate`, `sync`; `install` remains a preview
 unless paired with `--apply`. Unknown flags are errors.
 
@@ -21,6 +30,9 @@ unless paired with `--apply`. Unknown flags are errors.
 - `--apply` requires an affirmative TTY prompt, or `--yes` without a TTY.
   Cancellation exits 1. Already-present targets are skipped, including explicitly
   named targets and packages installed as another action's dependency.
+- `migrate` follows the same gate: explicit TTY confirmation or `--yes`.
+  It writes only the machine manifest and the catalog; it never runs installs
+  or modifies the legacy source file.
 - `--sync` is the explicit authorization to replace **only inventory** in the
   selected manifest. It cannot combine with apply/check/yes or a target.
   `--json` cannot combine with sync/apply.
