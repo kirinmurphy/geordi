@@ -257,7 +257,7 @@ struct ContentView: View {
         .padding(10)
       }
       .background(
-        Color(nsColor: .controlBackgroundColor).opacity(0.55),
+        Self.sidebarInsetFill,
         in: RoundedRectangle(cornerRadius: 12)
       )
       .padding(.horizontal, 10)
@@ -548,4 +548,13 @@ struct ContentView: View {
       .padding(.top, 6)
       .padding(.bottom, 3)
   }
+
+  /// A fill that is genuinely LIGHTER than the sidebar material in both
+  /// appearances. `controlBackgroundColor` is darker than the sidebar in
+  /// dark mode, which inverted the intended inset effect.
+  private static let sidebarInsetFill = Color(
+    nsColor: NSColor(name: nil) { appearance in
+      let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+      return isDark ? NSColor.white.withAlphaComponent(0.06) : NSColor.white.withAlphaComponent(0.5)
+    })
 }
