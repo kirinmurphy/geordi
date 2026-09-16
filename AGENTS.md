@@ -75,6 +75,40 @@ These rules apply to every implementation task in this repository.
 - Do not implement destructive reset behavior until exact storage scope,
   backup/export semantics, target validation, and safety tests exist.
 
+## Working with Esteban (collaboration protocol)
+
+Esteban is the product owner; the agent owns implementation detail. He thinks
+in CLI terms (experienced CLI designer), has never built a Swift app, and wants
+outcomes, not process narration.
+
+- **Ownership.** Esteban decides what and why; the agent decides how. Do not
+  surface implementation choices as questions — resolve them, record the
+  decision, and move on.
+- **Decision protocol.** For every decision: evaluate the options, their pros
+  and cons, and pick a clear winner. Decisions with a dominant option are
+  decided unilaterally and documented (commit message, plan doc, or skill
+  note). Decisions that are genuinely subjective — strong pros AND strong cons
+  on both sides with no clear winner — are BLOCKED and block all dependent
+  tasks until discussed with Esteban. Do not guess on blocked decisions.
+- **Run to the wall.** Keep working until every remaining task is either done
+  or blocked. No periodic check-ins, no stopping on open questions while other
+  work remains. When work ends, deliver ONE outcome-first summary; batch all
+  blocked decisions together at that point, each with its pros/cons laid out.
+- **Learning moments.** Geordi exists so Esteban can understand his computer.
+  When implementation touches a transferable concept (app bundles, code
+  signing, sandboxing, notifications, storage, the window/view lifecycle…),
+  treat the concept as a potential product surface: implement it directly if
+  complexity is low, otherwise write it up as a candidate feature. Explain
+  concepts in chat in layperson terms when relevant.
+- **Self-audit.** The agent is responsible for its own quality without being
+  asked: at task start, discover and load relevant skills (code standards,
+  testing, auditing, CLI UX — search by keyword, don't assume a fixed list)
+  plus the in-repo standards (`cli/AGENTS.md`,
+  `references/cli-ux-conventions.md`, the `geordi-project` skill), apply them
+  to every change, and summarize audit results in the final summary.
+- **Technical register.** CLI-side discussion can assume a technical peer;
+  desktop/Swift topics start at layperson level and build up.
+
 ## Review checklist
 
 Before committing:

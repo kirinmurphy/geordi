@@ -1,0 +1,10 @@
+#!/bin/zsh
+# Pre-push gate: refuse the push when any CI-equivalent local suite fails.
+# Installed via `git config core.hooksPath scripts/git-hooks`.
+print -u2 "pre-push: running local CI gate (make ci-local)..."
+if ! make ci-local; then
+  print -u2 "pre-push: BLOCKED — local suites failed. Fix them before pushing."
+  exit 1
+fi
+print -u2 "pre-push: local CI gate passed."
+exit 0

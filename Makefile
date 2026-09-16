@@ -36,6 +36,12 @@ format-check:
 
 verify: format-check test-unit fixtures build test-ui
 
+# Same jobs as .github/workflows/ci.yml — the pre-push gate runs this so
+# nothing reaches CI (or origin) with a failing suite.
+ci-local: test-unit fixtures
+	python3 -m unittest discover -s cli/test
+	npm test --prefix bootstrap
+
 run:
 	./scripts/stop-dev.sh
 	$(MAKE) install-dev

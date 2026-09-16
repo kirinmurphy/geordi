@@ -41,9 +41,9 @@ into your PATH; no scripts are copied outside the bundle.
    one-time step per app copy; it disappears entirely with Developer ID
    notarization (not yet).
 3. Enable the CLI from inside the app (onboarding card, **Enable CLI**)
-   or from a terminal: `geordi install-cli` once the link exists — or
+   or from a terminal: `geordi repair-cli` once the link exists — or
    from the bundle directly:
-   `/Applications/geordi.app/Contents/MacOS/geordi install-cli`.
+   `/Applications/geordi.app/Contents/MacOS/geordi repair-cli`.
 
 This creates exactly one thing outside the app: a symlink
 `/opt/homebrew/bin/geordi` → the bundle's launcher. Nothing else is
@@ -69,7 +69,7 @@ Replace the bundle (drag the new `geordi.app` over the old one, or
 `make install-dev` for development) — the PATH symlink target does not
 change, so the CLI follows the new bundle automatically. If the app was
 renamed or moved, the launcher detects the broken link: run
-`geordi install-cli` again (or use the in-app card) to re-link.
+`geordi repair-cli` again (or use the in-app card) to re-link.
 
 ## Dev and DMG coexistence
 
@@ -88,8 +88,8 @@ one of them as the "installed" app. The reliable switch is the PATH
 symlink:
 
 - Dev CLI: `python3 scripts/install-cli.py` (targets the repo checkout)
-- Bundled CLI: `geordi install-cli` from the installed bundle, or
-  `/Applications/geordi.app/Contents/MacOS/geordi install-cli`
+- Bundled CLI: `geordi repair-cli` from the installed bundle, or
+  `/Applications/geordi.app/Contents/MacOS/geordi repair-cli`
 
 `readlink /opt/homebrew/bin/geordi` always tells you which one is live.
 

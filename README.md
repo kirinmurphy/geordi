@@ -26,7 +26,7 @@ flowchart LR
 |---|---|---|
 | Work on geordi (development) | `make install-dev` then `make run` — debug build installs to `~/Applications/geordi.app`; CLI runs from the repo via `python3 scripts/install-cli.py` | Dev loop is `make verify` before committing |
 | Install the packaged app | Grab `geordi-<version>.dmg`, drag to `/Applications`, right-click → Open on first launch (ad-hoc signed), enable the CLI from the onboarding card | Build it with `make dmg`; see [Install & uninstall](docs/install-and-uninstall.md) |
-| CLI only | `python3 scripts/install-cli.py` (repo checkout) or `geordi install-cli` (bundled) | `geordi --help` lists commands |
+| CLI only | `python3 scripts/install-cli.py` (repo checkout) or `geordi repair-cli` (bundled) | `geordi --help` lists commands |
 
 What each install puts on disk — app, PATH symlink, Application Support
 data, preferences, duplicate-review state — and how to remove every trace
