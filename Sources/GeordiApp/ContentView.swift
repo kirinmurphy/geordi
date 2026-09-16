@@ -224,14 +224,24 @@ struct ContentView: View {
         Section {
           navigationButton("This Mac", symbol: "laptopcomputer", destination: .overview)
         }
+        // Mirrors the Home question cards one-to-one — same destinations,
+        // same order, same symbols — so the sidebar and the Home page are
+        // two views of one navigation contract.
         Section("Explore") {
           navigationButton(
             "Installed software", symbol: "macwindow.on.rectangle", destination: .applications)
           navigationButton(
-            "Filesystem Map", symbol: "point.3.connected.trianglepath.dotted",
-            destination: .filesystem)
+            "What starts automatically", symbol: "power", destination: .startup)
+          navigationButton(
+            "Reclaimable data", symbol: "arrow.3.trianglepath", destination: .storage)
+          navigationButton(
+            "Command-line tools", symbol: "terminal", destination: .commandLine)
+          navigationButton(
+            "Where software lives", symbol: "folder.badge.gearshape", destination: .filesystem)
+          navigationButton(
+            "Shell PATH Lab", symbol: "point.3.connected.trianglepath.dotted",
+            destination: .shellPath)
           if model.isSynthetic {
-            navigationButton("Storage", symbol: "internaldrive", destination: .storage)
             navigationButton(
               "Performance", symbol: "gauge.with.dots.needle.50percent",
               destination: .performance)
@@ -239,7 +249,6 @@ struct ContentView: View {
         }
         Section("Tools") {
           navigationButton("Duplicate review", symbol: "square.on.square", destination: .dupeReview)
-          navigationButton("Shell PATH Lab", symbol: "terminal", destination: .shellPath)
         }
       }
 
@@ -262,16 +271,23 @@ struct ContentView: View {
           }
         }
         if !model.isSynthetic {
-          HStack(spacing: 8) {
+          // Data-source actions live behind one menu; the sidebar footer
+          // stays a status line, not a control panel.
+          Menu {
             Button("Check again") { model.refreshLiveData() }
+            Divider()
             Button("Return to fictional Mac…") {
               unlinkConfirmationPresented = true
             }
+          } label: {
+            Image(systemName: "ellipsis.circle")
+              .foregroundStyle(.secondary)
           }
-          .controlSize(.small)
-          .buttonStyle(.bordered)
+          .menuStyle(.borderlessButton)
+          .menuIndicator(.visible)
+          .fixedSize()
           .disabled(model.isCollecting)
-          .accessibilityElement(children: .contain)
+          .help("Data source actions")
           .accessibilityIdentifier("linkedDataActions")
         }
       }

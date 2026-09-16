@@ -94,15 +94,14 @@ private struct QuestionCard: View {
           .multilineTextAlignment(.leading)
           .fixedSize(horizontal: false, vertical: true)
         Spacer(minLength: 4)
-        if isHovering {
-          HStack {
-            Spacer()
-            Label("Explore", systemImage: "arrow.right")
-              .font(.secondary.bold())
-              .foregroundStyle(.blue)
-          }
-          .transition(.opacity)
+        // Always laid out so hover never changes the card's height.
+        HStack {
+          Spacer()
+          Label("Explore", systemImage: "arrow.right")
+            .font(.secondary.bold())
+            .foregroundStyle(.blue)
         }
+        .opacity(isHovering ? 1 : 0)
       }
       .padding(18)
       .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
