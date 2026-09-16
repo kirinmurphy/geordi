@@ -228,36 +228,36 @@ struct ContentView: View {
       Divider()
 
       // Navigation band: full-bleed and content-sized — it ends at the
-      // last item instead of stretching to fill the column.
-      ScrollView {
-        VStack(alignment: .leading, spacing: 1) {
-          navigationButton("Home", symbol: "laptopcomputer", destination: .overview)
-            .padding(.bottom, 6)
-          // Mirrors the Home question cards one-to-one — same destinations,
-          // same order, same symbols — so the sidebar and the Home page are
-          // two views of one navigation contract.
-          sectionLabel("Explore")
+      // last item instead of stretching to fill the column. Plain stack,
+      // no scroll machinery: ScrollView sizing inside the split-view
+      // sidebar collapsed the column and broke detail-column scrolling.
+      VStack(alignment: .leading, spacing: 1) {
+        navigationButton("Home", symbol: "laptopcomputer", destination: .overview)
+          .padding(.bottom, 6)
+        // Mirrors the Home question cards one-to-one — same destinations,
+        // same order, same symbols — so the sidebar and the Home page are
+        // two views of one navigation contract.
+        sectionLabel("Explore")
+        navigationButton(
+          "What starts automatically", symbol: "power", destination: .startup)
+        navigationButton(
+          "Reclaimable data", symbol: "arrow.3.trianglepath", destination: .storage)
+        navigationButton(
+          "Command-line tools", symbol: "terminal", destination: .commandLine)
+        navigationButton(
+          "Where software lives", symbol: "folder.badge.gearshape", destination: .filesystem)
+        navigationButton(
+          "Shell PATH Lab", symbol: "point.3.connected.trianglepath.dotted",
+          destination: .shellPath)
+        if model.isSynthetic {
           navigationButton(
-            "What starts automatically", symbol: "power", destination: .startup)
-          navigationButton(
-            "Reclaimable data", symbol: "arrow.3.trianglepath", destination: .storage)
-          navigationButton(
-            "Command-line tools", symbol: "terminal", destination: .commandLine)
-          navigationButton(
-            "Where software lives", symbol: "folder.badge.gearshape", destination: .filesystem)
-          navigationButton(
-            "Shell PATH Lab", symbol: "point.3.connected.trianglepath.dotted",
-            destination: .shellPath)
-          if model.isSynthetic {
-            navigationButton(
-              "Performance", symbol: "gauge.with.dots.needle.50percent",
-              destination: .performance)
-          }
+            "Performance", symbol: "gauge.with.dots.needle.50percent",
+            destination: .performance)
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 12)
       }
-      .fixedSize(horizontal: false, vertical: true)
+      .padding(.vertical, 10)
+      .padding(.horizontal, 12)
+      .frame(maxWidth: .infinity, alignment: .leading)
       .background(Self.sidebarNavFill)
       Spacer(minLength: 0)
 
