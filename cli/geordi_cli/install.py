@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from .registry import Registry
-from .schema import ManifestError
+from .schema import ManifestError, read_json
 
 
 class Installer:
@@ -14,8 +14,29 @@ class Installer:
         self.registry = registry
         self.directory = Path(prefix).expanduser().absolute() / "bin"
 
+    def bundle_launcher(self):
+        """Inside a staged app bundle, the @cliCommand launcher is the
+        bundle shim (Contents/<layout shim bundlePath>), not the repo's
+        bin/geordi — which does not exist in a bundle. Resolved through
+        the versioned bundle-layout manifest; None in a repo checkout
+        (the repo's declared path is used there)."""
+        layout_path = self.registry.root / "cli/resources/bundle-layout.json"
+        if not layout_path.is_file():
+            return None
+        try:
+            layout = read_json(layout_path)
+        except Exception:
+            return None
+        # root = <Bundle>/Contents/Resources/<cliRoot> -> Contents
+        contents = self.registry.root.parent.parent
+        shim = contents / layout["shim"]["bundlePath"]
+        if shim.is_file() and os.access(shim, os.X_OK):
+            return shim
+        return None
+
     def plan(self):
         planned = []
+        brand_launcher = self.bundle_launcher()
         # preflight every declared command source too: an install that
         # leaves a manifest command unrunnable is a broken install
         for command in self.registry.data["commands"]:
@@ -23,7 +44,10 @@ class Installer:
             if not source.is_file() or not os.access(source, os.X_OK):
                 raise ManifestError(f"installation source missing or not executable: {source}")
         for link in self.registry.data["links"]:
-            source = self.registry.resource(link["path"])
+            if brand_launcher is not None and link["name"] == "@cliCommand":
+                source = brand_launcher
+            else:
+                source = self.registry.resource(link["path"])
             if not source.is_file() or not os.access(source, os.X_OK):
                 raise ManifestError(f"installation source missing or not executable: {source}")
             target = self.directory / self.registry.link_name(link)

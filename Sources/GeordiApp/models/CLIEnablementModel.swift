@@ -13,7 +13,7 @@ enum CLILinkStatus: Equatable {
   case occupied(description: String)
 }
 
-/// Runs the bundled `geordi install-cli` command (same Installer as
+/// Runs the bundled `geordi repair-cli` command (same Installer as
 /// scripts/install-cli.py — reused, not forked) and classifies the
 /// current PATH link state. Filesystem inspection is read-only; the
 /// mutating step is only ever triggered by an explicit user action.
@@ -34,6 +34,8 @@ final class CLIEnablementModel {
   private let processRunner: (String, [String]) async -> (Int32, String, String)
 
   static let defaultLinkDirectory = "/opt/homebrew/bin"
+  /// What `--prefix` means to the installer: it appends `/bin` itself.
+  static let defaultInstallPrefix = "/opt/homebrew"
 
   init(
     linkLocation: String = CLIEnablementModel.defaultLinkDirectory,
@@ -56,9 +58,15 @@ final class CLIEnablementModel {
 
   func enable() async {
     guard phase != .running else { return }
+    guard let installerPath = bundledInstallCLIPath() else {
+      phase = .failed(
+        "The CLI installer is not present in this build of \(AppBrand.displayName)."
+      )
+      return
+    }
     phase = .running
     let (code, _, stderr) = await processRunner(
-      bundledInstallCLIPath(), ["--prefix", CLIEnablementModel.defaultLinkDirectory])
+      installerPath, ["--prefix", CLIEnablementModel.defaultInstallPrefix])
     if code == 0 {
       phase = .succeeded
       await refresh()
@@ -67,17 +75,28 @@ final class CLIEnablementModel {
     }
   }
 
-  func bundledInstallCLIPath() -> String {
-    // Bundled layout: Contents/Resources/geordi/cli/bin/install-cli
-    // (declared by bundle-layout.json); repo fallback for development.
-    let bundle = Bundle.main.bundleURL
+  /// Locates the bundled `repair-cli` script. Returns nil (never a
+  /// multi-token command string) when no staged installer exists, so the
+  /// caller can surface a clear message instead of a launch failure.
+  func bundledInstallCLIPath() -> String? {
     let staged =
-      bundle
-      .appendingPathComponent("Contents/Resources/geordi/cli/bin/install-cli")
+      Bundle.main.bundleURL
+      .appendingPathComponent("Contents/Resources/geordi/cli/bin/repair-cli")
     if FileManager.default.isExecutableFile(atPath: staged.path) {
       return staged.path
     }
-    return "/usr/bin/env python3"
+    // Development layouts: a bare SwiftPM binary or the unpackaged
+    // .build/<config>/<App>.app both live inside the repo's .build
+    // directory — the repo's staged CLI is at <repo>/cli/bin/repair-cli.
+    var directory = Bundle.main.bundleURL
+    for _ in 0..<3 {
+      directory.deleteLastPathComponent()
+    }
+    let repoCandidate = directory.appendingPathComponent("cli/bin/repair-cli")
+    if FileManager.default.isExecutableFile(atPath: repoCandidate.path) {
+      return repoCandidate.path
+    }
+    return nil
   }
 
   // MARK: - Path classification (read-only)
@@ -116,7 +135,7 @@ final class CLIEnablementModel {
     // The bundled entry point is a Python script; run it with env python.
     let executable: String
     let finalArguments: [String]
-    if launchPath.hasSuffix("install-cli") {
+    if launchPath.hasSuffix("repair-cli") {
       executable = "/usr/bin/python3"
       finalArguments = [launchPath] + arguments
     } else {

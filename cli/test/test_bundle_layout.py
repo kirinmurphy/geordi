@@ -109,7 +109,8 @@ class ShimBundleResolutionTests(unittest.TestCase):
         probe.write_text("#!/usr/bin/env python3\nimport json, sys\nprint(json.dumps({'argv': sys.argv[1:]}))\n")
         probe.chmod(0o755)
         commands = json.loads((REPO / "cli/resources/commands.json").read_text())
-        commands["commands"] = [{"command": ["probe"], "description": "probe", "runtime": "python",
+        commands["commands"] = [{"command": ["probe"], "description": "probe", "category": "utility",
+                                 "runtime": "python",
                                  "path": "cli/bin/sidekicks/probe", "args": []}]
         (root / "cli/resources/commands.json").write_text(json.dumps(commands))
         self.shim = shim

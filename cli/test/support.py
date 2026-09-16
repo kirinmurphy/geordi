@@ -39,9 +39,9 @@ class Sandbox(unittest.TestCase):
         sidekick = self.root / "cli/bin/sidekicks/find-dupe-files"
         sidekick.parent.mkdir(parents=True)
         shutil.copy2(REPO / "cli/bin/sidekicks/find-dupe-files", sidekick)
-        install_cli = self.root / "cli/bin/install-cli"
+        install_cli = self.root / "cli/bin/repair-cli"
         install_cli.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(REPO / "cli/bin/install-cli", install_cli)
+        shutil.copy2(REPO / "cli/bin/repair-cli", install_cli)
         install_cli.chmod(0o755)  # the installer preflights command sources
         bootstrap = self.root / "bootstrap/bin/geordi-bootstrap.js"
         bootstrap.parent.mkdir(parents=True)
@@ -74,4 +74,5 @@ class Sandbox(unittest.TestCase):
         script = self.root / "cli/probe.py"
         script.write_text("import json, os, sys\nprint(json.dumps({'args':sys.argv[1:],'cwd':os.getcwd()}))\nsys.exit(23)\n")
         self.manifest["commands"].append({"command": list(tokens), "description": "Test fixture",
+                                           "category": "utility",
                                            "runtime": runtime, "path": "cli/probe.py", "args": ["fixed"]})

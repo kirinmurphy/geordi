@@ -1,21 +1,13 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "commands": [
-    {
-      "command": [
-        "find-dupe-files"
-      ],
-      "description": "Review duplicate files (current directory by default)",
-      "runtime": "python",
-      "path": "cli/bin/sidekicks/find-dupe-files",
-      "args": []
-    },
     {
       "command": [
         "setup",
         "mac"
       ],
       "description": "Set up this Mac: preview missing registered apps; --apply installs",
+      "category": "setup",
       "runtime": "node",
       "path": "bootstrap/bin/geordi-bootstrap.js",
       "args": [
@@ -28,6 +20,7 @@
         "manifest"
       ],
       "description": "Migrate the legacy combined setup manifest (v2) into catalog + machine manifest",
+      "category": "setup",
       "runtime": "node",
       "path": "bootstrap/bin/geordi-bootstrap.js",
       "args": [
@@ -37,11 +30,22 @@
     },
     {
       "command": [
-        "install-cli"
+        "repair-cli"
       ],
-      "description": "Install or repair the geordi command link (no sudo)",
+      "description": "Repair the geordi command link on PATH (no sudo; also what the app's Enable CLI runs)",
+      "category": "setup",
       "runtime": "python",
-      "path": "cli/bin/install-cli",
+      "path": "cli/bin/repair-cli",
+      "args": []
+    },
+    {
+      "command": [
+        "find-dupe-files"
+      ],
+      "description": "Review duplicate files (current directory by default)",
+      "category": "utility",
+      "runtime": "python",
+      "path": "cli/bin/sidekicks/find-dupe-files",
       "args": []
     }
   ],

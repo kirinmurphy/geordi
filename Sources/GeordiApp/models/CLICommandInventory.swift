@@ -2,13 +2,16 @@ import Foundation
 import GeordiDomain
 
 /// Manifest-driven inventory of the commands the bundled CLI exposes.
-/// Decoded from the staged command registry (`commands.json`) — never a
-/// hardcoded list — so new commands appear without editing Swift.
+/// Decoded from the staged command registry (`commands.json`, schema v2)
+/// — never a hardcoded list — so new commands appear without editing
+/// Swift. Entries carry a manifest-declared category ("setup" or
+/// "utility") used for grouping in the CLI actions popup.
 public struct CLICommandInventory: Equatable, Sendable {
   public struct Entry: Equatable, Identifiable, Sendable {
     public let id: String
     public let tokens: [String]
     public let summary: String
+    public let category: String
 
     public var usage: String {
       ([AppBrand.cliCommand] + tokens).joined(separator: " ")
@@ -46,12 +49,12 @@ public struct CLICommandInventory: Equatable, Sendable {
     guard let data = try? Data(contentsOf: url),
       let document = try? JSONDecoder().decode(
         CommandRegistryDocument.self, from: data),
-      document.schemaVersion == 1
+      document.schemaVersion == 2
     else { return nil }
     let entries = document.commands.map { command in
       Entry(
         id: command.command.joined(separator: "-"), tokens: command.command,
-        summary: command.description)
+        summary: command.description, category: command.category)
     }
     return CLICommandInventory(entries: entries)
   }
@@ -64,5 +67,6 @@ private struct CommandRegistryDocument: Decodable {
   struct CommandEntry: Decodable {
     let command: [String]
     let description: String
+    let category: String
   }
 }

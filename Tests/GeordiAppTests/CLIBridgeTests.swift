@@ -11,7 +11,7 @@ struct CLICommandInventoryTests {
     let inventory = try #require(CLICommandInventory.repositoryFallback())
     #expect(!inventory.entries.isEmpty)
     #expect(inventory.entries.contains { $0.tokens == ["find-dupe-files"] })
-    #expect(inventory.entries.contains { $0.tokens == ["install-cli"] })
+    #expect(inventory.entries.contains { $0.tokens == ["repair-cli"] })
     for entry in inventory.entries {
       #expect(entry.usage.hasPrefix("\(AppBrand.cliCommand) "))
       #expect(!entry.summary.isEmpty)

@@ -10,18 +10,20 @@ class RegistryTests(Sandbox):
     def test_committed_manifest_validates(self):
         commands = {tuple(c["command"]) for c in self.registry().data["commands"]}
         # Both arcs' registry commands must coexist: find-dupe-files (sidekicks),
-        # install-cli (installation), and the bootstrap arc's setup/migrate.
-        self.assertTrue({("find-dupe-files",), ("install-cli",), ("setup", "mac"), ("migrate", "manifest")} <= commands)
+        # repair-cli (installation/repair), and the bootstrap arc's setup/migrate.
+        self.assertTrue({("find-dupe-files",), ("repair-cli",), ("setup", "mac"), ("migrate", "manifest")} <= commands)
 
     def test_unknown_fields_invalid_enums_and_types(self):
         mutations = [
             lambda d: d.update(extra=True),
-            lambda d: d.update(schemaVersion=2),
+            lambda d: d.update(schemaVersion=3),
             lambda d: d.update(schemaVersion=True),
             lambda d: d["commands"][0].update(extra=True),
             lambda d: d["commands"][0].update(runtime="shell"),
             lambda d: d["commands"][0].update(command="not-an-array"),
             lambda d: d["commands"][0].pop("args"),
+            lambda d: d["commands"][0].pop("category"),
+            lambda d: d["commands"][0].update(category="bogus"),
             lambda d: d["links"][0].update(extra=True),
             lambda d: d["commands"][0].update(args=["bad\0arg"]),
         ]

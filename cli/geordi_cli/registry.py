@@ -7,17 +7,27 @@ from .schema import ManifestError, SchemaValidator, read_json
 
 def safe_resource(root, relative, field="path"):
     """Resolve a manifest-declared path inside `root`, refusing absolute
-    paths, traversal, and symlink escapes. Shared by every manifest that
-    declares repository-relative paths."""
+    paths, traversal, and symlink escapes or loops. Shared by every
+    manifest that declares repository-relative paths.
+
+    Symlink-loop detection is interpreter-independent: Python <=3.12 raises
+    RuntimeError from Path.resolve() on a loop, but 3.13+ silently returns
+    the unresolved loop path. A fully resolved path that still contains a
+    symlink component therefore means resolution hit a loop — refuse it."""
     root = Path(root).resolve()
     parts = PurePosixPath(relative).parts
     if not parts or relative.startswith("/") or ".." in parts or "." in relative.split("/") or "\\" in relative:
         raise ManifestError(f"{field}: expected a repository-relative path without traversal")
     try:
         resolved = (root / relative).resolve()
-        resolved.relative_to(root)
+        relative_to_root = resolved.relative_to(root)
     except (ValueError, OSError, RuntimeError) as error:
         raise ManifestError(f"{field}: path escapes repository or contains a symlink loop") from error
+    current = root
+    for part in relative_to_root.parts:
+        current = current / part
+        if current.is_symlink():
+            raise ManifestError(f"{field}: path escapes repository or contains a symlink loop")
     return resolved
 
 

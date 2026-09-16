@@ -18,7 +18,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     resources = root / "cli/resources"
     try:
-        data = {"schemaVersion": 1, "commands": [json.loads(c) for c in args.command],
+        data = {"schemaVersion": 2, "commands": [json.loads(c) for c in args.command],
                 "links": [json.loads(link) for link in args.link]}
         # Generate before a brand is required; the registry contract is independent.
         registry = Registry.__new__(Registry)

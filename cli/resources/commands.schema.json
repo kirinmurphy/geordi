@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://geordi.local/schemas/cli-commands/v1",
+  "$id": "https://geordi.local/schemas/cli-commands/v2",
   "title": "Geordi CLI command and installation registry",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "commands", "links"],
   "properties": {
-    "schemaVersion": {"type": "integer", "const": 1},
+    "schemaVersion": {"type": "integer", "const": 2},
     "commands": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/command"}},
     "links": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/link"}}
   },
@@ -15,10 +15,11 @@
     "path": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*$"},
     "command": {
       "type": "object", "additionalProperties": false,
-      "required": ["command", "description", "runtime", "path", "args"],
+      "required": ["command", "description", "category", "runtime", "path", "args"],
       "properties": {
         "command": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/token"}},
         "description": {"type": "string", "minLength": 1},
+        "category": {"enum": ["setup", "utility"]},
         "runtime": {"type": "string", "enum": ["python", "node", "executable"]},
         "path": {"$ref": "#/$defs/path"},
         "args": {"type": "array", "items": {"type": "string"}}
