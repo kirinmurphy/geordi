@@ -69,6 +69,12 @@ installation is idempotent. It refuses unrelated occupied targets;
 there is no force flag. Keep the checkout in place: installed commands
 are symlinks, not copied bundles.
 
+When the app is installed (DMG or `make run`), prefer enabling from the
+app's **Enable CLI** action or from a terminal: `geordi repair-cli` once
+the link exists. Inside a bundle the installer links the bundle's launcher
+shim, so the PATH link follows the app across moves and updates; the
+repo-checkout installer links the checkout instead.
+
 ## Commands
 
 | Command | Behavior |
@@ -77,6 +83,8 @@ are symlinks, not copied bundles.
 | `geordi help [command]` | Top-level help or forwarded command help |
 | `geordi find-dupe-files [args]` | Run the duplicate-review sidekick (stages, Trash default, `--unreviewed`/`--forget-seen` seen-state) |
 | `geordi setup mac [args]` | Run `node bootstrap/bin/geordi-bootstrap.js mac [args]` |
+| `geordi migrate manifest` | One-time split of a legacy v2 manifest into catalog + machine manifest (explicit confirm or `--yes`) |
+| `geordi repair-cli` | Install or repair the `geordi` command link on PATH (no sudo; also what the app's Enable CLI runs) |
 
 `geordi setup mac` defaults to preview. Use `--apply` for prompted installation,
 `--apply --yes` for scripts, `--check` or `--json` for status, and `--sync` for
@@ -88,13 +96,17 @@ Dispatched commands otherwise retain their own exit status.
 ## Registry maintenance
 
 Edit command definitions through the validating factory, passing the complete
-collection as repeated JSON parameters. This example regenerates the current registry:
+collection as repeated JSON parameters (schema v2: every command declares a
+`category` — `setup` or `utility`). This example regenerates the current registry:
 
 ```sh
 python3 cli/manage-commands.py \
-  --command '{"command":["find-dupe-files"],"description":"Review duplicate files (current directory by default)","runtime":"python","path":"cli/bin/sidekicks/find-dupe-files","args":[]}' \
-  --command '{"command":["setup","mac"],"description":"Preview missing Mac setup packages; use --apply to install","runtime":"node","path":"bootstrap/bin/geordi-bootstrap.js","args":["mac"]}' \
-  --link '{"name":"@cliCommand","path":"bin/geordi","legacySources":[]}'
+  --command '{"command":["setup","mac"],"description":"Set up this Mac: preview missing registered apps; --apply installs","category":"setup","runtime":"node","path":"bootstrap/bin/geordi-bootstrap.js","args":["mac"]}' \
+  --command '{"command":["migrate","manifest"],"description":"Migrate the legacy combined setup manifest (v2) into catalog + machine manifest","category":"setup","runtime":"node","path":"bootstrap/bin/geordi-bootstrap.js","args":["migrate","manifest"]}' \
+  --command '{"command":["repair-cli"],"description":"Repair the geordi command link on PATH (no sudo; also run by the app Enable CLI action)","category":"setup","runtime":"python","path":"cli/bin/repair-cli","args":[]}' \
+  --command '{"command":["find-dupe-files"],"description":"Review duplicate files (current directory by default)","category":"utility","runtime":"python","path":"cli/bin/sidekicks/find-dupe-files","args":[]}' \
+  --link '{"name":"@cliCommand","path":"bin/geordi","legacySources":[]}' \
+  --link '{"name":"find-dupe-files","path":"cli/bin/sidekicks/find-dupe-files","legacySources":["bin/sidekicks/find-dupe-files"]}'
 ```
 
 `@cliCommand` resolves the installed name from the canonical brand. All paths

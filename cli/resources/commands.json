@@ -32,7 +32,7 @@
       "command": [
         "repair-cli"
       ],
-      "description": "Repair the geordi command link on PATH (no sudo; also what the app's Enable CLI runs)",
+      "description": "Repair the geordi command link on PATH (no sudo; also run by the app Enable CLI action)",
       "category": "setup",
       "runtime": "python",
       "path": "cli/bin/repair-cli",
