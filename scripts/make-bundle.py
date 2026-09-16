@@ -68,16 +68,21 @@ def stage_into(bundle_contents, layout):
 def main():
     parser = argparse.ArgumentParser(description="Build the production Geordi.app bundle (release build, staged CLI, ad-hoc signature).")
     parser.add_argument("--configuration", default="release", choices=["release", "debug"])
+    parser.add_argument("--bundle-name", default=None,
+                        help="bundle name (default: brand displayName). Development "
+                        "packaging passes the executable name to keep existing "
+                        ".build/<config>/<Executable>.app paths stable.")
     parser.add_argument("--output", default=None, help="output directory (default: .build/<configuration>)")
     args = parser.parse_args()
 
     brand = product_brand()
     layout = load_layout()
+    bundle_name = args.bundle_name or brand["displayName"]
     binary = REPO / ".build" / args.configuration / brand["executable"]
     check(binary.is_file(), f"missing {brand['executable']} binary at {binary}; run 'swift build -c {args.configuration} --product {brand['executable']}' first")
 
     build_dir = Path(args.output) if args.output else binary.parent
-    bundle = build_dir / f"{brand['displayName']}.app"
+    bundle = build_dir / f"{bundle_name}.app"
     contents = bundle / "Contents"
     if bundle.exists():
         shutil.rmtree(bundle)
