@@ -184,8 +184,6 @@ struct ContentView: View {
           FilesystemMapView(model: model)
         case .shellPath:
           ShellPathVisualizerView()
-        case .applications:
-          ApplicationBrowserView(model: model)
         case .startup, .storage, .commandLine:
           ExplorationBrowserView(model: model)
         case .dupeReview:
@@ -214,22 +212,18 @@ struct ContentView: View {
     VStack(alignment: .leading, spacing: 0) {
       VStack(alignment: .leading, spacing: 5) {
         Text(AppBrand.displayName)
-          .font(.display.bold())
-        Text("Understand this Mac")
-          .foregroundStyle(.secondary)
+          .font(.heading.bold())
       }
       .padding(20)
 
       List {
         Section {
-          navigationButton("This Mac", symbol: "laptopcomputer", destination: .overview)
+          navigationButton("Home", symbol: "laptopcomputer", destination: .overview)
         }
         // Mirrors the Home question cards one-to-one — same destinations,
         // same order, same symbols — so the sidebar and the Home page are
         // two views of one navigation contract.
         Section("Explore") {
-          navigationButton(
-            "Installed software", symbol: "macwindow.on.rectangle", destination: .applications)
           navigationButton(
             "What starts automatically", symbol: "power", destination: .startup)
           navigationButton(

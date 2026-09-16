@@ -95,7 +95,6 @@ struct AtlasDetailView: View {
   private var summaryTitle: String {
     switch model.destination {
     case .storage: "What could be safely removed?"
-    case .applications: "What software is installed?"
     case .startup: "What starts automatically?"
     case .commandLine: "How is the command-line environment assembled?"
     case .dupeReview: "Where are duplicate files costing space?"
@@ -104,23 +103,29 @@ struct AtlasDetailView: View {
     case .performance:
       model.isSynthetic ? "What changed during the memory spike?" : "What is running now?"
     case .entity(let id): model.fixture.entity(id)?.name ?? "Selected item"
-    case .overview: "This Mac"
+    case .overview: "Home"
     }
+  }
+
+  /// The synthetic storage summary derives its figure from the graph —
+  /// the same total the Home alert shows — never a hard-coded number.
+  private var reclaimableSizeSummary: String {
+    let gigabytes = model.reclaimCandidates.compactMap { file -> Double? in
+      guard
+        let raw = file.details.first(where: { $0.label == "Synthetic size" })?.value
+      else { return nil }
+      return Double(raw.prefix { $0.isNumber || $0 == "." })
+    }.reduce(0, +)
+    return gigabytes > 0 ? String(format: "%.1f GB", gigabytes) : "No rebuildable data"
   }
 
   private var summaryText: String {
     return switch model.destination {
     case .storage:
       if model.isSynthetic {
-        "24.4 GB is likely rebuildable or redownloadable. Profiles, configuration, and application data remain protected."
+        "\(reclaimableSizeSummary) is likely rebuildable or redownloadable. Profiles, configuration, and application data remain protected."
       } else {
-        "\(AppBrand.displayName) observed configured rebuildable or redownloadable roots using metadata only. Sizes were not collected, and no removal action is enabled."
-      }
-    case .applications:
-      if model.isSynthetic {
-        "Explore familiar applications alongside Homebrew, Oh My Zsh, and an npm-installed TypeScript package."
-      } else {
-        "\(AppBrand.displayName) observed \(model.applicationScopeCounts.total) application bundles in the configured read-only search roots."
+        "\(AppBrand.displayName) measured configured rebuildable or redownloadable roots with a bounded read-only walk. Lower bounds are marked with ≥, and no removal action is enabled."
       }
     case .startup:
       "Startup declarations are shown separately from running processes. A declaration means software may start automatically; it does not prove the software is running now."

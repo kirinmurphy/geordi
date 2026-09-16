@@ -100,7 +100,6 @@ final class AppModel {
   enum Destination: Hashable {
     case overview
     case storage
-    case applications
     case startup
     case commandLine
     case shellPath
@@ -113,7 +112,6 @@ final class AppModel {
       switch self {
       case .overview: "overview"
       case .storage: "storage"
-      case .applications: "applications"
       case .startup: "startup"
       case .commandLine: "commandLine"
       case .shellPath: "shellPath"
@@ -557,7 +555,9 @@ final class AppModel {
 
   func exploreLinkedApplications() {
     dismissLinkedCompletion()
-    navigate(to: .applications)
+    // The Installed Software page was removed as redundant with the Home
+    // application inventory; linking now returns to Home.
+    navigate(to: .overview)
   }
 
   func dismissLinkedCompletion() {
@@ -719,8 +719,6 @@ final class AppModel {
       selection = nil
     case .storage:
       selection = syntheticSelection(for: destination)
-    case .applications:
-      selection = nil
     case .startup, .commandLine, .shellPath, .dupeReview:
       selection = nil
     case .filesystem:

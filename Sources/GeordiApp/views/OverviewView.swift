@@ -153,7 +153,7 @@ struct OverviewView: View {
                 tint: .blue,
                 title: source.label,
                 trailing: "\(sourceApplications.count) applications"
-              ) { model.navigate(to: .applications) }
+              ) { model.navigate(to: .overview) }
               ForEach(classifiedApplicationGroups(sourceApplications), id: \.id) { group in
                 softwareDisclosureRow(
                   id: "\(source.id):\(group.id)",

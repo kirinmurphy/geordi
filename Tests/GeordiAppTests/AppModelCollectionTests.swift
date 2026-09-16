@@ -77,7 +77,7 @@ struct AppModelCollectionTests {
 
     model.exploreLinkedApplications()
     #expect(!model.linkCompletionPending)
-    #expect(model.destination == .applications)
+    #expect(model.destination == .overview)
   }
 
   @Test("Homepage destinations resolve to their manifest exploration contexts")
@@ -85,7 +85,6 @@ struct AppModelCollectionTests {
     let unused = snapshot(id: "unused", entityName: "Unused")
     let model = makeModel(preferences: MemoryPreferences()) { unused }
     let routes: [(AppModel.Destination, String, ExplorationPresentationKind)] = [
-      (.applications, "applications", .applicationBrowser),
       (.startup, "startup", .groupedBrowser),
       (.storage, "storage", .groupedBrowser),
       (.commandLine, "command-line", .groupedBrowser),
@@ -105,7 +104,7 @@ struct AppModelCollectionTests {
     let unused = snapshot(id: "unused", entityName: "Unused")
     let model = makeModel(preferences: MemoryPreferences()) { unused }
     for destination in [
-      AppModel.Destination.applications, .startup, .storage, .commandLine,
+      AppModel.Destination.startup, .storage, .commandLine,
     ] {
       model.navigate(to: destination)
       #expect((model.explorationContext?.initialItemBudget ?? 101) <= 30)
