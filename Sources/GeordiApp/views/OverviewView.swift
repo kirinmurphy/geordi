@@ -507,9 +507,9 @@ struct OverviewView: View {
     } label: {
       HStack(spacing: 12) {
         Image(systemName: symbol)
-          .font(.system(size: 17, weight: .semibold))
+          .font(.system(size: 21, weight: .semibold))
           .foregroundStyle(tint)
-          .frame(width: 28, height: 28)
+          .frame(width: 32, height: 32)
         Text(title)
           .font(.rowTitle)
         Image(systemName: expanded ? "chevron.up" : "chevron.down")

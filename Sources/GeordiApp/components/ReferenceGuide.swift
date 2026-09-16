@@ -9,18 +9,24 @@ struct GuideNode: Identifiable, Hashable {
   let symbol: String
 }
 
-/// Dark forest green — the reference palette. Deliberately distinct from
-/// the blue used by observation and action surfaces, so supporting theory
-/// reads as its own layer of the page.
+/// Solid dark blue-gray — the reference palette. Deliberately heavier
+/// than every other card surface so supporting theory reads as its own
+/// layer of the page; type colors are adjusted for the dark ground.
 enum ReferencePalette {
-  static let ink = Color(red: 0.13, green: 0.35, blue: 0.22)
+  static let panel = Color(red: 0.16, green: 0.20, blue: 0.26)
+  static let accent = Color(red: 0.58, green: 0.72, blue: 0.87)
+  static let foreground = Color.white
+  static let mutedForeground = Color.white.opacity(0.72)
+  static let panelStroke = Color.white.opacity(0.16)
+  static let card = Color.white.opacity(0.08)
+  static let cardStroke = Color.white.opacity(0.14)
 }
 
 /// Shared styling for explanatory reference panels. Distinct from
-/// observation panels — forest-green card, an overline chip, bounded
-/// width — so supporting theory never reads as interactive findings.
-/// Every "how this works" surface on the destination pages renders
-/// through this one component.
+/// observation panels — solid dark blue-gray card, an overline chip,
+/// bounded width — so supporting theory never reads as interactive
+/// findings. Every "how this works" surface on the destination pages
+/// renders through this one component.
 struct ReferencePanel<Content: View>: View {
   let title: String
   var maxWidth: CGFloat = 860
@@ -32,16 +38,17 @@ struct ReferencePanel<Content: View>: View {
         .font(.small.weight(.semibold))
         .tracking(1.2)
         .textCase(.uppercase)
-        .foregroundStyle(ReferencePalette.ink)
+        .foregroundStyle(ReferencePalette.accent)
       Text(title)
         .font(.section.bold())
+        .foregroundStyle(ReferencePalette.foreground)
       content()
     }
     .padding(20)
     .frame(maxWidth: maxWidth, alignment: .leading)
-    .background(ReferencePalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 16))
+    .background(ReferencePalette.panel, in: RoundedRectangle(cornerRadius: 16))
     .overlay {
-      RoundedRectangle(cornerRadius: 16).stroke(ReferencePalette.ink.opacity(0.35))
+      RoundedRectangle(cornerRadius: 16).stroke(ReferencePalette.panelStroke)
     }
   }
 }
@@ -89,7 +96,7 @@ struct ReferenceFlow: View {
   private func connector(_ symbol: String) -> some View {
     Image(systemName: symbol)
       .font(.system(size: 17, weight: .bold))
-      .foregroundStyle(ReferencePalette.ink)
+      .foregroundStyle(ReferencePalette.accent)
       .accessibilityHidden(true)
   }
 
@@ -97,22 +104,23 @@ struct ReferenceFlow: View {
     VStack(alignment: .leading, spacing: 8) {
       Image(systemName: node.symbol)
         .font(.system(size: 30, weight: .medium))
-        .foregroundStyle(ReferencePalette.ink)
+        .foregroundStyle(ReferencePalette.accent)
       Text(node.title)
         .font(.rowTitle)
+        .foregroundStyle(ReferencePalette.foreground)
       Text(node.explanation)
         .font(.small)
-        .foregroundStyle(.secondary)
+        .foregroundStyle(ReferencePalette.mutedForeground)
         .fixedSize(horizontal: false, vertical: true)
     }
     .frame(maxWidth: .infinity, minHeight: Self.nodeRowHeight, alignment: .topLeading)
     .padding(14)
     .background(
-      Color(nsColor: .controlBackgroundColor),
+      ReferencePalette.card,
       in: RoundedRectangle(cornerRadius: 12)
     )
     .overlay {
-      RoundedRectangle(cornerRadius: 12).stroke(ReferencePalette.ink.opacity(0.2))
+      RoundedRectangle(cornerRadius: 12).stroke(ReferencePalette.cardStroke)
     }
   }
 }

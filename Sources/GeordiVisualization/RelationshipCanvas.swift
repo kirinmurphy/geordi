@@ -14,10 +14,10 @@ public enum TypeSize {
 }
 
 public enum IconSize {
-  public static let small: CGFloat = 18
-  public static let base: CGFloat = 26
-  public static let large: CGFloat = 34
-  public static let xl: CGFloat = 44
+  public static let small: CGFloat = 20
+  public static let base: CGFloat = 30
+  public static let large: CGFloat = 38
+  public static let xl: CGFloat = 48
 }
 
 public struct RelationshipCanvas: View {

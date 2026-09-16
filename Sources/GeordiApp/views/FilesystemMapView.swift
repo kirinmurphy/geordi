@@ -67,7 +67,7 @@ struct FilesystemMapView: View {
           } label: {
             VStack(alignment: .leading, spacing: 8) {
               Image(systemName: systemSymbol(system))
-                .font(.system(size: 26, weight: .medium))
+                .font(.system(size: 30, weight: .medium))
                 .foregroundStyle(.blue)
               Text(systemTitle(system)).font(.rowTitle)
               Text(systemExplanation(system)).font(.small).foregroundStyle(.secondary).lineLimit(
@@ -102,9 +102,9 @@ struct FilesystemMapView: View {
     } label: {
       HStack(spacing: 14) {
         Image(systemName: node.symbol)
-          .font(.system(size: 20, weight: .medium))
+          .font(.system(size: 24, weight: .medium))
           .foregroundStyle(.blue)
-          .frame(width: 32)
+          .frame(width: 36)
         VStack(alignment: .leading, spacing: 4) {
           Text(node.label).font(.rowTitle)
           Text(node.purpose).font(.secondary).foregroundStyle(.secondary)

@@ -261,8 +261,8 @@ struct EntityBrowserRow: View {
     Button(action: action) {
       HStack(spacing: 12) {
         Image(systemName: entity.presentation?.symbol ?? symbol)
-          .font(.system(size: 19, weight: .medium))
-          .frame(width: 28)
+          .font(.system(size: 22, weight: .medium))
+          .frame(width: 32)
           .foregroundStyle(.blue)
         VStack(alignment: .leading, spacing: 3) {
           Text(entity.name)
