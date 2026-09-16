@@ -211,10 +211,21 @@ struct ContentView: View {
   private var sidebar: some View {
     VStack(alignment: .leading, spacing: 0) {
       VStack(alignment: .leading, spacing: 5) {
-        Text(AppBrand.displayName)
-          .font(.heading.bold())
+        HStack(alignment: .top, spacing: 5) {
+          Text(AppBrand.displayName)
+            .font(.custom("Courier New", size: 20).weight(.medium))
+          Text("BETA")
+            .font(.custom("Courier New", size: 13).weight(.semibold))
+            .tracking(1)
+            .foregroundStyle(.secondary)
+            .baselineOffset(5)
+        }
       }
-      .padding(20)
+      .padding(.horizontal, 20)
+      .padding(.top, 10)
+      .padding(.bottom, 12)
+
+      Divider()
 
       List {
         Section {
@@ -245,6 +256,10 @@ struct ContentView: View {
           navigationButton("Duplicate review", symbol: "square.on.square", destination: .dupeReview)
         }
       }
+      // The navigation column reads as a slightly lighter inset beneath
+      // the title, separated by the divider above.
+      .scrollContentBackground(.hidden)
+      .background(Color(nsColor: .controlBackgroundColor))
 
       Divider()
       VStack(alignment: .leading, spacing: 10) {
