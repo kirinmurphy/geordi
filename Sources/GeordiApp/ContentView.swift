@@ -233,7 +233,7 @@ struct ContentView: View {
       // sidebar collapsed the column and broke detail-column scrolling.
       VStack(alignment: .leading, spacing: 1) {
         navigationButton("Home", symbol: "laptopcomputer", destination: .overview)
-          .padding(.bottom, 6)
+          .padding(.bottom, 12)
         // Mirrors the Home question cards one-to-one — same destinations,
         // same order, same symbols — so the sidebar and the Home page are
         // two views of one navigation contract.
@@ -259,6 +259,9 @@ struct ContentView: View {
       .padding(.horizontal, 12)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(Self.sidebarNavFill)
+      // Breathing room between the band and the divider/footer; the
+      // column ground shows through.
+      .padding(.vertical, 12)
       Spacer(minLength: 0)
 
       Divider()
@@ -556,7 +559,7 @@ struct ContentView: View {
     nsColor: NSColor(name: nil) { appearance in
       let isDark = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
       return isDark
-        ? NSColor(red: 0.20, green: 0.24, blue: 0.30, alpha: 1)
-        : NSColor(red: 0.88, green: 0.91, blue: 0.94, alpha: 1)
+        ? NSColor(red: 0.17, green: 0.20, blue: 0.25, alpha: 1)
+        : NSColor(red: 0.92, green: 0.93, blue: 0.95, alpha: 1)
     })
 }
