@@ -252,14 +252,16 @@ struct ContentView: View {
               destination: .performance)
           }
         }
-        Section("Tools") {
-          navigationButton("Duplicate review", symbol: "square.on.square", destination: .dupeReview)
-        }
       }
-      // The navigation column reads as a slightly lighter inset beneath
-      // the title, separated by the divider above.
+      // The navigation column reads as a subtle inset card beneath the
+      // title, separated from it by the divider and breathing room.
       .scrollContentBackground(.hidden)
-      .background(Color(nsColor: .controlBackgroundColor))
+      .padding(.horizontal, 10)
+      .padding(.top, 6)
+      .background(
+        Color(nsColor: .controlBackgroundColor).opacity(0.55),
+        in: RoundedRectangle(cornerRadius: 12)
+      )
 
       Divider()
       VStack(alignment: .leading, spacing: 10) {
