@@ -621,7 +621,11 @@ public struct ApplicationGraphProjector: Sendable {
     let persistenceRuntimeRelationships = (persistenceRuntimeCorrelations?.observations ?? [])
       .filter { $0.value.state == .matched }
       .flatMap { correlation -> [Relationship] in
-        correlation.value.processIDs.compactMap { pid in
+        // Multiple process instances can share one process entity (grouped
+        // by owner + executable identity). Emit ONE relationship per entity;
+        // per-instance evidence stays on the entity's instance partition.
+        var seenProcessEntities = Set<String>()
+        return correlation.value.processIDs.compactMap { pid -> Relationship? in
           guard
             let process = processesByPID[pid],
             let resolution = processResolutions?.observations.first(where: {
@@ -629,6 +633,7 @@ public struct ApplicationGraphProjector: Sendable {
             })
           else { return nil }
           let processID = processEntityID(resolution: resolution, process: process.value)
+          guard seenProcessEntities.insert(processID.rawValue).inserted else { return nil }
           return Relationship(
             id: RelationshipID(
               "persistence-runtime:\(persistenceEntityID(correlation.value.declarationPath).rawValue):\(processID.rawValue)"

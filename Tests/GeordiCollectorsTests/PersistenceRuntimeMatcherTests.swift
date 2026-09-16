@@ -167,6 +167,57 @@ struct PersistenceRuntimeMatcherTests {
     )
   }
 
+  @Test("Multiple instances of one executable produce a single observed-running relationship")
+  func duplicateProcessInstancesProduceOneRelationship() throws {
+    let declarations = declarationOutput([
+      declaration(path: "/Library/LaunchDaemons/example.plist", program: "/opt/example/Helper")
+    ])
+    let processes = processOutput([
+      process(pid: 10, name: "Helper", path: "/opt/example/Helper"),
+      process(pid: 20, name: "Helper", path: "/opt/example/Helper"),
+    ])
+    let processResolutions = CollectorOutput(
+      run: run(id: "process-resolution"),
+      observations: [10, 20].map { pid in
+        CollectedObservation(
+          id: ObservationID("process-resolution:\(pid)"),
+          scanID: "scan",
+          collectorID: "process-resolution",
+          schemaVersion: 1,
+          observedAt: timestamp,
+          subject: SubjectIdentity(
+            primary: IdentityClaim(kind: .processInstance, value: "\(pid)")
+          ),
+          value: ProcessApplicationResolutionValue(processID: pid, state: .unmatched)
+        )
+      }
+    )
+    let applications = CollectorOutput<ApplicationBundleValue>(
+      run: run(id: "applications"),
+      observations: []
+    )
+    let correlations = try makeMatcher().match(
+      scanID: "scan",
+      declarations: declarations,
+      processes: processes
+    )
+    let graph = ApplicationGraphProjector().snapshot(
+      scanID: "scan",
+      output: applications,
+      processes: processes,
+      processResolutions: processResolutions,
+      persistence: declarations,
+      persistenceRuntimeCorrelations: correlations
+    ).graph
+
+    // Both PIDs share one process entity (same owner + executable), so the
+    // declaration gets ONE observed-running relationship — duplicate
+    // relationship identifiers previously aborted the whole live scan.
+    let running = graph.relationships.filter { $0.type == .observedRunning }
+    #expect(running.count == 1)
+    #expect(Set(running.map(\.id.rawValue)).count == running.count)
+  }
+
   private func makeMatcher() throws -> PersistenceRuntimeMatcher {
     PersistenceRuntimeMatcher(
       configuration: try .bundled(),
